@@ -1,0 +1,510 @@
+{
+  "suite": "pagila_v1",
+  "database": "pagila_legacy",
+  "questions_scored": 45,
+  "execution_accuracy": 0.578,
+  "per_tag": {
+    "ambiguous": {
+      "correct": 1,
+      "total": 2,
+      "ex": 0.5
+    },
+    "composite_key": {
+      "correct": 2,
+      "total": 7,
+      "ex": 0.286
+    },
+    "cryptic_names": {
+      "correct": 8,
+      "total": 10,
+      "ex": 0.8
+    },
+    "dialect_friction": {
+      "correct": 5,
+      "total": 7,
+      "ex": 0.714
+    },
+    "drift": {
+      "correct": 8,
+      "total": 18,
+      "ex": 0.444
+    },
+    "embedded_format": {
+      "correct": 1,
+      "total": 3,
+      "ex": 0.333
+    },
+    "god_table": {
+      "correct": 8,
+      "total": 14,
+      "ex": 0.571
+    },
+    "inconsistent_types": {
+      "correct": 4,
+      "total": 10,
+      "ex": 0.4
+    },
+    "magic_numbers": {
+      "correct": 3,
+      "total": 6,
+      "ex": 0.5
+    },
+    "misleading_docs": {
+      "correct": 2,
+      "total": 2,
+      "ex": 1.0
+    },
+    "missing_fk": {
+      "correct": 7,
+      "total": 13,
+      "ex": 0.538
+    },
+    "soft_delete": {
+      "correct": 6,
+      "total": 10,
+      "ex": 0.6
+    },
+    "string_quality": {
+      "correct": 4,
+      "total": 7,
+      "ex": 0.571
+    }
+  },
+  "per_difficulty": {
+    "easy": {
+      "correct": 10,
+      "total": 11,
+      "ex": 0.909
+    },
+    "medium": {
+      "correct": 16,
+      "total": 30,
+      "ex": 0.533
+    },
+    "hard": {
+      "correct": 0,
+      "total": 4,
+      "ex": 0.0
+    }
+  },
+  "clarification": {
+    "precision": 0.0,
+    "recall": 0.0,
+    "f1": 0.0
+  },
+  "behaviour": {
+    "cost_guard": {
+      "triggered": 1,
+      "total": 2,
+      "rate": 0.5
+    },
+    "abstain": {
+      "triggered": 1,
+      "total": 2,
+      "rate": 0.5
+    },
+    "false_abstentions": {
+      "count": 9,
+      "of": 45
+    }
+  },
+  "verified_hit_rate": 0.0,
+  "mean_tokens": 2911,
+  "max_tokens": 5547,
+  "mean_latency_ms": 20262,
+  "failures": [
+    {
+      "id": "p-006",
+      "reason": "no system column matches a gold column (0/1 matched)",
+      "tags": [
+        "magic_numbers",
+        "soft_delete"
+      ]
+    },
+    {
+      "id": "p-009",
+      "reason": "abstain: every provider failed or is rate limited: groq-qwen: qwen/qwen3.8-27b used all 500 tokens reasoning and returned nothing; raise max_tokens o",
+      "tags": [
+        "god_table",
+        "drift",
+        "inconsistent_types"
+      ]
+    },
+    {
+      "id": "p-012",
+      "reason": "no system column matches a gold column (0/2 matched)",
+      "tags": [
+        "god_table",
+        "drift"
+      ]
+    },
+    {
+      "id": "p-013",
+      "reason": "abstain: every provider failed or is rate limited: groq-qwen: qwen/qwen3.8-27b used all 500 tokens reasoning and returned nothing; raise max_tokens o",
+      "tags": [
+        "god_table",
+        "drift",
+        "missing_fk"
+      ]
+    },
+    {
+      "id": "p-017",
+      "reason": "abstain: the join multiplies payment: the aggregate reads 32,653 rows for 14,027 distinct payment records, so any SUM or AVG over it is counted more ",
+      "tags": [
+        "god_table",
+        "drift",
+        "missing_fk",
+        "inconsistent_types",
+        "composite_key"
+      ]
+    },
+    {
+      "id": "p-018",
+      "reason": "abstain: every provider failed or is rate limited: groq-qwen: rate limited for 3s; groq-qwen: qwen/qwen3.8-27b used all 500 tokens reasoning and retu",
+      "tags": [
+        "god_table",
+        "drift",
+        "missing_fk",
+        "inconsistent_types",
+        "composite_key"
+      ]
+    },
+    {
+      "id": "p-019",
+      "reason": "no system column matches a gold column (0/2 matched)",
+      "tags": [
+        "inconsistent_types",
+        "cryptic_names"
+      ]
+    },
+    {
+      "id": "p-022",
+      "reason": "abstain: logical SQL does not parse: Error tokenizing 'p >= '2022-06-01' AND return_timestamp < '2022-07'",
+      "tags": [
+        "drift",
+        "inconsistent_types"
+      ]
+    },
+    {
+      "id": "p-023",
+      "reason": "abstain: every provider failed or is rate limited: groq-qwen: qwen/qwen3.8-27b used all 500 tokens reasoning and returned nothing; raise max_tokens o",
+      "tags": [
+        "drift",
+        "inconsistent_types"
+      ]
+    },
+    {
+      "id": "p-025",
+      "reason": "abstain: every provider failed or is rate limited: groq-qwen: qwen/qwen3.8-27b used all 500 tokens reasoning and returned nothing; raise max_tokens o",
+      "tags": [
+        "cryptic_names",
+        "missing_fk"
+      ]
+    },
+    {
+      "id": "p-026",
+      "reason": "abstain: every provider failed or is rate limited: groq-qwen: qwen/qwen3.8-27b used all 500 tokens reasoning and returned nothing; raise max_tokens o",
+      "tags": [
+        "string_quality",
+        "missing_fk"
+      ]
+    },
+    {
+      "id": "p-027",
+      "reason": "no system column matches a gold column (1/2 matched)",
+      "tags": [
+        "composite_key",
+        "soft_delete",
+        "missing_fk"
+      ]
+    },
+    {
+      "id": "p-029",
+      "reason": "no system column matches a gold column (0/1 matched)",
+      "tags": [
+        "string_quality",
+        "composite_key",
+        "soft_delete"
+      ]
+    },
+    {
+      "id": "p-030",
+      "reason": "no system column matches a gold column (0/1 matched)",
+      "tags": [
+        "composite_key",
+        "soft_delete"
+      ]
+    },
+    {
+      "id": "p-032",
+      "reason": "no system column matches a gold column (0/2 matched)",
+      "tags": [
+        "magic_numbers",
+        "dialect_friction"
+      ]
+    },
+    {
+      "id": "p-033",
+      "reason": "no system column matches a gold column (0/2 matched)",
+      "tags": [
+        "magic_numbers",
+        "dialect_friction"
+      ]
+    },
+    {
+      "id": "p-041",
+      "reason": "no system column matches a gold column (0/1 matched)",
+      "tags": [
+        "drift",
+        "embedded_format",
+        "string_quality"
+      ]
+    },
+    {
+      "id": "p-042",
+      "reason": "no system column matches a gold column (0/1 matched)",
+      "tags": [
+        "drift",
+        "embedded_format"
+      ]
+    },
+    {
+      "id": "p-045",
+      "reason": "abstain: every provider failed or is rate limited: groq-qwen: qwen/qwen3.8-27b used all 500 tokens reasoning and returned nothing; raise max_tokens o",
+      "tags": [
+        "ambiguous",
+        "god_table",
+        "drift"
+      ]
+    }
+  ],
+  "mode": "full",
+  "offline": false,
+  "models": {
+    "groq-qwen:qwen/qwen3.8-27b": 82
+  },
+  "providers_pinned": [
+    "groq-qwen"
+  ],
+  "calibration": {
+    "weights": {
+      "mapping_confidence": 0.0405,
+      "join_confidence": -0.0211,
+      "candidate_agreement": 0.3139,
+      "validation": 0.0005,
+      "repairs": -0.1301,
+      "linking_margin": -0.0574
+    },
+    "intercept": 0.7178,
+    "observations": 37,
+    "ece_before": 0.169,
+    "ece_after": 0.0399,
+    "monotonic": true,
+    "reliability_before": [
+      {
+        "range": [
+          0.0,
+          0.1
+        ],
+        "count": 0,
+        "predicted": 0.0,
+        "observed": 0.0,
+        "gap": 0.0
+      },
+      {
+        "range": [
+          0.1,
+          0.2
+        ],
+        "count": 0,
+        "predicted": 0.0,
+        "observed": 0.0,
+        "gap": 0.0
+      },
+      {
+        "range": [
+          0.2,
+          0.3
+        ],
+        "count": 0,
+        "predicted": 0.0,
+        "observed": 0.0,
+        "gap": 0.0
+      },
+      {
+        "range": [
+          0.3,
+          0.4
+        ],
+        "count": 0,
+        "predicted": 0.0,
+        "observed": 0.0,
+        "gap": 0.0
+      },
+      {
+        "range": [
+          0.4,
+          0.5
+        ],
+        "count": 0,
+        "predicted": 0.0,
+        "observed": 0.0,
+        "gap": 0.0
+      },
+      {
+        "range": [
+          0.5,
+          0.6
+        ],
+        "count": 0,
+        "predicted": 0.0,
+        "observed": 0.0,
+        "gap": 0.0
+      },
+      {
+        "range": [
+          0.6,
+          0.7
+        ],
+        "count": 2,
+        "predicted": 0.693,
+        "observed": 0.5,
+        "gap": -0.193
+      },
+      {
+        "range": [
+          0.7,
+          0.8
+        ],
+        "count": 3,
+        "predicted": 0.78,
+        "observed": 0.667,
+        "gap": -0.114
+      },
+      {
+        "range": [
+          0.8,
+          0.9
+        ],
+        "count": 20,
+        "predicted": 0.864,
+        "observed": 0.75,
+        "gap": -0.114
+      },
+      {
+        "range": [
+          0.9,
+          1.0
+        ],
+        "count": 12,
+        "predicted": 0.938,
+        "observed": 0.667,
+        "gap": -0.271
+      }
+    ],
+    "reliability_after": [
+      {
+        "range": [
+          0.0,
+          0.1
+        ],
+        "count": 0,
+        "predicted": 0.0,
+        "observed": 0.0,
+        "gap": 0.0
+      },
+      {
+        "range": [
+          0.1,
+          0.2
+        ],
+        "count": 0,
+        "predicted": 0.0,
+        "observed": 0.0,
+        "gap": 0.0
+      },
+      {
+        "range": [
+          0.2,
+          0.3
+        ],
+        "count": 0,
+        "predicted": 0.0,
+        "observed": 0.0,
+        "gap": 0.0
+      },
+      {
+        "range": [
+          0.3,
+          0.4
+        ],
+        "count": 0,
+        "predicted": 0.0,
+        "observed": 0.0,
+        "gap": 0.0
+      },
+      {
+        "range": [
+          0.4,
+          0.5
+        ],
+        "count": 0,
+        "predicted": 0.0,
+        "observed": 0.0,
+        "gap": 0.0
+      },
+      {
+        "range": [
+          0.5,
+          0.6
+        ],
+        "count": 0,
+        "predicted": 0.0,
+        "observed": 0.0,
+        "gap": 0.0
+      },
+      {
+        "range": [
+          0.6,
+          0.7
+        ],
+        "count": 7,
+        "predicted": 0.677,
+        "observed": 0.571,
+        "gap": -0.105
+      },
+      {
+        "range": [
+          0.7,
+          0.8
+        ],
+        "count": 30,
+        "predicted": 0.709,
+        "observed": 0.733,
+        "gap": 0.025
+      },
+      {
+        "range": [
+          0.8,
+          0.9
+        ],
+        "count": 0,
+        "predicted": 0.0,
+        "observed": 0.0,
+        "gap": 0.0
+      },
+      {
+        "range": [
+          0.9,
+          1.0
+        ],
+        "count": 0,
+        "predicted": 0.0,
+        "observed": 0.0,
+        "gap": 0.0
+      }
+    ],
+    "note": "fitted on 37 answers; calibration error 0.169 -> 0.040"
+  },
+  "ablations": []
+}

@@ -1,0 +1,652 @@
+# Chinook v1 question suite.
+#
+# Gold SQL is written against the CLEAN database (gauntlet/build/chinook_clean.sqlite).
+# The system under test only ever sees the legacy copy. Two independent formulations
+# per question; `python -m gauntlet.scorer --check-gold` fails the build if they disagree.
+#
+# tags name the anti-patterns a question exercises, so accuracy can be broken down
+# per anti-pattern. See docs/PLAN.md 3.2 for the catalogue.
+
+suite: chinook_v1
+database: chinook_legacy
+clean: chinook_clean
+dialect: sqlite
+
+questions:
+  - id: c-001
+    question: How many customers do we have?
+    tags: [cryptic_names, soft_delete]
+    difficulty: easy
+    gold_sql: SELECT COUNT(*) AS n FROM Customer
+    gold_sql_alt: SELECT COUNT(DISTINCT CustomerId) AS n FROM Customer
+    order_sensitive: false
+
+  - id: c-002
+    question: How many tracks are in the catalog?
+    tags: [cryptic_names, soft_delete]
+    difficulty: easy
+    gold_sql: SELECT COUNT(*) AS n FROM Track
+    gold_sql_alt: SELECT COUNT(DISTINCT TrackId) AS n FROM Track
+    order_sensitive: false
+
+  - id: c-003
+    question: What is our total revenue across all invoices?
+    tags: [god_table, drift, soft_delete]
+    difficulty: medium
+    gold_sql: SELECT ROUND(SUM(Total), 2) AS revenue FROM Invoice
+    gold_sql_alt: |
+      SELECT ROUND(SUM(l.UnitPrice * l.Quantity), 2) AS revenue
+      FROM InvoiceLine l
+    order_sensitive: false
+
+  - id: c-004
+    question: How many invoices were issued in 2022?
+    tags: [god_table, inconsistent_types, soft_delete]
+    difficulty: medium
+    gold_sql: |
+      SELECT COUNT(*) AS n FROM Invoice
+      WHERE InvoiceDate >= '2022-01-01' AND InvoiceDate < '2023-01-01'
+    gold_sql_alt: |
+      SELECT COUNT(*) AS n FROM Invoice
+      WHERE STRFTIME('%Y', InvoiceDate) = '2022'
+    order_sensitive: false
+
+  - id: c-005
+    question: Which billing country generated the most revenue?
+    tags: [god_table, drift, string_quality]
+    difficulty: medium
+    gold_sql: |
+      SELECT BillingCountry, ROUND(SUM(Total), 2) AS revenue
+      FROM Invoice GROUP BY BillingCountry
+      ORDER BY revenue DESC, BillingCountry ASC LIMIT 1
+    gold_sql_alt: |
+      SELECT BillingCountry, ROUND(SUM(Total), 2) AS revenue
+      FROM Invoice GROUP BY BillingCountry
+      HAVING SUM(Total) = (SELECT MAX(s) FROM
+        (SELECT SUM(Total) AS s FROM Invoice GROUP BY BillingCountry))
+    order_sensitive: false
+
+  - id: c-006
+    question: Who are the top 10 customers by total amount spent? Give first and last name and the amount.
+    tags: [god_table, drift, missing_fk, inconsistent_types, cryptic_names]
+    difficulty: hard
+    gold_sql: |
+      SELECT c.FirstName, c.LastName, ROUND(SUM(i.Total), 2) AS spend
+      FROM Customer c JOIN Invoice i ON i.CustomerId = c.CustomerId
+      GROUP BY c.CustomerId, c.FirstName, c.LastName
+      ORDER BY spend DESC, c.LastName ASC LIMIT 10
+    gold_sql_alt: |
+      SELECT c.FirstName, c.LastName, ROUND(t.spend, 2) AS spend
+      FROM Customer c
+      JOIN (SELECT CustomerId, SUM(Total) AS spend FROM Invoice GROUP BY CustomerId) t
+        ON t.CustomerId = c.CustomerId
+      ORDER BY t.spend DESC, c.LastName ASC LIMIT 10
+    order_sensitive: true
+
+  - id: c-007
+    question: How many employees report to Nancy Edwards?
+    tags: [cryptic_names, missing_fk, soft_delete, string_quality]
+    difficulty: medium
+    gold_sql: |
+      SELECT COUNT(*) AS n FROM Employee e
+      JOIN Employee m ON m.EmployeeId = e.ReportsTo
+      WHERE m.FirstName = 'Nancy' AND m.LastName = 'Edwards'
+    gold_sql_alt: |
+      SELECT COUNT(*) AS n FROM Employee
+      WHERE ReportsTo = (SELECT EmployeeId FROM Employee
+                         WHERE FirstName = 'Nancy' AND LastName = 'Edwards')
+    order_sensitive: false
+
+  - id: c-008
+    question: What is the average invoice total?
+    tags: [god_table, drift, soft_delete]
+    difficulty: medium
+    gold_sql: SELECT ROUND(AVG(Total), 2) AS avg_total FROM Invoice
+    gold_sql_alt: SELECT ROUND(SUM(Total) / COUNT(*), 2) AS avg_total FROM Invoice
+    order_sensitive: false
+
+  - id: c-009
+    question: List the 5 longest tracks by duration, with their length in milliseconds.
+    tags: [cryptic_names, soft_delete]
+    difficulty: easy
+    gold_sql: |
+      SELECT Name, Milliseconds FROM Track
+      ORDER BY Milliseconds DESC, Name ASC LIMIT 5
+    gold_sql_alt: |
+      SELECT t.Name, t.Milliseconds FROM Track t
+      WHERE t.Milliseconds >= (SELECT MIN(m) FROM
+        (SELECT Milliseconds AS m FROM Track ORDER BY Milliseconds DESC LIMIT 5))
+      ORDER BY t.Milliseconds DESC, t.Name ASC LIMIT 5
+    order_sensitive: true
+
+  - id: c-010
+    question: How many albums does Led Zeppelin have?
+    tags: [cryptic_names, missing_fk]
+    difficulty: easy
+    gold_sql: |
+      SELECT COUNT(*) AS n FROM Album al
+      JOIN Artist ar ON ar.ArtistId = al.ArtistId WHERE ar.Name = 'Led Zeppelin'
+    gold_sql_alt: |
+      SELECT COUNT(*) AS n FROM Album
+      WHERE ArtistId = (SELECT ArtistId FROM Artist WHERE Name = 'Led Zeppelin')
+    order_sensitive: false
+
+  - id: c-011
+    question: Which genre has the most tracks?
+    tags: [cryptic_names, missing_fk, embedded_format, soft_delete]
+    difficulty: medium
+    gold_sql: |
+      SELECT g.Name, COUNT(*) AS n FROM Track t
+      JOIN Genre g ON g.GenreId = t.GenreId
+      GROUP BY g.GenreId, g.Name ORDER BY n DESC, g.Name ASC LIMIT 1
+    gold_sql_alt: |
+      SELECT g.Name, COUNT(t.TrackId) AS n FROM Genre g
+      JOIN Track t ON t.GenreId = g.GenreId GROUP BY g.Name
+      HAVING COUNT(t.TrackId) = (SELECT MAX(c) FROM
+        (SELECT COUNT(*) AS c FROM Track WHERE GenreId IS NOT NULL GROUP BY GenreId))
+    order_sensitive: false
+
+  - id: c-012
+    question: How many tracks have no composer recorded?
+    tags: [string_quality, soft_delete, cryptic_names]
+    difficulty: medium
+    gold_sql: |
+      SELECT COUNT(*) AS n FROM Track
+      WHERE Composer IS NULL OR TRIM(Composer) = ''
+    gold_sql_alt: |
+      SELECT (SELECT COUNT(*) FROM Track)
+           - (SELECT COUNT(*) FROM Track WHERE Composer IS NOT NULL AND TRIM(Composer) <> '')
+        AS n
+    order_sensitive: false
+
+  - id: c-013
+    question: How many customers are based in the USA?
+    tags: [string_quality, embedded_format, soft_delete]
+    difficulty: medium
+    gold_sql: SELECT COUNT(*) AS n FROM Customer WHERE Country = 'USA'
+    gold_sql_alt: |
+      SELECT COUNT(DISTINCT CustomerId) AS n FROM Customer
+      WHERE UPPER(TRIM(Country)) IN ('USA', 'US', 'UNITED STATES', 'U.S.A.')
+    order_sensitive: false
+
+  - id: c-014
+    question: Show total revenue per year.
+    tags: [god_table, drift, inconsistent_types]
+    difficulty: medium
+    gold_sql: |
+      SELECT STRFTIME('%Y', InvoiceDate) AS yr, ROUND(SUM(Total), 2) AS revenue
+      FROM Invoice GROUP BY yr ORDER BY yr
+    gold_sql_alt: |
+      SELECT SUBSTR(InvoiceDate, 1, 4) AS yr, ROUND(SUM(Total), 2) AS revenue
+      FROM Invoice GROUP BY SUBSTR(InvoiceDate, 1, 4) ORDER BY 1
+    order_sensitive: true
+
+  - id: c-015
+    question: Which support rep serves the most customers?
+    tags: [inconsistent_types, missing_fk, soft_delete, cryptic_names]
+    difficulty: hard
+    gold_sql: |
+      SELECT e.FirstName, e.LastName, COUNT(*) AS n
+      FROM Customer c JOIN Employee e ON e.EmployeeId = c.SupportRepId
+      GROUP BY e.EmployeeId, e.FirstName, e.LastName
+      ORDER BY n DESC, e.LastName ASC LIMIT 1
+    gold_sql_alt: |
+      SELECT e.FirstName, e.LastName, t.n FROM Employee e
+      JOIN (SELECT SupportRepId AS rid, COUNT(*) AS n FROM Customer
+            WHERE SupportRepId IS NOT NULL GROUP BY SupportRepId) t ON t.rid = e.EmployeeId
+      ORDER BY t.n DESC, e.LastName ASC LIMIT 1
+    order_sensitive: false
+
+  - id: c-016
+    question: Which playlist has the most tracks?
+    tags: [cryptic_names, missing_fk, composite_key]
+    difficulty: medium
+    gold_sql: |
+      SELECT p.Name, COUNT(*) AS n FROM PlaylistTrack pt
+      JOIN Playlist p ON p.PlaylistId = pt.PlaylistId
+      GROUP BY p.PlaylistId, p.Name ORDER BY n DESC, p.Name ASC LIMIT 1
+    gold_sql_alt: |
+      SELECT p.Name, (SELECT COUNT(*) FROM PlaylistTrack x WHERE x.PlaylistId = p.PlaylistId) AS n
+      FROM Playlist p
+      ORDER BY n DESC, p.Name ASC LIMIT 1
+    order_sensitive: false
+
+  - id: c-017
+    question: How many distinct artists have at least one album?
+    tags: [cryptic_names, missing_fk]
+    difficulty: easy
+    gold_sql: SELECT COUNT(DISTINCT ArtistId) AS n FROM Album
+    gold_sql_alt: |
+      SELECT COUNT(*) AS n FROM Artist ar
+      WHERE EXISTS (SELECT 1 FROM Album al WHERE al.ArtistId = ar.ArtistId)
+    order_sensitive: false
+
+  - id: c-018
+    question: What is the total quantity of tracks sold?
+    tags: [composite_key, cryptic_names]
+    difficulty: easy
+    gold_sql: SELECT SUM(Quantity) AS qty FROM InvoiceLine
+    gold_sql_alt: SELECT CAST(TOTAL(Quantity) AS INTEGER) AS qty FROM InvoiceLine
+    order_sensitive: false
+
+  - id: c-019
+    question: What is the average unit price of a track?
+    tags: [cryptic_names, soft_delete]
+    difficulty: easy
+    gold_sql: SELECT ROUND(AVG(UnitPrice), 4) AS avg_price FROM Track
+    gold_sql_alt: SELECT ROUND(SUM(UnitPrice) / COUNT(*), 4) AS avg_price FROM Track
+    order_sensitive: false
+
+  - id: c-020
+    question: How many invoices had a total greater than 10 dollars?
+    tags: [god_table, drift, soft_delete]
+    difficulty: medium
+    gold_sql: SELECT COUNT(*) AS n FROM Invoice WHERE Total > 10
+    gold_sql_alt: |
+      SELECT (SELECT COUNT(*) FROM Invoice) - (SELECT COUNT(*) FROM Invoice WHERE Total <= 10)
+        AS n
+    order_sensitive: false
+
+  - id: c-021
+    question: Which artists have no albums in the catalog?
+    tags: [missing_fk, cryptic_names, sprawl]
+    difficulty: medium
+    gold_sql: |
+      SELECT ar.Name FROM Artist ar
+      WHERE NOT EXISTS (SELECT 1 FROM Album al WHERE al.ArtistId = ar.ArtistId)
+      ORDER BY ar.Name
+    gold_sql_alt: |
+      SELECT ar.Name FROM Artist ar
+      LEFT JOIN Album al ON al.ArtistId = ar.ArtistId
+      WHERE al.AlbumId IS NULL ORDER BY ar.Name
+    order_sensitive: false
+
+  - id: c-022
+    question: What was the largest single invoice total?
+    tags: [god_table, drift, soft_delete]
+    difficulty: medium
+    gold_sql: SELECT ROUND(MAX(Total), 2) AS max_total FROM Invoice
+    gold_sql_alt: SELECT ROUND(Total, 2) AS max_total FROM Invoice ORDER BY Total DESC LIMIT 1
+    order_sensitive: false
+
+  - id: c-023
+    question: How many tracks are longer than five minutes?
+    tags: [cryptic_names, soft_delete]
+    difficulty: easy
+    gold_sql: SELECT COUNT(*) AS n FROM Track WHERE Milliseconds > 300000
+    gold_sql_alt: SELECT COUNT(*) AS n FROM Track WHERE Milliseconds / 1000.0 > 300
+    order_sensitive: false
+
+  - id: c-024
+    question: Compare total revenue in 2021 against 2024.
+    tags: [drift, god_table, inconsistent_types]
+    difficulty: hard
+    gold_sql: |
+      SELECT STRFTIME('%Y', InvoiceDate) AS yr, ROUND(SUM(Total), 2) AS revenue
+      FROM Invoice WHERE STRFTIME('%Y', InvoiceDate) IN ('2021', '2024')
+      GROUP BY yr ORDER BY yr
+    gold_sql_alt: |
+      SELECT yr, ROUND(revenue, 2) AS revenue FROM (
+        SELECT SUBSTR(InvoiceDate, 1, 4) AS yr, SUM(Total) AS revenue
+        FROM Invoice GROUP BY SUBSTR(InvoiceDate, 1, 4)
+      ) WHERE yr IN ('2021', '2024') ORDER BY yr
+    # not order sensitive: two named years placed side by side; neither comes first
+    order_sensitive: false
+
+  - id: c-025
+    question: Which city has the most customers?
+    tags: [embedded_format, string_quality, soft_delete]
+    difficulty: hard
+    gold_sql: |
+      SELECT UPPER(City) AS city, COUNT(*) AS n FROM Customer
+      GROUP BY UPPER(City) ORDER BY n DESC, city ASC LIMIT 1
+    gold_sql_alt: |
+      SELECT city, n FROM (
+        SELECT UPPER(TRIM(City)) AS city, COUNT(CustomerId) AS n
+        FROM Customer GROUP BY UPPER(TRIM(City))
+      ) ORDER BY n DESC, city ASC LIMIT 1
+    order_sensitive: false
+
+  - id: c-026
+    question: What are the top 5 artists by revenue?
+    tags: [missing_fk, composite_key, god_table, drift, cryptic_names]
+    difficulty: hard
+    gold_sql: |
+      SELECT ar.Name, ROUND(SUM(il.UnitPrice * il.Quantity), 2) AS revenue
+      FROM InvoiceLine il
+      JOIN Track t ON t.TrackId = il.TrackId
+      JOIN Album al ON al.AlbumId = t.AlbumId
+      JOIN Artist ar ON ar.ArtistId = al.ArtistId
+      GROUP BY ar.ArtistId, ar.Name ORDER BY revenue DESC, ar.Name ASC LIMIT 5
+    gold_sql_alt: |
+      SELECT Name, ROUND(revenue, 2) AS revenue FROM (
+        SELECT ar.Name AS Name, SUM(il.UnitPrice * il.Quantity) AS revenue
+        FROM Artist ar
+        JOIN Album al ON al.ArtistId = ar.ArtistId
+        JOIN Track t ON t.AlbumId = al.AlbumId
+        JOIN InvoiceLine il ON il.TrackId = t.TrackId
+        GROUP BY ar.Name
+      ) ORDER BY revenue DESC, Name ASC LIMIT 5
+    order_sensitive: true
+
+  - id: c-027
+    question: How many tracks appear on at least one playlist?
+    tags: [composite_key, missing_fk, soft_delete]
+    difficulty: medium
+    gold_sql: SELECT COUNT(DISTINCT TrackId) AS n FROM PlaylistTrack
+    gold_sql_alt: |
+      SELECT COUNT(*) AS n FROM Track t
+      WHERE EXISTS (SELECT 1 FROM PlaylistTrack pt WHERE pt.TrackId = t.TrackId)
+    order_sensitive: false
+
+  - id: c-028
+    question: What is the average number of line items per invoice?
+    tags: [composite_key, god_table, soft_delete]
+    difficulty: hard
+    gold_sql: |
+      SELECT ROUND(CAST(COUNT(*) AS REAL) / COUNT(DISTINCT InvoiceId), 3) AS avg_lines
+      FROM InvoiceLine
+    gold_sql_alt: |
+      SELECT ROUND(AVG(n), 3) AS avg_lines FROM (
+        SELECT InvoiceId, COUNT(*) AS n FROM InvoiceLine GROUP BY InvoiceId
+      )
+    order_sensitive: false
+
+  - id: c-029
+    question: How many customers have a company recorded?
+    tags: [string_quality, soft_delete]
+    difficulty: medium
+    gold_sql: |
+      SELECT COUNT(*) AS n FROM Customer
+      WHERE Company IS NOT NULL AND TRIM(Company) <> ''
+    gold_sql_alt: |
+      SELECT (SELECT COUNT(*) FROM Customer)
+           - (SELECT COUNT(*) FROM Customer WHERE Company IS NULL OR TRIM(Company) = '') AS n
+    order_sensitive: false
+
+  - id: c-030
+    question: How many tracks are there of each media type?
+    tags: [missing_fk, embedded_format, soft_delete]
+    difficulty: medium
+    gold_sql: |
+      SELECT m.Name, COUNT(*) AS n FROM Track t
+      JOIN MediaType m ON m.MediaTypeId = t.MediaTypeId
+      GROUP BY m.MediaTypeId, m.Name ORDER BY m.Name
+    gold_sql_alt: |
+      SELECT m.Name, (SELECT COUNT(*) FROM Track t WHERE t.MediaTypeId = m.MediaTypeId) AS n
+      FROM MediaType m ORDER BY m.Name
+    # not order sensitive: a count per media type; the question names no order
+    order_sensitive: false
+
+  - id: c-031
+    question: What is the total revenue from Rock tracks?
+    tags: [missing_fk, composite_key, embedded_format, soft_delete]
+    difficulty: hard
+    gold_sql: |
+      SELECT ROUND(SUM(il.UnitPrice * il.Quantity), 2) AS revenue
+      FROM InvoiceLine il
+      JOIN Track t ON t.TrackId = il.TrackId
+      JOIN Genre g ON g.GenreId = t.GenreId
+      WHERE g.Name = 'Rock'
+    gold_sql_alt: |
+      SELECT ROUND(SUM(il.UnitPrice * il.Quantity), 2) AS revenue
+      FROM InvoiceLine il
+      WHERE il.TrackId IN (
+        SELECT t.TrackId FROM Track t
+        WHERE t.GenreId = (SELECT GenreId FROM Genre WHERE Name = 'Rock')
+      )
+    order_sensitive: false
+
+  - id: c-032
+    question: On what date was the earliest invoice issued?
+    tags: [god_table, inconsistent_types, soft_delete]
+    difficulty: medium
+    gold_sql: SELECT DATE(MIN(InvoiceDate)) AS first_date FROM Invoice
+    gold_sql_alt: SELECT DATE(InvoiceDate) AS first_date FROM Invoice ORDER BY InvoiceDate LIMIT 1
+    order_sensitive: false
+
+  - id: c-033
+    question: Show monthly revenue for 2022.
+    tags: [god_table, drift, inconsistent_types]
+    difficulty: hard
+    gold_sql: |
+      SELECT STRFTIME('%Y-%m', InvoiceDate) AS ym, ROUND(SUM(Total), 2) AS revenue
+      FROM Invoice WHERE STRFTIME('%Y', InvoiceDate) = '2022'
+      GROUP BY ym ORDER BY ym
+    gold_sql_alt: |
+      SELECT SUBSTR(InvoiceDate, 1, 7) AS ym, ROUND(SUM(Total), 2) AS revenue
+      FROM Invoice WHERE InvoiceDate >= '2022-01-01' AND InvoiceDate < '2023-01-01'
+      GROUP BY SUBSTR(InvoiceDate, 1, 7) ORDER BY 1
+    order_sensitive: true
+
+  - id: c-034
+    question: How many employees are based in Calgary?
+    tags: [string_quality, soft_delete, cryptic_names]
+    difficulty: medium
+    gold_sql: SELECT COUNT(*) AS n FROM Employee WHERE UPPER(City) = 'CALGARY'
+    gold_sql_alt: |
+      SELECT COUNT(DISTINCT EmployeeId) AS n FROM Employee
+      WHERE UPPER(TRIM(City)) LIKE 'CALGARY'
+    order_sensitive: false
+
+  - id: c-035
+    question: Which album has the longest total running time?
+    tags: [missing_fk, cryptic_names, soft_delete]
+    difficulty: hard
+    gold_sql: |
+      SELECT al.Title, SUM(t.Milliseconds) AS ms FROM Track t
+      JOIN Album al ON al.AlbumId = t.AlbumId
+      GROUP BY al.AlbumId, al.Title ORDER BY ms DESC, al.Title ASC LIMIT 1
+    gold_sql_alt: |
+      SELECT Title, ms FROM (
+        SELECT al.Title AS Title, TOTAL(t.Milliseconds) AS ms
+        FROM Album al JOIN Track t ON t.AlbumId = al.AlbumId GROUP BY al.AlbumId, al.Title
+      ) ORDER BY ms DESC, Title ASC LIMIT 1
+    order_sensitive: false
+
+  - id: c-036
+    question: How many invoices were issued per billing country?
+    tags: [god_table, string_quality, soft_delete]
+    difficulty: medium
+    gold_sql: |
+      SELECT BillingCountry, COUNT(*) AS n FROM Invoice
+      GROUP BY BillingCountry ORDER BY BillingCountry
+    gold_sql_alt: |
+      SELECT BillingCountry, COUNT(InvoiceId) AS n FROM Invoice
+      GROUP BY 1 ORDER BY 1
+    # not order sensitive: a count per country; the question names no order
+    order_sensitive: false
+
+  - id: c-037
+    question: What is the average total spend per customer?
+    tags: [god_table, drift, missing_fk, inconsistent_types]
+    difficulty: hard
+    gold_sql: |
+      SELECT ROUND(AVG(spend), 2) AS avg_spend FROM (
+        SELECT CustomerId, SUM(Total) AS spend FROM Invoice GROUP BY CustomerId
+      )
+    gold_sql_alt: |
+      SELECT ROUND(SUM(Total) / COUNT(DISTINCT CustomerId), 2) AS avg_spend FROM Invoice
+    order_sensitive: false
+
+  - id: c-038
+    question: How many tracks cost more than 99 cents?
+    tags: [cryptic_names, soft_delete]
+    difficulty: easy
+    gold_sql: SELECT COUNT(*) AS n FROM Track WHERE UnitPrice > 0.99
+    gold_sql_alt: SELECT COUNT(*) AS n FROM Track WHERE UnitPrice >= 1.00
+    order_sensitive: false
+
+  - id: c-039
+    question: List each employee with the name of their manager.
+    tags: [missing_fk, cryptic_names, soft_delete]
+    difficulty: medium
+    gold_sql: |
+      SELECT e.LastName AS employee, m.LastName AS manager
+      FROM Employee e LEFT JOIN Employee m ON m.EmployeeId = e.ReportsTo
+      ORDER BY e.LastName
+    gold_sql_alt: |
+      SELECT e.LastName AS employee,
+             (SELECT m.LastName FROM Employee m WHERE m.EmployeeId = e.ReportsTo) AS manager
+      FROM Employee e ORDER BY e.LastName
+    # not order sensitive: a list of pairs; the question names no order
+    order_sensitive: false
+
+  - id: c-040
+    question: Which artist has the most tracks?
+    tags: [missing_fk, cryptic_names, soft_delete]
+    difficulty: hard
+    gold_sql: |
+      SELECT ar.Name, COUNT(*) AS n
+      FROM Track t JOIN Album al ON al.AlbumId = t.AlbumId
+      JOIN Artist ar ON ar.ArtistId = al.ArtistId
+      GROUP BY ar.ArtistId, ar.Name ORDER BY n DESC, ar.Name ASC LIMIT 1
+    gold_sql_alt: |
+      SELECT Name, n FROM (
+        SELECT ar.Name AS Name, COUNT(t.TrackId) AS n FROM Artist ar
+        JOIN Album al ON al.ArtistId = ar.ArtistId
+        JOIN Track t ON t.AlbumId = al.AlbumId GROUP BY ar.Name
+      ) ORDER BY n DESC, Name ASC LIMIT 1
+    order_sensitive: false
+
+  - id: c-041
+    question: How many customers were served by employees hired before 2003?
+    tags: [inconsistent_types, missing_fk, soft_delete]
+    difficulty: hard
+    gold_sql: |
+      SELECT COUNT(*) AS n FROM Customer c
+      JOIN Employee e ON e.EmployeeId = c.SupportRepId
+      WHERE DATE(e.HireDate) < '2003-01-01'
+    gold_sql_alt: |
+      SELECT COUNT(*) AS n FROM Customer c
+      WHERE c.SupportRepId IN (
+        SELECT EmployeeId FROM Employee WHERE STRFTIME('%Y', HireDate) < '2003'
+      )
+    order_sensitive: false
+
+  # ---------------------------------------------------------------- ambiguous questions
+  # About 15% of the suite. The eval's simulated user answers only with the annotated
+  # clarification and refuses anything else. Gold SQL encodes the clarified reading.
+
+  - id: c-042
+    question: Who are our top customers?
+    tags: [ambiguous, god_table, drift, missing_fk]
+    difficulty: medium
+    ambiguity:
+      type: intent
+      clarification: Top 10 by total amount spent, across all time
+    gold_sql: |
+      SELECT c.FirstName, c.LastName, ROUND(SUM(i.Total), 2) AS spend
+      FROM Customer c JOIN Invoice i ON i.CustomerId = c.CustomerId
+      GROUP BY c.CustomerId, c.FirstName, c.LastName
+      ORDER BY spend DESC, c.LastName ASC LIMIT 10
+    gold_sql_alt: |
+      SELECT c.FirstName, c.LastName, ROUND(t.spend, 2) AS spend FROM Customer c
+      JOIN (SELECT CustomerId, SUM(Total) AS spend FROM Invoice GROUP BY CustomerId) t
+        ON t.CustomerId = c.CustomerId
+      ORDER BY t.spend DESC, c.LastName ASC LIMIT 10
+    order_sensitive: true
+
+  - id: c-043
+    question: How many active customers do we have?
+    tags: [ambiguous, soft_delete, god_table]
+    difficulty: medium
+    ambiguity:
+      type: knowledge
+      clarification: A customer counts as active if they have at least one invoice
+    gold_sql: SELECT COUNT(DISTINCT CustomerId) AS n FROM Invoice
+    gold_sql_alt: |
+      SELECT COUNT(*) AS n FROM Customer c
+      WHERE EXISTS (SELECT 1 FROM Invoice i WHERE i.CustomerId = c.CustomerId)
+    order_sensitive: false
+
+  - id: c-044
+    question: What is our best selling genre?
+    tags: [ambiguous, missing_fk, composite_key]
+    difficulty: hard
+    ambiguity:
+      type: intent
+      clarification: Best selling means the highest total revenue, not the most tracks sold
+    gold_sql: |
+      SELECT g.Name, ROUND(SUM(il.UnitPrice * il.Quantity), 2) AS revenue
+      FROM InvoiceLine il JOIN Track t ON t.TrackId = il.TrackId
+      JOIN Genre g ON g.GenreId = t.GenreId
+      GROUP BY g.GenreId, g.Name ORDER BY revenue DESC, g.Name ASC LIMIT 1
+    gold_sql_alt: |
+      SELECT Name, ROUND(revenue, 2) AS revenue FROM (
+        SELECT g.Name AS Name, SUM(il.UnitPrice * il.Quantity) AS revenue
+        FROM Genre g JOIN Track t ON t.GenreId = g.GenreId
+        JOIN InvoiceLine il ON il.TrackId = t.TrackId GROUP BY g.Name
+      ) ORDER BY revenue DESC, Name ASC LIMIT 1
+    order_sensitive: false
+
+  - id: c-045
+    question: Show me recent sales.
+    tags: [ambiguous, god_table, drift, inconsistent_types]
+    difficulty: medium
+    ambiguity:
+      type: implementation
+      clarification: Recent means invoices issued during 2025, the most recent year in the data
+    gold_sql: |
+      SELECT DATE(InvoiceDate) AS invoice_date, ROUND(Total, 2) AS total
+      FROM Invoice WHERE STRFTIME('%Y', InvoiceDate) = '2025'
+      ORDER BY InvoiceDate, Total
+    gold_sql_alt: |
+      SELECT DATE(InvoiceDate) AS invoice_date, ROUND(Total, 2) AS total
+      FROM Invoice WHERE InvoiceDate >= '2025-01-01' ORDER BY 1, 2
+    order_sensitive: true
+
+  - id: c-046
+    question: How much did we make last year?
+    tags: [ambiguous, drift, god_table]
+    difficulty: medium
+    ambiguity:
+      type: implementation
+      clarification: Use 2025, the last full year present in the data
+    gold_sql: |
+      SELECT ROUND(SUM(Total), 2) AS revenue FROM Invoice
+      WHERE STRFTIME('%Y', InvoiceDate) = '2025'
+    gold_sql_alt: |
+      SELECT ROUND(SUM(Total), 2) AS revenue FROM Invoice
+      WHERE InvoiceDate >= '2025-01-01' AND InvoiceDate < '2026-01-01'
+    order_sensitive: false
+
+  # ------------------------------------------------------------- cost guard / abstention
+  # These have no gold SQL: the correct behaviour is to refuse to run, not to answer.
+  # AUDIT_LOG exists only in the legacy copy and has no index on its date column.
+
+  - id: c-047
+    question: Show me every audit log entry from 2022 with the old and new values.
+    tags: [perf_trap]
+    difficulty: medium
+    expect: cost_guard
+    gold_sql: null
+    gold_sql_alt: null
+    order_sensitive: false
+
+  - id: c-048
+    question: List every row in the audit log.
+    tags: [perf_trap]
+    difficulty: easy
+    expect: cost_guard
+    gold_sql: null
+    gold_sql_alt: null
+    order_sensitive: false
+
+  - id: c-049
+    question: What is each customer's credit score?
+    tags: [abstention]
+    difficulty: easy
+    expect: abstain
+    gold_sql: null
+    gold_sql_alt: null
+    order_sensitive: false
+
+  - id: c-050
+    question: Which suppliers are we late paying?
+    tags: [abstention]
+    difficulty: easy
+    expect: abstain
+    gold_sql: null
+    gold_sql_alt: null
+    order_sensitive: false

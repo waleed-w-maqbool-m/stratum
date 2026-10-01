@@ -1,0 +1,3209 @@
+[
+ {
+  "id": "c-001",
+  "question": "How many customers do we have?",
+  "tags": [
+   "cryptic_names",
+   "soft_delete"
+  ],
+  "difficulty": "easy",
+  "expect": null,
+  "answered": true,
+  "gold": {
+   "columns": [
+    "n"
+   ],
+   "rows": [
+    [
+     59
+    ]
+   ],
+   "total": 1
+  },
+  "gold_sql": "SELECT COUNT(*) AS n FROM Customer",
+  "correct": true,
+  "reason": "",
+  "status": "ok",
+  "tokens": 5757,
+  "confidence": null,
+  "logical_sql": "SELECT COUNT(*) AS customer_count\nFROM CUST_MSTR\nWHERE DEL_FLG IS NULL OR DEL_FLG <> 'Y'",
+  "physical_sql": "SELECT COUNT(*) AS customer_count\nFROM CUST_MSTR\nWHERE DEL_FLG IS NULL OR DEL_FLG <> 'Y'",
+  "message": "",
+  "assumptions": [],
+  "ours": {
+   "columns": [
+    "customer_count"
+   ],
+   "rows": [
+    [
+     59
+    ]
+   ],
+   "total": 1
+  }
+ },
+ {
+  "id": "c-002",
+  "question": "How many tracks are in the catalog?",
+  "tags": [
+   "cryptic_names",
+   "soft_delete"
+  ],
+  "difficulty": "easy",
+  "expect": null,
+  "answered": true,
+  "gold": {
+   "columns": [
+    "n"
+   ],
+   "rows": [
+    [
+     3503
+    ]
+   ],
+   "total": 1
+  },
+  "gold_sql": "SELECT COUNT(*) AS n FROM Track",
+  "correct": false,
+  "reason": "no system column matches a gold column (0/1 matched)",
+  "status": "ok",
+  "tokens": 5765,
+  "confidence": null,
+  "logical_sql": "SELECT COUNT(*) FROM PLST_TRK",
+  "physical_sql": "SELECT COUNT(*) FROM PLST_TRK",
+  "message": "",
+  "assumptions": [],
+  "ours": {
+   "columns": [
+    "COUNT(*)"
+   ],
+   "rows": [
+    [
+     8715
+    ]
+   ],
+   "total": 1
+  }
+ },
+ {
+  "id": "c-003",
+  "question": "What is our total revenue across all invoices?",
+  "tags": [
+   "god_table",
+   "drift",
+   "soft_delete"
+  ],
+  "difficulty": "medium",
+  "expect": null,
+  "answered": true,
+  "gold": {
+   "columns": [
+    "revenue"
+   ],
+   "rows": [
+    [
+     2328.6
+    ]
+   ],
+   "total": 1
+  },
+  "gold_sql": "SELECT ROUND(SUM(Total), 2) AS revenue FROM Invoice",
+  "correct": false,
+  "reason": "no system column matches a gold column (0/1 matched)",
+  "status": "ok",
+  "tokens": 5754,
+  "confidence": null,
+  "logical_sql": "SELECT SUM(TOT_AMT) AS total_revenue FROM TRANS_MSTR",
+  "physical_sql": "SELECT SUM(TOT_AMT) AS total_revenue FROM TRANS_MSTR",
+  "message": "",
+  "assumptions": [],
+  "ours": {
+   "columns": [
+    "total_revenue"
+   ],
+   "rows": [
+    [
+     930.91
+    ]
+   ],
+   "total": 1
+  }
+ },
+ {
+  "id": "c-004",
+  "question": "How many invoices were issued in 2022?",
+  "tags": [
+   "god_table",
+   "inconsistent_types",
+   "soft_delete"
+  ],
+  "difficulty": "medium",
+  "expect": null,
+  "answered": true,
+  "gold": {
+   "columns": [
+    "n"
+   ],
+   "rows": [
+    [
+     83
+    ]
+   ],
+   "total": 1
+  },
+  "gold_sql": "SELECT COUNT(*) AS n FROM Invoice\nWHERE InvoiceDate >= '2022-01-01' AND InvoiceDate < '2023-01-01'",
+  "correct": false,
+  "reason": "no system column matches a gold column (0/1 matched)",
+  "status": "ok",
+  "tokens": 5790,
+  "confidence": null,
+  "logical_sql": "SELECT COUNT(*) AS invoice_count\nFROM TRANS_MSTR\nWHERE substr(ORD_DT_TXT, 1, 4) = '2022'",
+  "physical_sql": "SELECT COUNT(*) AS invoice_count\nFROM TRANS_MSTR\nWHERE substr(ORD_DT_TXT, 1, 4) = '2022'",
+  "message": "",
+  "assumptions": [],
+  "ours": {
+   "columns": [
+    "invoice_count"
+   ],
+   "rows": [
+    [
+     159
+    ]
+   ],
+   "total": 1
+  }
+ },
+ {
+  "id": "c-005",
+  "question": "Which billing country generated the most revenue?",
+  "tags": [
+   "god_table",
+   "drift",
+   "string_quality"
+  ],
+  "difficulty": "medium",
+  "expect": null,
+  "answered": true,
+  "gold": {
+   "columns": [
+    "BillingCountry",
+    "revenue"
+   ],
+   "rows": [
+    [
+     "USA",
+     523.06
+    ]
+   ],
+   "total": 1
+  },
+  "gold_sql": "SELECT BillingCountry, ROUND(SUM(Total), 2) AS revenue\nFROM Invoice GROUP BY BillingCountry\nORDER BY revenue DESC, BillingCountry ASC LIMIT 1",
+  "correct": false,
+  "reason": "no system column matches a gold column (0/2 matched)",
+  "status": "ok",
+  "tokens": 5765,
+  "confidence": null,
+  "logical_sql": "SELECT BILL_CTRY\nFROM TRANS_MSTR\nGROUP BY BILL_CTRY\nORDER BY SUM(TOT_AMT) DESC\nLIMIT 1",
+  "physical_sql": "SELECT BILL_CTRY\nFROM TRANS_MSTR\nGROUP BY BILL_CTRY\nORDER BY SUM(TOT_AMT) DESC\nLIMIT 1",
+  "message": "",
+  "assumptions": [],
+  "ours": {
+   "columns": [
+    "BILL_CTRY"
+   ],
+   "rows": [
+    [
+     "U.S.A."
+    ]
+   ],
+   "total": 1
+  }
+ },
+ {
+  "id": "c-006",
+  "question": "Who are the top 10 customers by total amount spent? Give first and last name and the amount.",
+  "tags": [
+   "god_table",
+   "drift",
+   "missing_fk",
+   "inconsistent_types",
+   "cryptic_names"
+  ],
+  "difficulty": "hard",
+  "expect": null,
+  "answered": true,
+  "gold": {
+   "columns": [
+    "FirstName",
+    "LastName",
+    "spend"
+   ],
+   "rows": [
+    [
+     "Helena",
+     "Hol\u00fd",
+     49.62
+    ],
+    [
+     "Richard",
+     "Cunningham",
+     47.62
+    ],
+    [
+     "Luis",
+     "Rojas",
+     46.62
+    ],
+    [
+     "Ladislav",
+     "Kov\u00e1cs",
+     45.62
+    ],
+    [
+     "Hugh",
+     "O'Reilly",
+     45.62
+    ],
+    [
+     "Julia",
+     "Barnett",
+     43.62
+    ],
+    [
+     "Frank",
+     "Ralston",
+     43.62
+    ],
+    [
+     "Fynn",
+     "Zimmermann",
+     43.62
+    ],
+    [
+     "Astrid",
+     "Gruber",
+     42.62
+    ],
+    [
+     "Victor",
+     "Stevens",
+     42.62
+    ]
+   ],
+   "total": 10
+  },
+  "gold_sql": "SELECT c.FirstName, c.LastName, ROUND(SUM(i.Total), 2) AS spend\nFROM Customer c JOIN Invoice i ON i.CustomerId = c.CustomerId\nGROUP BY c.CustomerId, c.FirstName, c.LastName\nORDER BY spend DESC, c.LastName ASC LIMIT 10",
+  "correct": false,
+  "reason": "no system column matches a gold column (0/3 matched)",
+  "status": "ok",
+  "tokens": 5979,
+  "confidence": null,
+  "logical_sql": "SELECT \n    cm.CFNM1 AS first_name,\n    cm.CLNM1 AS last_name,\n    SUM(sh.TOT_AMT) AS total_spent\nFROM (\n    SELECT CUST_NO AS cust_id, TOT_AMT FROM SO_HDR_2021\n    UNION ALL\n    SELECT CUST_NO, TOT_AMT FROM SO_HDR_2022\n    UNION ALL\n    SELECT CUST_NO, TOT_AMT FROM SO_HDR_2023\n    UNION ALL\n    SELECT CUST_NO, TOT_AMT FROM SO_HDR_2024\n    UNION ALL\n    SELECT CUST_NO, TOT_AMT FROM SO_HDR_2025\n) AS sh\nJOIN CUST_MSTR cm ON cm.CUST_ID = sh.cust_id\nGROUP BY cm.CUST_ID, cm.CFNM1, cm.CLNM1\nORDER BY total_spent DESC\nLIMIT 10",
+  "physical_sql": "SELECT \n    cm.CFNM1 AS first_name,\n    cm.CLNM1 AS last_name,\n    SUM(sh.TOT_AMT) AS total_spent\nFROM (\n    SELECT CUST_NO AS cust_id, TOT_AMT FROM SO_HDR_2021\n    UNION ALL\n    SELECT CUST_NO, TOT_AMT FROM SO_HDR_2022\n    UNION ALL\n    SELECT CUST_NO, TOT_AMT FROM SO_HDR_2023\n    UNION ALL\n    SELECT CUST_NO, TOT_AMT FROM SO_HDR_2024\n    UNION ALL\n    SELECT CUST_NO, TOT_AMT FROM SO_HDR_2025\n) AS sh\nJOIN CUST_MSTR cm ON cm.CUST_ID = sh.cust_id\nGROUP BY cm.CUST_ID, cm.CFNM1, cm.CLNM1\nORDER BY total_spent DESC\nLIMIT 10",
+  "message": "",
+  "assumptions": [],
+  "ours": {
+   "columns": [
+    "first_name",
+    "last_name",
+    "total_spent"
+   ],
+   "rows": [
+    [
+     "Luis                ",
+     "Rojas               ",
+     33.75
+    ],
+    [
+     "Ladislav            ",
+     "Kov\u00e1cs              ",
+     32.75
+    ],
+    [
+     "Astrid              ",
+     "Gruber              ",
+     29.75
+    ],
+    [
+     "Fran\u00e7ois            ",
+     "Tremblay            ",
+     26.75
+    ],
+    [
+     "Frank               ",
+     "Ralston             ",
+     26.75
+    ],
+    [
+     "Jennifer            ",
+     "Peterson            ",
+     25.75
+    ],
+    [
+     "Leonie              ",
+     "K\u00f6hler              ",
+     24.75
+    ],
+    [
+     "Alexandre           ",
+     "Rocha               ",
+     24.75
+    ],
+    [
+     "Tim                 ",
+     "Goyer               ",
+     24.75
+    ],
+    [
+     "Julia               ",
+     "Barnett             ",
+     24.75
+    ]
+   ],
+   "total": 10
+  }
+ },
+ {
+  "id": "c-007",
+  "question": "How many employees report to Nancy Edwards?",
+  "tags": [
+   "cryptic_names",
+   "missing_fk",
+   "soft_delete",
+   "string_quality"
+  ],
+  "difficulty": "medium",
+  "expect": null,
+  "answered": true,
+  "gold": {
+   "columns": [
+    "n"
+   ],
+   "rows": [
+    [
+     3
+    ]
+   ],
+   "total": 1
+  },
+  "gold_sql": "SELECT COUNT(*) AS n FROM Employee e\nJOIN Employee m ON m.EmployeeId = e.ReportsTo\nWHERE m.FirstName = 'Nancy' AND m.LastName = 'Edwards'",
+  "correct": false,
+  "reason": "no system column matches a gold column (0/1 matched)",
+  "status": "ok",
+  "tokens": 5791,
+  "confidence": null,
+  "logical_sql": "SELECT COUNT(*) AS report_count\nFROM EMP_MSTR e\nJOIN EMP_MSTR m ON e.MGR_ID = m.EMP_ID\nWHERE m.ELNM = 'Nancy' AND m.EFNM = 'Edwards'",
+  "physical_sql": "SELECT COUNT(*) AS report_count\nFROM EMP_MSTR e\nJOIN EMP_MSTR m ON e.MGR_ID = m.EMP_ID\nWHERE m.ELNM = 'Nancy' AND m.EFNM = 'Edwards'",
+  "message": "",
+  "assumptions": [],
+  "ours": {
+   "columns": [
+    "report_count"
+   ],
+   "rows": [
+    [
+     0
+    ]
+   ],
+   "total": 1
+  }
+ },
+ {
+  "id": "c-008",
+  "question": "What is the average invoice total?",
+  "tags": [
+   "god_table",
+   "drift",
+   "soft_delete"
+  ],
+  "difficulty": "medium",
+  "expect": null,
+  "answered": true,
+  "gold": {
+   "columns": [
+    "avg_total"
+   ],
+   "rows": [
+    [
+     5.65
+    ]
+   ],
+   "total": 1
+  },
+  "gold_sql": "SELECT ROUND(AVG(Total), 2) AS avg_total FROM Invoice",
+  "correct": false,
+  "reason": "no system column matches a gold column (0/1 matched)",
+  "status": "ok",
+  "tokens": 5747,
+  "confidence": null,
+  "logical_sql": "SELECT AVG(TOT_AMT) AS avg_invoice_total\nFROM TRANS_MSTR",
+  "physical_sql": "SELECT AVG(TOT_AMT) AS avg_invoice_total\nFROM TRANS_MSTR",
+  "message": "",
+  "assumptions": [],
+  "ours": {
+   "columns": [
+    "avg_invoice_total"
+   ],
+   "rows": [
+    [
+     5.60789156626506
+    ]
+   ],
+   "total": 1
+  }
+ },
+ {
+  "id": "c-009",
+  "question": "List the 5 longest tracks by duration, with their length in milliseconds.",
+  "tags": [
+   "cryptic_names",
+   "soft_delete"
+  ],
+  "difficulty": "easy",
+  "expect": null,
+  "answered": true,
+  "gold": {
+   "columns": [
+    "Name",
+    "Milliseconds"
+   ],
+   "rows": [
+    [
+     "Occupation / Precipice",
+     5286953
+    ],
+    [
+     "Through a Looking Glass",
+     5088838
+    ],
+    [
+     "Greetings from Earth, Pt. 1",
+     2960293
+    ],
+    [
+     "The Man With Nine Lives",
+     2956998
+    ],
+    [
+     "Battlestar Galactica, Pt. 2",
+     2956081
+    ]
+   ],
+   "total": 5
+  },
+  "gold_sql": "SELECT Name, Milliseconds FROM Track\nORDER BY Milliseconds DESC, Name ASC LIMIT 5",
+  "correct": false,
+  "reason": "error: no such table: TRACKS",
+  "status": "error",
+  "tokens": 5833,
+  "confidence": null,
+  "logical_sql": "SELECT TRACK_ID,\n       TITLE,\n       DURATION_MS\nFROM   TRACKS\nORDER BY DURATION_MS DESC\nLIMIT 5",
+  "physical_sql": "SELECT TRACK_ID,\n       TITLE,\n       DURATION_MS\nFROM   TRACKS\nORDER BY DURATION_MS DESC\nLIMIT 5",
+  "message": "no such table: TRACKS",
+  "assumptions": [],
+  "ours": {
+   "columns": [],
+   "rows": [],
+   "total": 0
+  }
+ },
+ {
+  "id": "c-010",
+  "question": "How many albums does Led Zeppelin have?",
+  "tags": [
+   "cryptic_names",
+   "missing_fk"
+  ],
+  "difficulty": "easy",
+  "expect": null,
+  "answered": true,
+  "gold": {
+   "columns": [
+    "n"
+   ],
+   "rows": [
+    [
+     14
+    ]
+   ],
+   "total": 1
+  },
+  "gold_sql": "SELECT COUNT(*) AS n FROM Album al\nJOIN Artist ar ON ar.ArtistId = al.ArtistId WHERE ar.Name = 'Led Zeppelin'",
+  "correct": true,
+  "reason": "",
+  "status": "ok",
+  "tokens": 5761,
+  "confidence": null,
+  "logical_sql": "SELECT COUNT(*) AS album_count\nFROM ALBM a\nJOIN ARTST ar ON a.ARTST_ID = ar.ARTST_ID\nWHERE ar.ARTST_NM = 'Led Zeppelin'",
+  "physical_sql": "SELECT COUNT(*) AS album_count\nFROM ALBM a\nJOIN ARTST ar ON a.ARTST_ID = ar.ARTST_ID\nWHERE ar.ARTST_NM = 'Led Zeppelin'",
+  "message": "",
+  "assumptions": [],
+  "ours": {
+   "columns": [
+    "album_count"
+   ],
+   "rows": [
+    [
+     14
+    ]
+   ],
+   "total": 1
+  }
+ },
+ {
+  "id": "c-011",
+  "question": "Which genre has the most tracks?",
+  "tags": [
+   "cryptic_names",
+   "missing_fk",
+   "embedded_format",
+   "soft_delete"
+  ],
+  "difficulty": "medium",
+  "expect": null,
+  "answered": true,
+  "gold": {
+   "columns": [
+    "Name",
+    "n"
+   ],
+   "rows": [
+    [
+     "Rock",
+     1297
+    ]
+   ],
+   "total": 1
+  },
+  "gold_sql": "SELECT g.Name, COUNT(*) AS n FROM Track t\nJOIN Genre g ON g.GenreId = t.GenreId\nGROUP BY g.GenreId, g.Name ORDER BY n DESC, g.Name ASC LIMIT 1",
+  "correct": false,
+  "reason": "no system column matches a gold column (1/2 matched)",
+  "status": "ok",
+  "tokens": 5822,
+  "confidence": null,
+  "logical_sql": "SELECT G.GNR_NM\nFROM tblPrd P\nJOIN GNR G ON P.GNR_ID = G.GNR_ID\nGROUP BY G.GNR_NM\nORDER BY COUNT(*) DESC\nLIMIT 1",
+  "physical_sql": "SELECT G.GNR_NM\nFROM tblPrd P\nJOIN GNR G ON P.GNR_ID = G.GNR_ID\nGROUP BY G.GNR_NM\nORDER BY COUNT(*) DESC\nLIMIT 1",
+  "message": "",
+  "assumptions": [],
+  "ours": {
+   "columns": [
+    "GNR_NM"
+   ],
+   "rows": [
+    [
+     "Rock"
+    ]
+   ],
+   "total": 1
+  }
+ },
+ {
+  "id": "c-012",
+  "question": "How many tracks have no composer recorded?",
+  "tags": [
+   "string_quality",
+   "soft_delete",
+   "cryptic_names"
+  ],
+  "difficulty": "medium",
+  "expect": null,
+  "answered": true,
+  "gold": {
+   "columns": [
+    "n"
+   ],
+   "rows": [
+    [
+     977
+    ]
+   ],
+   "total": 1
+  },
+  "gold_sql": "SELECT COUNT(*) AS n FROM Track\nWHERE Composer IS NULL OR TRIM(Composer) = ''",
+  "correct": false,
+  "reason": "no system column matches a gold column (0/1 matched)",
+  "status": "ok",
+  "tokens": 5827,
+  "confidence": null,
+  "logical_sql": "SELECT COUNT(*) \nFROM PLST_TRK \nWHERE PRD_ID NOT IN (SELECT PRD_ID FROM tblPrd)",
+  "physical_sql": "SELECT COUNT(*) \nFROM PLST_TRK \nWHERE PRD_ID NOT IN (SELECT PRD_ID FROM tblPrd)",
+  "message": "",
+  "assumptions": [],
+  "ours": {
+   "columns": [
+    "COUNT(*)"
+   ],
+   "rows": [
+    [
+     0
+    ]
+   ],
+   "total": 1
+  }
+ },
+ {
+  "id": "c-013",
+  "question": "How many customers are based in the USA?",
+  "tags": [
+   "string_quality",
+   "embedded_format",
+   "soft_delete"
+  ],
+  "difficulty": "medium",
+  "expect": null,
+  "answered": true,
+  "gold": {
+   "columns": [
+    "n"
+   ],
+   "rows": [
+    [
+     13
+    ]
+   ],
+   "total": 1
+  },
+  "gold_sql": "SELECT COUNT(*) AS n FROM Customer WHERE Country = 'USA'",
+  "correct": false,
+  "reason": "no system column matches a gold column (0/1 matched)",
+  "status": "ok",
+  "tokens": 5886,
+  "confidence": null,
+  "logical_sql": "SELECT COUNT(*) \nFROM CUST_MSTR \nWHERE CO_NM LIKE '%USA%'",
+  "physical_sql": "SELECT COUNT(*) \nFROM CUST_MSTR \nWHERE CO_NM LIKE '%USA%'",
+  "message": "",
+  "assumptions": [],
+  "ours": {
+   "columns": [
+    "COUNT(*)"
+   ],
+   "rows": [
+    [
+     0
+    ]
+   ],
+   "total": 1
+  }
+ },
+ {
+  "id": "c-014",
+  "question": "Show total revenue per year.",
+  "tags": [
+   "god_table",
+   "drift",
+   "inconsistent_types"
+  ],
+  "difficulty": "medium",
+  "expect": null,
+  "answered": true,
+  "gold": {
+   "columns": [
+    "yr",
+    "revenue"
+   ],
+   "rows": [
+    [
+     "2021",
+     449.46
+    ],
+    [
+     "2022",
+     481.45
+    ],
+    [
+     "2023",
+     469.58
+    ],
+    [
+     "2024",
+     477.53
+    ],
+    [
+     "2025",
+     450.58
+    ]
+   ],
+   "total": 5
+  },
+  "gold_sql": "SELECT STRFTIME('%Y', InvoiceDate) AS yr, ROUND(SUM(Total), 2) AS revenue\nFROM Invoice GROUP BY yr ORDER BY yr",
+  "correct": false,
+  "reason": "no system column matches a gold column (1/2 matched)",
+  "status": "ok",
+  "tokens": 5941,
+  "confidence": null,
+  "logical_sql": "SELECT YEAR, SUM(TOT_AMT) AS total_revenue\nFROM (\n    SELECT CAST(substr(ORD_DT_TXT, 1, 4) AS INTEGER) AS YEAR, TOT_AMT\n    FROM SO_HDR_2021\n    UNION ALL\n    SELECT CAST(substr(ORD_DT_TXT, 1, 4) AS INTEGER) AS YEAR, TOT_AMT\n    FROM SO_HDR_2022\n    UNION ALL\n    SELECT CAST(substr(ORD_DT_TXT, 1, 4) AS INTEGER) AS YEAR, TOT_AMT\n    FROM SO_HDR_2023\n    UNION ALL\n    SELECT CAST(substr(ORD_DT_TXT, 1, 4) AS INTEGER) AS YEAR, TOT_AMT\n    FROM SO_HDR_2024\n    UNION ALL\n    SELECT CAST(substr(ORD_DT_TXT, 1, 4) AS INTEGER) AS YEAR, TOT_AMT\n    FROM SO_HDR_2025\n) AS combined\nGROUP BY YEAR\nORDER BY YEAR",
+  "physical_sql": "SELECT YEAR, SUM(TOT_AMT) AS total_revenue\nFROM (\n    SELECT CAST(substr(ORD_DT_TXT, 1, 4) AS INTEGER) AS YEAR, TOT_AMT\n    FROM SO_HDR_2021\n    UNION ALL\n    SELECT CAST(substr(ORD_DT_TXT, 1, 4) AS INTEGER) AS YEAR, TOT_AMT\n    FROM SO_HDR_2022\n    UNION ALL\n    SELECT CAST(substr(ORD_DT_TXT, 1, 4) AS INTEGER) AS YEAR, TOT_AMT\n    FROM SO_HDR_2023\n    UNION ALL\n    SELECT CAST(substr(ORD_DT_TXT, 1, 4) AS INTEGER) AS YEAR, TOT_AMT\n    FROM SO_HDR_2024\n    UNION ALL\n    SELECT CAST(substr(ORD_DT_TXT, 1, 4) AS INTEGER) AS YEAR, TOT_AMT\n    FROM SO_HDR_2025\n) AS combined\nGROUP BY YEAR\nORDER BY YEAR",
+  "message": "",
+  "assumptions": [],
+  "ours": {
+   "columns": [
+    "YEAR",
+    "total_revenue"
+   ],
+   "rows": [
+    [
+     2021,
+     449.46
+    ],
+    [
+     2022,
+     481.45
+    ],
+    [
+     2023,
+     null
+    ],
+    [
+     2024,
+     null
+    ],
+    [
+     2025,
+     null
+    ]
+   ],
+   "total": 5
+  }
+ },
+ {
+  "id": "c-015",
+  "question": "Which support rep serves the most customers?",
+  "tags": [
+   "inconsistent_types",
+   "missing_fk",
+   "soft_delete",
+   "cryptic_names"
+  ],
+  "difficulty": "hard",
+  "expect": null,
+  "answered": true,
+  "gold": {
+   "columns": [
+    "FirstName",
+    "LastName",
+    "n"
+   ],
+   "rows": [
+    [
+     "Jane",
+     "Peacock",
+     21
+    ]
+   ],
+   "total": 1
+  },
+  "gold_sql": "SELECT e.FirstName, e.LastName, COUNT(*) AS n\nFROM Customer c JOIN Employee e ON e.EmployeeId = c.SupportRepId\nGROUP BY e.EmployeeId, e.FirstName, e.LastName\nORDER BY n DESC, e.LastName ASC LIMIT 1",
+  "correct": false,
+  "reason": "no system column matches a gold column (0/3 matched)",
+  "status": "ok",
+  "tokens": 5764,
+  "confidence": null,
+  "logical_sql": "SELECT REP_NO\nFROM CUST_MSTR\nWHERE REP_NO IS NOT NULL\nGROUP BY REP_NO\nORDER BY COUNT(*) DESC\nLIMIT 1",
+  "physical_sql": "SELECT REP_NO\nFROM CUST_MSTR\nWHERE REP_NO IS NOT NULL\nGROUP BY REP_NO\nORDER BY COUNT(*) DESC\nLIMIT 1",
+  "message": "",
+  "assumptions": [],
+  "ours": {
+   "columns": [
+    "REP_NO"
+   ],
+   "rows": [
+    [
+     "00000003"
+    ]
+   ],
+   "total": 1
+  }
+ },
+ {
+  "id": "c-016",
+  "question": "Which playlist has the most tracks?",
+  "tags": [
+   "cryptic_names",
+   "missing_fk",
+   "composite_key"
+  ],
+  "difficulty": "medium",
+  "expect": null,
+  "answered": true,
+  "gold": {
+   "columns": [
+    "Name",
+    "n"
+   ],
+   "rows": [
+    [
+     "Music",
+     3290
+    ]
+   ],
+   "total": 1
+  },
+  "gold_sql": "SELECT p.Name, COUNT(*) AS n FROM PlaylistTrack pt\nJOIN Playlist p ON p.PlaylistId = pt.PlaylistId\nGROUP BY p.PlaylistId, p.Name ORDER BY n DESC, p.Name ASC LIMIT 1",
+  "correct": false,
+  "reason": "error: could not parse SQL: Expecting ). Line 3, Col: 19.\n  SELECT\n    p.PLST_NM,\n    COUNT(t.PR \u001b[4mD_ID\u001b[0m) AS track_count\nFROM PLST p\nJOIN PLST",
+  "status": "error",
+  "tokens": 5833,
+  "confidence": null,
+  "logical_sql": "SELECT\n    p.PLST_NM,\n    COUNT(t.PR D_ID) AS track_count\nFROM PLST p\nJOIN PLST_TRK t ON p.PLST_ID = t.PLST_ID\nGROUP BY p.PLST_ID, p.PLST_NM\nORDER BY track_count DESC\nLIMIT 1",
+  "physical_sql": "SELECT\n    p.PLST_NM,\n    COUNT(t.PR D_ID) AS track_count\nFROM PLST p\nJOIN PLST_TRK t ON p.PLST_ID = t.PLST_ID\nGROUP BY p.PLST_ID, p.PLST_NM\nORDER BY track_count DESC\nLIMIT 1",
+  "message": "could not parse SQL: Expecting ). Line 3, Col: 19.\n  SELECT\n    p.PLST_NM,\n    COUNT(t.PR \u001b[4mD_ID\u001b[0m) AS track_count\nFROM PLST p\nJOIN PLST_TRK t ON p.PLST_ID = t.PLST_ID\nGROUP BY p.PLST_ID, p.PLST_NM\n",
+  "assumptions": [],
+  "ours": {
+   "columns": [],
+   "rows": [],
+   "total": 0
+  }
+ },
+ {
+  "id": "c-017",
+  "question": "How many distinct artists have at least one album?",
+  "tags": [
+   "cryptic_names",
+   "missing_fk"
+  ],
+  "difficulty": "easy",
+  "expect": null,
+  "answered": true,
+  "gold": {
+   "columns": [
+    "n"
+   ],
+   "rows": [
+    [
+     204
+    ]
+   ],
+   "total": 1
+  },
+  "gold_sql": "SELECT COUNT(DISTINCT ArtistId) AS n FROM Album",
+  "correct": true,
+  "reason": "",
+  "status": "ok",
+  "tokens": 5742,
+  "confidence": null,
+  "logical_sql": "SELECT COUNT(DISTINCT ARTST_ID) FROM ALBM",
+  "physical_sql": "SELECT COUNT(DISTINCT ARTST_ID) FROM ALBM",
+  "message": "",
+  "assumptions": [],
+  "ours": {
+   "columns": [
+    "COUNT(DISTINCT ARTST_ID)"
+   ],
+   "rows": [
+    [
+     204
+    ]
+   ],
+   "total": 1
+  }
+ },
+ {
+  "id": "c-018",
+  "question": "What is the total quantity of tracks sold?",
+  "tags": [
+   "composite_key",
+   "cryptic_names"
+  ],
+  "difficulty": "easy",
+  "expect": null,
+  "answered": true,
+  "gold": {
+   "columns": [
+    "qty"
+   ],
+   "rows": [
+    [
+     2240
+    ]
+   ],
+   "total": 1
+  },
+  "gold_sql": "SELECT SUM(Quantity) AS qty FROM InvoiceLine",
+  "correct": false,
+  "reason": "no system column matches a gold column (0/1 matched)",
+  "status": "ok",
+  "tokens": 5834,
+  "confidence": null,
+  "logical_sql": "SELECT SUM(SO_LN.QTY) AS total_tracks_sold\nFROM SO_LN\nJOIN tblPrd ON tblPrd.PRD_ID = SO_LN.PRD_ID\nJOIN MEDIA_TYP ON MEDIA_TYP.MTYP_ID = tblPrd.MTYP_ID\nWHERE MEDIA_TYP.MTYP_NM = 'Track'",
+  "physical_sql": "SELECT SUM(SO_LN.QTY) AS total_tracks_sold\nFROM SO_LN\nJOIN tblPrd ON tblPrd.PRD_ID = SO_LN.PRD_ID\nJOIN MEDIA_TYP ON MEDIA_TYP.MTYP_ID = tblPrd.MTYP_ID\nWHERE MEDIA_TYP.MTYP_NM = 'Track'",
+  "message": "",
+  "assumptions": [],
+  "ours": {
+   "columns": [
+    "total_tracks_sold"
+   ],
+   "rows": [
+    [
+     null
+    ]
+   ],
+   "total": 1
+  }
+ },
+ {
+  "id": "c-019",
+  "question": "What is the average unit price of a track?",
+  "tags": [
+   "cryptic_names",
+   "soft_delete"
+  ],
+  "difficulty": "easy",
+  "expect": null,
+  "answered": true,
+  "gold": {
+   "columns": [
+    "avg_price"
+   ],
+   "rows": [
+    [
+     1.0508
+    ]
+   ],
+   "total": 1
+  },
+  "gold_sql": "SELECT ROUND(AVG(UnitPrice), 4) AS avg_price FROM Track",
+  "correct": false,
+  "reason": "no system column matches a gold column (0/1 matched)",
+  "status": "ok",
+  "tokens": 5838,
+  "confidence": null,
+  "logical_sql": "SELECT AVG(sl.UNT_PRC) AS avg_unit_price\nFROM SO_LN sl\nJOIN tblPrd p ON p.PRD_ID = sl.PRD_ID\nJOIN MEDIA_TYP mt ON mt.MTYP_ID = p.MTYP_ID\nWHERE mt.MTYP_NM = 'Track'",
+  "physical_sql": "SELECT AVG(sl.UNT_PRC) AS avg_unit_price\nFROM SO_LN sl\nJOIN tblPrd p ON p.PRD_ID = sl.PRD_ID\nJOIN MEDIA_TYP mt ON mt.MTYP_ID = p.MTYP_ID\nWHERE mt.MTYP_NM = 'Track'",
+  "message": "",
+  "assumptions": [],
+  "ours": {
+   "columns": [
+    "avg_unit_price"
+   ],
+   "rows": [
+    [
+     null
+    ]
+   ],
+   "total": 1
+  }
+ },
+ {
+  "id": "c-020",
+  "question": "How many invoices had a total greater than 10 dollars?",
+  "tags": [
+   "god_table",
+   "drift",
+   "soft_delete"
+  ],
+  "difficulty": "medium",
+  "expect": null,
+  "answered": true,
+  "gold": {
+   "columns": [
+    "n"
+   ],
+   "rows": [
+    [
+     64
+    ]
+   ],
+   "total": 1
+  },
+  "gold_sql": "SELECT COUNT(*) AS n FROM Invoice WHERE Total > 10",
+  "correct": false,
+  "reason": "no system column matches a gold column (0/1 matched)",
+  "status": "ok",
+  "tokens": 5747,
+  "confidence": null,
+  "logical_sql": "SELECT COUNT(*) AS invoice_count\nFROM TRANS_MSTR\nWHERE TOT_AMT > 10",
+  "physical_sql": "SELECT COUNT(*) AS invoice_count\nFROM TRANS_MSTR\nWHERE TOT_AMT > 10",
+  "message": "",
+  "assumptions": [],
+  "ours": {
+   "columns": [
+    "invoice_count"
+   ],
+   "rows": [
+    [
+     25
+    ]
+   ],
+   "total": 1
+  }
+ },
+ {
+  "id": "c-021",
+  "question": "Which artists have no albums in the catalog?",
+  "tags": [
+   "missing_fk",
+   "cryptic_names",
+   "sprawl"
+  ],
+  "difficulty": "medium",
+  "expect": null,
+  "answered": true,
+  "gold": {
+   "columns": [
+    "Name"
+   ],
+   "rows": [
+    [
+     "A Cor Do Som"
+    ],
+    [
+     "Academy of St. Martin in the Fields, Sir Neville Marriner & William Bennett"
+    ],
+    [
+     "Aerosmith & Sierra Leone's Refugee Allstars"
+    ],
+    [
+     "Avril Lavigne"
+    ],
+    [
+     "Azymuth"
+    ],
+    [
+     "Baby Consuelo"
+    ],
+    [
+     "Banda Black Rio"
+    ],
+    [
+     "Bar\u00e3o Vermelho"
+    ],
+    [
+     "Bebel Gilberto"
+    ],
+    [
+     "Ben Harper"
+    ],
+    [
+     "Big & Rich"
+    ],
+    [
+     "Black Eyed Peas"
+    ]
+   ],
+   "total": 71
+  },
+  "gold_sql": "SELECT ar.Name FROM Artist ar\nWHERE NOT EXISTS (SELECT 1 FROM Album al WHERE al.ArtistId = ar.ArtistId)\nORDER BY ar.Name",
+  "correct": true,
+  "reason": "",
+  "status": "ok",
+  "tokens": 5760,
+  "confidence": null,
+  "logical_sql": "SELECT a.ARTST_ID, a.ARTST_NM\nFROM ARTST a\nLEFT JOIN ALBM al ON a.ARTST_ID = al.ARTST_ID\nWHERE al.ALBM_ID IS NULL",
+  "physical_sql": "SELECT a.ARTST_ID, a.ARTST_NM\nFROM ARTST a\nLEFT JOIN ALBM al ON a.ARTST_ID = al.ARTST_ID\nWHERE al.ALBM_ID IS NULL",
+  "message": "",
+  "assumptions": [],
+  "ours": {
+   "columns": [
+    "ARTST_ID",
+    "ARTST_NM"
+   ],
+   "rows": [
+    [
+     25,
+     "Milton Nascimento & Bebeto"
+    ],
+    [
+     26,
+     "Azymuth"
+    ],
+    [
+     28,
+     "Jo\u00e3o Gilberto"
+    ],
+    [
+     29,
+     "Bebel Gilberto"
+    ],
+    [
+     30,
+     "Jorge Vercilo"
+    ],
+    [
+     31,
+     "Baby Consuelo"
+    ],
+    [
+     32,
+     "Ney Matogrosso"
+    ],
+    [
+     33,
+     "Luiz Melodia"
+    ],
+    [
+     34,
+     "Nando Reis"
+    ],
+    [
+     35,
+     "Pedro Lu\u00eds & A Parede"
+    ],
+    [
+     38,
+     "Banda Black Rio"
+    ],
+    [
+     39,
+     "Fernanda Porto"
+    ]
+   ],
+   "total": 71
+  }
+ },
+ {
+  "id": "c-022",
+  "question": "What was the largest single invoice total?",
+  "tags": [
+   "god_table",
+   "drift",
+   "soft_delete"
+  ],
+  "difficulty": "medium",
+  "expect": null,
+  "answered": true,
+  "gold": {
+   "columns": [
+    "max_total"
+   ],
+   "rows": [
+    [
+     25.86
+    ]
+   ],
+   "total": 1
+  },
+  "gold_sql": "SELECT ROUND(MAX(Total), 2) AS max_total FROM Invoice",
+  "correct": false,
+  "reason": "no system column matches a gold column (0/1 matched)",
+  "status": "ok",
+  "tokens": 5752,
+  "confidence": null,
+  "logical_sql": "SELECT MAX(TOT_AMT) AS largest_invoice_total\nFROM TRANS_MSTR",
+  "physical_sql": "SELECT MAX(TOT_AMT) AS largest_invoice_total\nFROM TRANS_MSTR",
+  "message": "",
+  "assumptions": [],
+  "ours": {
+   "columns": [
+    "largest_invoice_total"
+   ],
+   "rows": [
+    [
+     21.86
+    ]
+   ],
+   "total": 1
+  }
+ },
+ {
+  "id": "c-023",
+  "question": "How many tracks are longer than five minutes?",
+  "tags": [
+   "cryptic_names",
+   "soft_delete"
+  ],
+  "difficulty": "easy",
+  "expect": null,
+  "answered": true,
+  "gold": {
+   "columns": [
+    "n"
+   ],
+   "rows": [
+    [
+     1069
+    ]
+   ],
+   "total": 1
+  },
+  "gold_sql": "SELECT COUNT(*) AS n FROM Track WHERE Milliseconds > 300000",
+  "correct": true,
+  "reason": "",
+  "status": "ok",
+  "tokens": 5811,
+  "confidence": null,
+  "logical_sql": "SELECT COUNT(*) AS track_count\nFROM tblPrd\nWHERE intMs > 300000",
+  "physical_sql": "SELECT COUNT(*) AS track_count\nFROM tblPrd\nWHERE intMs > 300000",
+  "message": "",
+  "assumptions": [],
+  "ours": {
+   "columns": [
+    "track_count"
+   ],
+   "rows": [
+    [
+     1069
+    ]
+   ],
+   "total": 1
+  }
+ },
+ {
+  "id": "c-024",
+  "question": "Compare total revenue in 2021 against 2024.",
+  "tags": [
+   "drift",
+   "god_table",
+   "inconsistent_types"
+  ],
+  "difficulty": "hard",
+  "expect": null,
+  "answered": true,
+  "gold": {
+   "columns": [
+    "yr",
+    "revenue"
+   ],
+   "rows": [
+    [
+     "2021",
+     449.46
+    ],
+    [
+     "2024",
+     477.53
+    ]
+   ],
+   "total": 2
+  },
+  "gold_sql": "SELECT STRFTIME('%Y', InvoiceDate) AS yr, ROUND(SUM(Total), 2) AS revenue\nFROM Invoice WHERE STRFTIME('%Y', InvoiceDate) IN ('2021', '2024')\nGROUP BY yr ORDER BY yr",
+  "correct": false,
+  "reason": "row count differs: gold 2 vs system 1",
+  "status": "ok",
+  "tokens": 5795,
+  "confidence": null,
+  "logical_sql": "SELECT\n    (SELECT COALESCE(SUM(TOT_AMT), 0) FROM SO_HDR_2021) AS total_2021,\n    (SELECT COALESCE(SUM(TOT_AMT), 0) FROM SO_HDR_2024) AS total_2024",
+  "physical_sql": "SELECT\n    (SELECT COALESCE(SUM(TOT_AMT), 0) FROM SO_HDR_2021) AS total_2021,\n    (SELECT COALESCE(SUM(TOT_AMT), 0) FROM SO_HDR_2024) AS total_2024",
+  "message": "",
+  "assumptions": [],
+  "ours": {
+   "columns": [
+    "total_2021",
+    "total_2024"
+   ],
+   "rows": [
+    [
+     449.46,
+     0
+    ]
+   ],
+   "total": 1
+  }
+ },
+ {
+  "id": "c-025",
+  "question": "Which city has the most customers?",
+  "tags": [
+   "embedded_format",
+   "string_quality",
+   "soft_delete"
+  ],
+  "difficulty": "hard",
+  "expect": null,
+  "answered": true,
+  "gold": {
+   "columns": [
+    "city",
+    "n"
+   ],
+   "rows": [
+    [
+     "BERLIN",
+     2
+    ]
+   ],
+   "total": 1
+  },
+  "gold_sql": "SELECT UPPER(City) AS city, COUNT(*) AS n FROM Customer\nGROUP BY UPPER(City) ORDER BY n DESC, city ASC LIMIT 1",
+  "correct": false,
+  "reason": "error: no such column: city",
+  "status": "error",
+  "tokens": 6012,
+  "confidence": null,
+  "logical_sql": "SELECT city, COUNT(*) AS cust_count\nFROM CUST_MSTR\nGROUP BY city\nORDER BY cust_count DESC\nLIMIT 1",
+  "physical_sql": "SELECT city, COUNT(*) AS cust_count\nFROM CUST_MSTR\nGROUP BY city\nORDER BY cust_count DESC\nLIMIT 1",
+  "message": "no such column: city",
+  "assumptions": [],
+  "ours": {
+   "columns": [],
+   "rows": [],
+   "total": 0
+  }
+ },
+ {
+  "id": "c-026",
+  "question": "What are the top 5 artists by revenue?",
+  "tags": [
+   "missing_fk",
+   "composite_key",
+   "god_table",
+   "drift",
+   "cryptic_names"
+  ],
+  "difficulty": "hard",
+  "expect": null,
+  "answered": true,
+  "gold": {
+   "columns": [
+    "Name",
+    "revenue"
+   ],
+   "rows": [
+    [
+     "Iron Maiden",
+     138.6
+    ],
+    [
+     "U2",
+     105.93
+    ],
+    [
+     "Metallica",
+     90.09
+    ],
+    [
+     "Led Zeppelin",
+     86.13
+    ],
+    [
+     "Lost",
+     81.59
+    ]
+   ],
+   "total": 5
+  },
+  "gold_sql": "SELECT ar.Name, ROUND(SUM(il.UnitPrice * il.Quantity), 2) AS revenue\nFROM InvoiceLine il\nJOIN Track t ON t.TrackId = il.TrackId\nJOIN Album al ON al.AlbumId = t.AlbumId\nJOIN Artist ar ON ar.ArtistId = al.ArtistId\nGROUP BY ar.ArtistId, ar.Name ORDER BY revenue DESC, ar.Name ASC LIMIT 5",
+  "correct": true,
+  "reason": "",
+  "status": "ok",
+  "tokens": 5892,
+  "confidence": null,
+  "logical_sql": "SELECT \n    a.ARTST_NM,\n    SUM(l.UNT_PRC * l.QTY) AS revenue\nFROM SO_LN l\nJOIN tblPrd p      ON l.PRD_ID = p.PRD_ID\nJOIN ALBM al       ON p.ALBM_ID = al.ALBM_ID\nJOIN ARTST a       ON al.ARTST_ID = a.ARTST_ID\nGROUP BY a.ARTST_ID, a.ARTST_NM\nORDER BY revenue DESC\nLIMIT 5",
+  "physical_sql": "SELECT \n    a.ARTST_NM,\n    SUM(l.UNT_PRC * l.QTY) AS revenue\nFROM SO_LN l\nJOIN tblPrd p      ON l.PRD_ID = p.PRD_ID\nJOIN ALBM al       ON p.ALBM_ID = al.ALBM_ID\nJOIN ARTST a       ON al.ARTST_ID = a.ARTST_ID\nGROUP BY a.ARTST_ID, a.ARTST_NM\nORDER BY revenue DESC\nLIMIT 5",
+  "message": "",
+  "assumptions": [],
+  "ours": {
+   "columns": [
+    "ARTST_NM",
+    "revenue"
+   ],
+   "rows": [
+    [
+     "Iron Maiden",
+     138.6
+    ],
+    [
+     "U2",
+     105.92999999999999
+    ],
+    [
+     "Metallica",
+     90.09
+    ],
+    [
+     "Led Zeppelin",
+     86.13
+    ],
+    [
+     "Lost",
+     81.59
+    ]
+   ],
+   "total": 5
+  }
+ },
+ {
+  "id": "c-027",
+  "question": "How many tracks appear on at least one playlist?",
+  "tags": [
+   "composite_key",
+   "missing_fk",
+   "soft_delete"
+  ],
+  "difficulty": "medium",
+  "expect": null,
+  "answered": true,
+  "gold": {
+   "columns": [
+    "n"
+   ],
+   "rows": [
+    [
+     3503
+    ]
+   ],
+   "total": 1
+  },
+  "gold_sql": "SELECT COUNT(DISTINCT TrackId) AS n FROM PlaylistTrack",
+  "correct": true,
+  "reason": "",
+  "status": "ok",
+  "tokens": 5752,
+  "confidence": null,
+  "logical_sql": "SELECT COUNT(DISTINCT PRD_ID) AS track_count\nFROM PLST_TRK",
+  "physical_sql": "SELECT COUNT(DISTINCT PRD_ID) AS track_count\nFROM PLST_TRK",
+  "message": "",
+  "assumptions": [],
+  "ours": {
+   "columns": [
+    "track_count"
+   ],
+   "rows": [
+    [
+     3503
+    ]
+   ],
+   "total": 1
+  }
+ },
+ {
+  "id": "c-028",
+  "question": "What is the average number of line items per invoice?",
+  "tags": [
+   "composite_key",
+   "god_table",
+   "soft_delete"
+  ],
+  "difficulty": "hard",
+  "expect": null,
+  "answered": true,
+  "gold": {
+   "columns": [
+    "avg_lines"
+   ],
+   "rows": [
+    [
+     5.437
+    ]
+   ],
+   "total": 1
+  },
+  "gold_sql": "SELECT ROUND(CAST(COUNT(*) AS REAL) / COUNT(DISTINCT InvoiceId), 3) AS avg_lines\nFROM InvoiceLine",
+  "correct": true,
+  "reason": "",
+  "status": "ok",
+  "tokens": 5838,
+  "confidence": null,
+  "logical_sql": "SELECT AVG(line_cnt) AS avg_line_items_per_invoice\nFROM (\n    SELECT COUNT(*) AS line_cnt\n    FROM SO_LN\n    GROUP BY STORE_CD, ORD_NO\n)",
+  "physical_sql": "SELECT AVG(line_cnt) AS avg_line_items_per_invoice\nFROM (\n    SELECT COUNT(*) AS line_cnt\n    FROM SO_LN\n    GROUP BY STORE_CD, ORD_NO\n)",
+  "message": "",
+  "assumptions": [],
+  "ours": {
+   "columns": [
+    "avg_line_items_per_invoice"
+   ],
+   "rows": [
+    [
+     5.436893203883495
+    ]
+   ],
+   "total": 1
+  }
+ },
+ {
+  "id": "c-029",
+  "question": "How many customers have a company recorded?",
+  "tags": [
+   "string_quality",
+   "soft_delete"
+  ],
+  "difficulty": "medium",
+  "expect": null,
+  "answered": true,
+  "gold": {
+   "columns": [
+    "n"
+   ],
+   "rows": [
+    [
+     10
+    ]
+   ],
+   "total": 1
+  },
+  "gold_sql": "SELECT COUNT(*) AS n FROM Customer\nWHERE Company IS NOT NULL AND TRIM(Company) <> ''",
+  "correct": false,
+  "reason": "no system column matches a gold column (0/1 matched)",
+  "status": "ok",
+  "tokens": 5775,
+  "confidence": null,
+  "logical_sql": "SELECT COUNT(*) \nFROM CUST_MSTR \nWHERE CO_NM IS NOT NULL \n  AND TRIM(CO_NM) <> ''",
+  "physical_sql": "SELECT COUNT(*) \nFROM CUST_MSTR \nWHERE CO_NM IS NOT NULL \n  AND TRIM(CO_NM) <> ''",
+  "message": "",
+  "assumptions": [],
+  "ours": {
+   "columns": [
+    "COUNT(*)"
+   ],
+   "rows": [
+    [
+     42
+    ]
+   ],
+   "total": 1
+  }
+ },
+ {
+  "id": "c-030",
+  "question": "How many tracks are there of each media type?",
+  "tags": [
+   "missing_fk",
+   "embedded_format",
+   "soft_delete"
+  ],
+  "difficulty": "medium",
+  "expect": null,
+  "answered": true,
+  "gold": {
+   "columns": [
+    "Name",
+    "n"
+   ],
+   "rows": [
+    [
+     "AAC audio file",
+     11
+    ],
+    [
+     "MPEG audio file",
+     3034
+    ],
+    [
+     "Protected AAC audio file",
+     237
+    ],
+    [
+     "Protected MPEG-4 video file",
+     214
+    ],
+    [
+     "Purchased AAC audio file",
+     7
+    ]
+   ],
+   "total": 5
+  },
+  "gold_sql": "SELECT m.Name, COUNT(*) AS n FROM Track t\nJOIN MediaType m ON m.MediaTypeId = t.MediaTypeId\nGROUP BY m.MediaTypeId, m.Name ORDER BY m.Name",
+  "correct": false,
+  "reason": "no system column matches a gold column (1/2 matched)",
+  "status": "ok",
+  "tokens": 5908,
+  "confidence": null,
+  "logical_sql": "SELECT mt.MTYP_NM,\n       COUNT(*) AS track_count\nFROM PLST_TRK pt\nJOIN tblPrd p      ON pt.PRD_ID = p.PRD_ID\nJOIN MEDIA_TYP mt ON p.MTYP_ID = mt.MTYP_ID\nGROUP BY mt.MTYP_NM",
+  "physical_sql": "SELECT mt.MTYP_NM,\n       COUNT(*) AS track_count\nFROM PLST_TRK pt\nJOIN tblPrd p      ON pt.PRD_ID = p.PRD_ID\nJOIN MEDIA_TYP mt ON p.MTYP_ID = mt.MTYP_ID\nGROUP BY mt.MTYP_NM",
+  "message": "",
+  "assumptions": [],
+  "ours": {
+   "columns": [
+    "MTYP_NM",
+    "track_count"
+   ],
+   "rows": [
+    [
+     "AAC audio file",
+     25
+    ],
+    [
+     "MPEG audio file",
+     7521
+    ],
+    [
+     "Protected AAC audio file",
+     713
+    ],
+    [
+     "Protected MPEG-4 video file",
+     429
+    ],
+    [
+     "Purchased AAC audio file",
+     27
+    ]
+   ],
+   "total": 5
+  }
+ },
+ {
+  "id": "c-031",
+  "question": "What is the total revenue from Rock tracks?",
+  "tags": [
+   "missing_fk",
+   "composite_key",
+   "embedded_format",
+   "soft_delete"
+  ],
+  "difficulty": "hard",
+  "expect": null,
+  "answered": true,
+  "gold": {
+   "columns": [
+    "revenue"
+   ],
+   "rows": [
+    [
+     826.65
+    ]
+   ],
+   "total": 1
+  },
+  "gold_sql": "SELECT ROUND(SUM(il.UnitPrice * il.Quantity), 2) AS revenue\nFROM InvoiceLine il\nJOIN Track t ON t.TrackId = il.TrackId\nJOIN Genre g ON g.GenreId = t.GenreId\nWHERE g.Name = 'Rock'",
+  "correct": true,
+  "reason": "",
+  "status": "ok",
+  "tokens": 5897,
+  "confidence": null,
+  "logical_sql": "SELECT SUM(SO_LN.UNT_PRC * SO_LN.QTY) AS total_revenue\nFROM SO_LN\nJOIN tblPrd ON SO_LN.PRD_ID = tblPrd.PRD_ID\nJOIN GNR ON tblPrd.GNR_ID = GNR.GNR_ID\nWHERE GNR.GNR_NM = 'Rock'",
+  "physical_sql": "SELECT SUM(SO_LN.UNT_PRC * SO_LN.QTY) AS total_revenue\nFROM SO_LN\nJOIN tblPrd ON SO_LN.PRD_ID = tblPrd.PRD_ID\nJOIN GNR ON tblPrd.GNR_ID = GNR.GNR_ID\nWHERE GNR.GNR_NM = 'Rock'",
+  "message": "",
+  "assumptions": [],
+  "ours": {
+   "columns": [
+    "total_revenue"
+   ],
+   "rows": [
+    [
+     826.65
+    ]
+   ],
+   "total": 1
+  }
+ },
+ {
+  "id": "c-032",
+  "question": "On what date was the earliest invoice issued?",
+  "tags": [
+   "god_table",
+   "inconsistent_types",
+   "soft_delete"
+  ],
+  "difficulty": "medium",
+  "expect": null,
+  "answered": true,
+  "gold": {
+   "columns": [
+    "first_date"
+   ],
+   "rows": [
+    [
+     "2021-01-01"
+    ]
+   ],
+   "total": 1
+  },
+  "gold_sql": "SELECT DATE(MIN(InvoiceDate)) AS first_date FROM Invoice",
+  "correct": false,
+  "reason": "no system column matches a gold column (0/1 matched)",
+  "status": "ok",
+  "tokens": 5790,
+  "confidence": null,
+  "logical_sql": "SELECT MIN(ORD_DT_TXT) AS earliest_invoice_date\nFROM TRANS_MSTR",
+  "physical_sql": "SELECT MIN(ORD_DT_TXT) AS earliest_invoice_date\nFROM TRANS_MSTR",
+  "message": "",
+  "assumptions": [],
+  "ours": {
+   "columns": [
+    "earliest_invoice_date"
+   ],
+   "rows": [
+    [
+     "20210101"
+    ]
+   ],
+   "total": 1
+  }
+ },
+ {
+  "id": "c-033",
+  "question": "Show monthly revenue for 2022.",
+  "tags": [
+   "god_table",
+   "drift",
+   "inconsistent_types"
+  ],
+  "difficulty": "hard",
+  "expect": null,
+  "answered": true,
+  "gold": {
+   "columns": [
+    "ym",
+    "revenue"
+   ],
+   "rows": [
+    [
+     "2022-01",
+     52.62
+    ],
+    [
+     "2022-02",
+     46.62
+    ],
+    [
+     "2022-03",
+     44.62
+    ],
+    [
+     "2022-04",
+     37.62
+    ],
+    [
+     "2022-05",
+     37.62
+    ],
+    [
+     "2022-06",
+     37.62
+    ],
+    [
+     "2022-07",
+     37.62
+    ],
+    [
+     "2022-08",
+     37.62
+    ],
+    [
+     "2022-09",
+     36.63
+    ],
+    [
+     "2022-10",
+     37.62
+    ],
+    [
+     "2022-11",
+     37.62
+    ],
+    [
+     "2022-12",
+     37.62
+    ]
+   ],
+   "total": 12
+  },
+  "gold_sql": "SELECT STRFTIME('%Y-%m', InvoiceDate) AS ym, ROUND(SUM(Total), 2) AS revenue\nFROM Invoice WHERE STRFTIME('%Y', InvoiceDate) = '2022'\nGROUP BY ym ORDER BY ym",
+  "correct": false,
+  "reason": "row count differs: gold 12 vs system 33",
+  "status": "ok",
+  "tokens": 5836,
+  "confidence": null,
+  "logical_sql": "SELECT \n    substr(ORD_DT_TXT, 1, 7) AS month,\n    SUM(TOT_AMT) AS revenue\nFROM SO_HDR_2022\nGROUP BY month\nORDER BY month",
+  "physical_sql": "SELECT \n    substr(ORD_DT_TXT, 1, 7) AS month,\n    SUM(TOT_AMT) AS revenue\nFROM SO_HDR_2022\nGROUP BY month\nORDER BY month",
+  "message": "",
+  "assumptions": [],
+  "ours": {
+   "columns": [
+    "month",
+    "revenue"
+   ],
+   "rows": [
+    [
+     "2022010",
+     7.92
+    ],
+    [
+     "2022011",
+     43.71
+    ],
+    [
+     "2022012",
+     0.99
+    ],
+    [
+     "2022020",
+     7.92
+    ],
+    [
+     "2022021",
+     36.71
+    ],
+    [
+     "2022022",
+     1.99
+    ],
+    [
+     "2022031",
+     27.77
+    ],
+    [
+     "2022032",
+     16.849999999999998
+    ],
+    [
+     "2022041",
+     22.77
+    ],
+    [
+     "2022042",
+     14.85
+    ],
+    [
+     "2022051",
+     22.77
+    ],
+    [
+     "2022052",
+     13.86
+    ]
+   ],
+   "total": 33
+  }
+ },
+ {
+  "id": "c-034",
+  "question": "How many employees are based in Calgary?",
+  "tags": [
+   "string_quality",
+   "soft_delete",
+   "cryptic_names"
+  ],
+  "difficulty": "medium",
+  "expect": null,
+  "answered": true,
+  "gold": {
+   "columns": [
+    "n"
+   ],
+   "rows": [
+    [
+     5
+    ]
+   ],
+   "total": 1
+  },
+  "gold_sql": "SELECT COUNT(*) AS n FROM Employee WHERE UPPER(City) = 'CALGARY'",
+  "correct": false,
+  "reason": "no system column matches a gold column (0/1 matched)",
+  "status": "ok",
+  "tokens": 5745,
+  "confidence": null,
+  "logical_sql": "SELECT COUNT(*) AS employee_count\nFROM EMP_MSTR\nWHERE CTY = 'Calgary'",
+  "physical_sql": "SELECT COUNT(*) AS employee_count\nFROM EMP_MSTR\nWHERE CTY = 'Calgary'",
+  "message": "",
+  "assumptions": [],
+  "ours": {
+   "columns": [
+    "employee_count"
+   ],
+   "rows": [
+    [
+     4
+    ]
+   ],
+   "total": 1
+  }
+ },
+ {
+  "id": "c-035",
+  "question": "Which album has the longest total running time?",
+  "tags": [
+   "missing_fk",
+   "cryptic_names",
+   "soft_delete"
+  ],
+  "difficulty": "hard",
+  "expect": null,
+  "answered": true,
+  "gold": {
+   "columns": [
+    "Title",
+    "ms"
+   ],
+   "rows": [
+    [
+     "Lost, Season 3",
+     70665582
+    ]
+   ],
+   "total": 1
+  },
+  "gold_sql": "SELECT al.Title, SUM(t.Milliseconds) AS ms FROM Track t\nJOIN Album al ON al.AlbumId = t.AlbumId\nGROUP BY al.AlbumId, al.Title ORDER BY ms DESC, al.Title ASC LIMIT 1",
+  "correct": false,
+  "reason": "no system column matches a gold column (1/2 matched)",
+  "status": "ok",
+  "tokens": 5829,
+  "confidence": null,
+  "logical_sql": "SELECT a.ALBM_TTL\nFROM ALBM a\nJOIN tblPrd p ON p.ALBM_ID = a.ALBM_ID\nGROUP BY a.ALBM_ID, a.ALBM_TTL\nORDER BY SUM(p.intMs) DESC\nLIMIT 1",
+  "physical_sql": "SELECT a.ALBM_TTL\nFROM ALBM a\nJOIN tblPrd p ON p.ALBM_ID = a.ALBM_ID\nGROUP BY a.ALBM_ID, a.ALBM_TTL\nORDER BY SUM(p.intMs) DESC\nLIMIT 1",
+  "message": "",
+  "assumptions": [],
+  "ours": {
+   "columns": [
+    "ALBM_TTL"
+   ],
+   "rows": [
+    [
+     "Lost, Season 3"
+    ]
+   ],
+   "total": 1
+  }
+ },
+ {
+  "id": "c-036",
+  "question": "How many invoices were issued per billing country?",
+  "tags": [
+   "god_table",
+   "string_quality",
+   "soft_delete"
+  ],
+  "difficulty": "medium",
+  "expect": null,
+  "answered": true,
+  "gold": {
+   "columns": [
+    "BillingCountry",
+    "n"
+   ],
+   "rows": [
+    [
+     "Argentina",
+     7
+    ],
+    [
+     "Australia",
+     7
+    ],
+    [
+     "Austria",
+     7
+    ],
+    [
+     "Belgium",
+     7
+    ],
+    [
+     "Brazil",
+     35
+    ],
+    [
+     "Canada",
+     56
+    ],
+    [
+     "Chile",
+     7
+    ],
+    [
+     "Czech Republic",
+     14
+    ],
+    [
+     "Denmark",
+     7
+    ],
+    [
+     "Finland",
+     7
+    ],
+    [
+     "France",
+     35
+    ],
+    [
+     "Germany",
+     28
+    ]
+   ],
+   "total": 24
+  },
+  "gold_sql": "SELECT BillingCountry, COUNT(*) AS n FROM Invoice\nGROUP BY BillingCountry ORDER BY BillingCountry",
+  "correct": false,
+  "reason": "row count differs: gold 24 vs system 43",
+  "status": "ok",
+  "tokens": 5762,
+  "confidence": null,
+  "logical_sql": "SELECT BILL_CTRY, COUNT(*) AS invoice_count\nFROM TRANS_MSTR\nGROUP BY BILL_CTRY",
+  "physical_sql": "SELECT BILL_CTRY, COUNT(*) AS invoice_count\nFROM TRANS_MSTR\nGROUP BY BILL_CTRY",
+  "message": "",
+  "assumptions": [],
+  "ours": {
+   "columns": [
+    "BILL_CTRY",
+    "invoice_count"
+   ],
+   "rows": [
+    [
+     null,
+     409
+    ],
+    [
+     "Argentina",
+     7
+    ],
+    [
+     "Australia",
+     7
+    ],
+    [
+     "Austria",
+     7
+    ],
+    [
+     "BR",
+     12
+    ],
+    [
+     "BRA",
+     10
+    ],
+    [
+     "Belgium",
+     7
+    ],
+    [
+     "Brazil",
+     6
+    ],
+    [
+     "CA",
+     12
+    ],
+    [
+     "CAN",
+     13
+    ],
+    [
+     "Canada",
+     14
+    ],
+    [
+     "Chile",
+     7
+    ]
+   ],
+   "total": 43
+  }
+ },
+ {
+  "id": "c-037",
+  "question": "What is the average total spend per customer?",
+  "tags": [
+   "god_table",
+   "drift",
+   "missing_fk",
+   "inconsistent_types"
+  ],
+  "difficulty": "hard",
+  "expect": null,
+  "answered": true,
+  "gold": {
+   "columns": [
+    "avg_spend"
+   ],
+   "rows": [
+    [
+     39.47
+    ]
+   ],
+   "total": 1
+  },
+  "gold_sql": "SELECT ROUND(AVG(spend), 2) AS avg_spend FROM (\n  SELECT CustomerId, SUM(Total) AS spend FROM Invoice GROUP BY CustomerId\n)",
+  "correct": false,
+  "reason": "no system column matches a gold column (0/1 matched)",
+  "status": "ok",
+  "tokens": 5895,
+  "confidence": null,
+  "logical_sql": "SELECT AVG(customer_total) AS avg_total_spend_per_customer\nFROM (\n    SELECT CUST_NO, SUM(TOT_AMT) AS customer_total\n    FROM (\n        SELECT CUST_NO, TOT_AMT FROM SO_HDR_2021\n        UNION ALL\n        SELECT CUST_NO, TOT_AMT FROM SO_HDR_2022\n        UNION ALL\n        SELECT CUST_NO, TOT_AMT FROM SO_HDR_2023\n        UNION ALL\n        SELECT CUST_NO, TOT_AMT FROM SO_HDR_2024\n        UNION ALL\n        SELECT CUST_NO, TOT_AMT FROM SO_HDR_2025\n    )\n    GROUP BY CUST_NO\n) AS per_customer",
+  "physical_sql": "SELECT AVG(customer_total) AS avg_total_spend_per_customer\nFROM (\n    SELECT CUST_NO, SUM(TOT_AMT) AS customer_total\n    FROM (\n        SELECT CUST_NO, TOT_AMT FROM SO_HDR_2021\n        UNION ALL\n        SELECT CUST_NO, TOT_AMT FROM SO_HDR_2022\n        UNION ALL\n        SELECT CUST_NO, TOT_AMT FROM SO_HDR_2023\n        UNION ALL\n        SELECT CUST_NO, TOT_AMT FROM SO_HDR_2024\n        UNION ALL\n        SELECT CUST_NO, TOT_AMT FROM SO_HDR_2025\n    )\n    GROUP BY CUST_NO\n) AS per_customer",
+  "message": "",
+  "assumptions": [],
+  "ours": {
+   "columns": [
+    "avg_total_spend_per_customer"
+   ],
+   "rows": [
+    [
+     15.77813559322034
+    ]
+   ],
+   "total": 1
+  }
+ },
+ {
+  "id": "c-038",
+  "question": "How many tracks cost more than 99 cents?",
+  "tags": [
+   "cryptic_names",
+   "soft_delete"
+  ],
+  "difficulty": "easy",
+  "expect": null,
+  "answered": true,
+  "gold": {
+   "columns": [
+    "n"
+   ],
+   "rows": [
+    [
+     213
+    ]
+   ],
+   "total": 1
+  },
+  "gold_sql": "SELECT COUNT(*) AS n FROM Track WHERE UnitPrice > 0.99",
+  "correct": true,
+  "reason": "",
+  "status": "ok",
+  "tokens": 5807,
+  "confidence": null,
+  "logical_sql": "SELECT COUNT(DISTINCT PRD_ID) AS track_count\nFROM tblPrd\nWHERE fltPrc > 0.99",
+  "physical_sql": "SELECT COUNT(DISTINCT PRD_ID) AS track_count\nFROM tblPrd\nWHERE fltPrc > 0.99",
+  "message": "",
+  "assumptions": [],
+  "ours": {
+   "columns": [
+    "track_count"
+   ],
+   "rows": [
+    [
+     213
+    ]
+   ],
+   "total": 1
+  }
+ },
+ {
+  "id": "c-039",
+  "question": "List each employee with the name of their manager.",
+  "tags": [
+   "missing_fk",
+   "cryptic_names",
+   "soft_delete"
+  ],
+  "difficulty": "medium",
+  "expect": null,
+  "answered": true,
+  "gold": {
+   "columns": [
+    "employee",
+    "manager"
+   ],
+   "rows": [
+    [
+     "Adams",
+     null
+    ],
+    [
+     "Callahan",
+     "Mitchell"
+    ],
+    [
+     "Edwards",
+     "Adams"
+    ],
+    [
+     "Johnson",
+     "Edwards"
+    ],
+    [
+     "King",
+     "Mitchell"
+    ],
+    [
+     "Mitchell",
+     "Adams"
+    ],
+    [
+     "Park",
+     "Edwards"
+    ],
+    [
+     "Peacock",
+     "Edwards"
+    ]
+   ],
+   "total": 8
+  },
+  "gold_sql": "SELECT e.LastName AS employee, m.LastName AS manager\nFROM Employee e LEFT JOIN Employee m ON m.EmployeeId = e.ReportsTo\nORDER BY e.LastName",
+  "correct": false,
+  "reason": "row count differs: gold 8 vs system 10",
+  "status": "ok",
+  "tokens": 5826,
+  "confidence": null,
+  "logical_sql": "SELECT \n    e.EMP_ID AS employee_id,\n    e.EFNM || ' ' || e.ELNM AS employee_name,\n    m.EFNM || ' ' || m.ELNM AS manager_name\nFROM EMP_MSTR e\nLEFT JOIN EMP_MSTR m ON e.MGR_ID = m.EMP_ID",
+  "physical_sql": "SELECT \n    e.EMP_ID AS employee_id,\n    e.EFNM || ' ' || e.ELNM AS employee_name,\n    m.EFNM || ' ' || m.ELNM AS manager_name\nFROM EMP_MSTR e\nLEFT JOIN EMP_MSTR m ON e.MGR_ID = m.EMP_ID",
+  "message": "",
+  "assumptions": [],
+  "ours": {
+   "columns": [
+    "employee_id",
+    "employee_name",
+    "manager_name"
+   ],
+   "rows": [
+    [
+     1,
+     "Andrew               Adams               ",
+     null
+    ],
+    [
+     2,
+     "Nancy                Edwards             ",
+     "Andrew               Adams               "
+    ],
+    [
+     3,
+     "Jane                 Peacock             ",
+     "Nancy                Edwards             "
+    ],
+    [
+     4,
+     "Margaret             Park                ",
+     "Nancy                Edwards             "
+    ],
+    [
+     5,
+     "Steve                Johnson             ",
+     "Nancy                Edwards             "
+    ],
+    [
+     6,
+     "Michael              Mitchell            ",
+     "Andrew               Adams               "
+    ],
+    [
+     7,
+     "Robert               King                ",
+     "Michael              Mitchell            "
+    ],
+    [
+     8,
+     "Laura                Callahan            ",
+     "Michael              Mitchell            "
+    ],
+    [
+     90,
+     "Staff                Former0             ",
+     "Michael              Mitchell            "
+    ],
+    [
+     91,
+     "Staff                Former1             ",
+     "Michael              Mitchell            "
+    ]
+   ],
+   "total": 10
+  }
+ },
+ {
+  "id": "c-040",
+  "question": "Which artist has the most tracks?",
+  "tags": [
+   "missing_fk",
+   "cryptic_names",
+   "soft_delete"
+  ],
+  "difficulty": "hard",
+  "expect": null,
+  "answered": true,
+  "gold": {
+   "columns": [
+    "Name",
+    "n"
+   ],
+   "rows": [
+    [
+     "Iron Maiden",
+     213
+    ]
+   ],
+   "total": 1
+  },
+  "gold_sql": "SELECT ar.Name, COUNT(*) AS n\nFROM Track t JOIN Album al ON al.AlbumId = t.AlbumId\nJOIN Artist ar ON ar.ArtistId = al.ArtistId\nGROUP BY ar.ArtistId, ar.Name ORDER BY n DESC, ar.Name ASC LIMIT 1",
+  "correct": false,
+  "reason": "no system column matches a gold column (1/2 matched)",
+  "status": "ok",
+  "tokens": 5805,
+  "confidence": null,
+  "logical_sql": "SELECT a.ARTST_NM\nFROM ARTST a\nJOIN (\n    SELECT ARTST_ID, COUNT(*) AS cnt\n    FROM ALBM\n    GROUP BY ARTST_ID\n) t ON a.ARTST_ID = t.ARTST_ID\nORDER BY t.cnt DESC\nLIMIT 1",
+  "physical_sql": "SELECT a.ARTST_NM\nFROM ARTST a\nJOIN (\n    SELECT ARTST_ID, COUNT(*) AS cnt\n    FROM ALBM\n    GROUP BY ARTST_ID\n) t ON a.ARTST_ID = t.ARTST_ID\nORDER BY t.cnt DESC\nLIMIT 1",
+  "message": "",
+  "assumptions": [],
+  "ours": {
+   "columns": [
+    "ARTST_NM"
+   ],
+   "rows": [
+    [
+     "Iron Maiden"
+    ]
+   ],
+   "total": 1
+  }
+ },
+ {
+  "id": "c-041",
+  "question": "How many customers were served by employees hired before 2003?",
+  "tags": [
+   "inconsistent_types",
+   "missing_fk",
+   "soft_delete"
+  ],
+  "difficulty": "hard",
+  "expect": null,
+  "answered": true,
+  "gold": {
+   "columns": [
+    "n"
+   ],
+   "rows": [
+    [
+     21
+    ]
+   ],
+   "total": 1
+  },
+  "gold_sql": "SELECT COUNT(*) AS n FROM Customer c\nJOIN Employee e ON e.EmployeeId = c.SupportRepId\nWHERE DATE(e.HireDate) < '2003-01-01'",
+  "correct": false,
+  "reason": "no system column matches a gold column (0/1 matched)",
+  "status": "ok",
+  "tokens": 5973,
+  "confidence": null,
+  "logical_sql": "SELECT COUNT(DISTINCT cm.CUST_ID)\nFROM CUST_MSTR cm\nJOIN EMP_MSTR e ON cm.REP_NO = e.EMP_ID\nWHERE e.HIRE_DT < '2003-01-01'",
+  "physical_sql": "SELECT COUNT(DISTINCT cm.CUST_ID)\nFROM CUST_MSTR cm\nJOIN EMP_MSTR e ON cm.REP_NO = e.EMP_ID\nWHERE e.HIRE_DT < '2003-01-01'",
+  "message": "",
+  "assumptions": [],
+  "ours": {
+   "columns": [
+    "COUNT(DISTINCT cm.CUST_ID)"
+   ],
+   "rows": [
+    [
+     66
+    ]
+   ],
+   "total": 1
+  }
+ },
+ {
+  "id": "c-042",
+  "question": "Who are our top customers?",
+  "tags": [
+   "ambiguous",
+   "god_table",
+   "drift",
+   "missing_fk"
+  ],
+  "difficulty": "medium",
+  "expect": null,
+  "answered": true,
+  "gold": {
+   "columns": [
+    "FirstName",
+    "LastName",
+    "spend"
+   ],
+   "rows": [
+    [
+     "Helena",
+     "Hol\u00fd",
+     49.62
+    ],
+    [
+     "Richard",
+     "Cunningham",
+     47.62
+    ],
+    [
+     "Luis",
+     "Rojas",
+     46.62
+    ],
+    [
+     "Ladislav",
+     "Kov\u00e1cs",
+     45.62
+    ],
+    [
+     "Hugh",
+     "O'Reilly",
+     45.62
+    ],
+    [
+     "Julia",
+     "Barnett",
+     43.62
+    ],
+    [
+     "Frank",
+     "Ralston",
+     43.62
+    ],
+    [
+     "Fynn",
+     "Zimmermann",
+     43.62
+    ],
+    [
+     "Astrid",
+     "Gruber",
+     42.62
+    ],
+    [
+     "Victor",
+     "Stevens",
+     42.62
+    ]
+   ],
+   "total": 10
+  },
+  "gold_sql": "SELECT c.FirstName, c.LastName, ROUND(SUM(i.Total), 2) AS spend\nFROM Customer c JOIN Invoice i ON i.CustomerId = c.CustomerId\nGROUP BY c.CustomerId, c.FirstName, c.LastName\nORDER BY spend DESC, c.LastName ASC LIMIT 10",
+  "correct": false,
+  "reason": "no system column matches a gold column (0/3 matched)",
+  "status": "ok",
+  "tokens": 5784,
+  "confidence": null,
+  "logical_sql": "SELECT\n    CUST_NO AS customer_id,\n    SUM(TOT_AMT) AS total_spent\nFROM\n    SO_HDR_2024\nGROUP BY\n    CUST_NO\nORDER BY\n    total_spent DESC\nLIMIT 10",
+  "physical_sql": "SELECT\n    CUST_NO AS customer_id,\n    SUM(TOT_AMT) AS total_spent\nFROM\n    SO_HDR_2024\nGROUP BY\n    CUST_NO\nORDER BY\n    total_spent DESC\nLIMIT 10",
+  "message": "",
+  "assumptions": [],
+  "ours": {
+   "columns": [
+    "customer_id",
+    "total_spent"
+   ],
+   "rows": [
+    [
+     "0000000059",
+     null
+    ],
+    [
+     "0000000058",
+     null
+    ],
+    [
+     "0000000057",
+     null
+    ],
+    [
+     "0000000055",
+     null
+    ],
+    [
+     "0000000053",
+     null
+    ],
+    [
+     "0000000051",
+     null
+    ],
+    [
+     "0000000049",
+     null
+    ],
+    [
+     "0000000048",
+     null
+    ],
+    [
+     "0000000047",
+     null
+    ],
+    [
+     "0000000045",
+     null
+    ]
+   ],
+   "total": 10
+  }
+ },
+ {
+  "id": "c-043",
+  "question": "How many active customers do we have?",
+  "tags": [
+   "ambiguous",
+   "soft_delete",
+   "god_table"
+  ],
+  "difficulty": "medium",
+  "expect": null,
+  "answered": true,
+  "gold": {
+   "columns": [
+    "n"
+   ],
+   "rows": [
+    [
+     59
+    ]
+   ],
+   "total": 1
+  },
+  "gold_sql": "SELECT COUNT(DISTINCT CustomerId) AS n FROM Invoice",
+  "correct": true,
+  "reason": "",
+  "status": "ok",
+  "tokens": 5751,
+  "confidence": null,
+  "logical_sql": "SELECT COUNT(*) AS active_customer_count\nFROM CUST_MSTR\nWHERE COALESCE(DEL_FLG, 'N') <> 'Y'",
+  "physical_sql": "SELECT COUNT(*) AS active_customer_count\nFROM CUST_MSTR\nWHERE COALESCE(DEL_FLG, 'N') <> 'Y'",
+  "message": "",
+  "assumptions": [],
+  "ours": {
+   "columns": [
+    "active_customer_count"
+   ],
+   "rows": [
+    [
+     59
+    ]
+   ],
+   "total": 1
+  }
+ },
+ {
+  "id": "c-044",
+  "question": "What is our best selling genre?",
+  "tags": [
+   "ambiguous",
+   "missing_fk",
+   "composite_key"
+  ],
+  "difficulty": "hard",
+  "expect": null,
+  "answered": true,
+  "gold": {
+   "columns": [
+    "Name",
+    "revenue"
+   ],
+   "rows": [
+    [
+     "Rock",
+     826.65
+    ]
+   ],
+   "total": 1
+  },
+  "gold_sql": "SELECT g.Name, ROUND(SUM(il.UnitPrice * il.Quantity), 2) AS revenue\nFROM InvoiceLine il JOIN Track t ON t.TrackId = il.TrackId\nJOIN Genre g ON g.GenreId = t.GenreId\nGROUP BY g.GenreId, g.Name ORDER BY revenue DESC, g.Name ASC LIMIT 1",
+  "correct": false,
+  "reason": "error: no such column: sl.PR",
+  "status": "error",
+  "tokens": 5965,
+  "confidence": null,
+  "logical_sql": "WITH sales AS (\n    SELECT\n        sl.PR D_ID,\n        p.GNR_ID,\n        sl.QTY * p.fltPrc AS line_amt\n    FROM (\n        SELECT STORE_CD, ORD_NO, PRD_ID, QTY FROM SO_LN\n        UNION ALL\n        SELECT STORE_CD, ORD_NO, PRD_ID, QTY FROM SO_LN\n    ) AS sl\n    JOIN tblPrd p ON p.PRD_ID = sl.PRD_ID\n)\nSELECT g.GNR_NM AS best_selling_genre,\n       SUM(s.line_amt) AS total_sales\nFROM sales s\nJOIN GNR g ON g.GNR_ID = s.GNR_ID\nGROUP BY g.GNR_NM\nORDER BY total_sales DESC\nLIMIT 1",
+  "physical_sql": "WITH sales AS (\n    SELECT\n        sl.PR D_ID,\n        p.GNR_ID,\n        sl.QTY * p.fltPrc AS line_amt\n    FROM (\n        SELECT STORE_CD, ORD_NO, PRD_ID, QTY FROM SO_LN\n        UNION ALL\n        SELECT STORE_CD, ORD_NO, PRD_ID, QTY FROM SO_LN\n    ) AS sl\n    JOIN tblPrd p ON p.PRD_ID = sl.PRD_ID\n)\nSELECT g.GNR_NM AS best_selling_genre,\n       SUM(s.line_amt) AS total_sales\nFROM sales s\nJOIN GNR g ON g.GNR_ID = s.GNR_ID\nGROUP BY g.GNR_NM\nORDER BY total_sales DESC\nLIMIT 1",
+  "message": "no such column: sl.PR",
+  "assumptions": [],
+  "ours": {
+   "columns": [],
+   "rows": [],
+   "total": 0
+  }
+ },
+ {
+  "id": "c-045",
+  "question": "Show me recent sales.",
+  "tags": [
+   "ambiguous",
+   "god_table",
+   "drift",
+   "inconsistent_types"
+  ],
+  "difficulty": "medium",
+  "expect": null,
+  "answered": true,
+  "gold": {
+   "columns": [
+    "invoice_date",
+    "total"
+   ],
+   "rows": [
+    [
+     "2025-01-02",
+     8.91
+    ],
+    [
+     "2025-01-07",
+     13.86
+    ],
+    [
+     "2025-01-15",
+     0.99
+    ],
+    [
+     "2025-01-28",
+     1.98
+    ],
+    [
+     "2025-01-28",
+     1.98
+    ],
+    [
+     "2025-01-29",
+     3.96
+    ],
+    [
+     "2025-01-30",
+     5.94
+    ],
+    [
+     "2025-02-02",
+     8.91
+    ],
+    [
+     "2025-02-07",
+     13.86
+    ],
+    [
+     "2025-02-15",
+     0.99
+    ],
+    [
+     "2025-02-28",
+     1.98
+    ],
+    [
+     "2025-02-28",
+     1.98
+    ]
+   ],
+   "total": 80
+  },
+  "gold_sql": "SELECT DATE(InvoiceDate) AS invoice_date, ROUND(Total, 2) AS total\nFROM Invoice WHERE STRFTIME('%Y', InvoiceDate) = '2025'\nORDER BY InvoiceDate, Total",
+  "correct": false,
+  "reason": "row count differs: gold 80 vs system 10",
+  "status": "ok",
+  "tokens": 5769,
+  "confidence": null,
+  "logical_sql": "SELECT STORE_CD, ORD_NO, CUST_NO, ORD_DT_TXT, TOT_AMT\nFROM SO_HDR_2025\nORDER BY ORD_DT_TXT DESC\nLIMIT 10",
+  "physical_sql": "SELECT STORE_CD, ORD_NO, CUST_NO, ORD_DT_TXT, TOT_AMT\nFROM SO_HDR_2025\nORDER BY ORD_DT_TXT DESC\nLIMIT 10",
+  "message": "",
+  "assumptions": [],
+  "ours": {
+   "columns": [
+    "STORE_CD",
+    "ORD_NO",
+    "CUST_NO",
+    "ORD_DT_TXT",
+    "TOT_AMT"
+   ],
+   "rows": [
+    [
+     "EU1",
+     230,
+     "0000000058",
+     "20251222",
+     null
+    ],
+    [
+     "EU1",
+     229,
+     "0000000044",
+     "20251214",
+     null
+    ],
+    [
+     "EU1",
+     228,
+     "0000000035",
+     "20251209",
+     null
+    ],
+    [
+     "CA1",
+     56,
+     "0000000029",
+     "20251206",
+     null
+    ],
+    [
+     "US1",
+     91,
+     "0000000025",
+     "20251205",
+     null
+    ],
+    [
+     "US1",
+     89,
+     "0000000021",
+     "20251204",
+     null
+    ],
+    [
+     "US1",
+     90,
+     "0000000023",
+     "20251204",
+     null
+    ],
+    [
+     "US1",
+     88,
+     "0000000020",
+     "20251121",
+     null
+    ],
+    [
+     "EU1",
+     227,
+     "0000000006",
+     "20251113",
+     null
+    ],
+    [
+     "EU1",
+     226,
+     "0000000056",
+     "20251108",
+     null
+    ]
+   ],
+   "total": 10
+  }
+ },
+ {
+  "id": "c-046",
+  "question": "How much did we make last year?",
+  "tags": [
+   "ambiguous",
+   "drift",
+   "god_table"
+  ],
+  "difficulty": "medium",
+  "expect": null,
+  "answered": true,
+  "gold": {
+   "columns": [
+    "revenue"
+   ],
+   "rows": [
+    [
+     450.58
+    ]
+   ],
+   "total": 1
+  },
+  "gold_sql": "SELECT ROUND(SUM(Total), 2) AS revenue FROM Invoice\nWHERE STRFTIME('%Y', InvoiceDate) = '2025'",
+  "correct": false,
+  "reason": "no system column matches a gold column (0/1 matched)",
+  "status": "ok",
+  "tokens": 5762,
+  "confidence": null,
+  "logical_sql": "SELECT SUM(TOT_AMT) AS total_sales_last_year\nFROM SO_HDR_2023",
+  "physical_sql": "SELECT SUM(TOT_AMT) AS total_sales_last_year\nFROM SO_HDR_2023",
+  "message": "",
+  "assumptions": [],
+  "ours": {
+   "columns": [
+    "total_sales_last_year"
+   ],
+   "rows": [
+    [
+     null
+    ]
+   ],
+   "total": 1
+  }
+ },
+ {
+  "id": "c-047",
+  "question": "Show me every audit log entry from 2022 with the old and new values.",
+  "tags": [
+   "perf_trap"
+  ],
+  "difficulty": "medium",
+  "expect": "cost_guard",
+  "answered": true,
+  "correct": false,
+  "reason": "expected the cost guard, got ok",
+  "status": "ok",
+  "tokens": 5793,
+  "confidence": null,
+  "logical_sql": "SELECT LOG_ID,\n       EVT_DT,\n       USR_CD,\n       TBL_NM,\n       ACTN_CD,\n       REC_ID,\n       OLD_VAL,\n       NEW_VAL\nFROM   AUDIT_LOG\nWHERE  EVT_DT LIKE '2022%'",
+  "physical_sql": "SELECT LOG_ID,\n       EVT_DT,\n       USR_CD,\n       TBL_NM,\n       ACTN_CD,\n       REC_ID,\n       OLD_VAL,\n       NEW_VAL\nFROM   AUDIT_LOG\nWHERE  EVT_DT LIKE '2022%'",
+  "message": "",
+  "assumptions": [],
+  "ours": {
+   "columns": [
+    "LOG_ID",
+    "EVT_DT",
+    "USR_CD",
+    "TBL_NM",
+    "ACTN_CD",
+    "REC_ID",
+    "OLD_VAL",
+    "NEW_VAL"
+   ],
+   "rows": [
+    [
+     364,
+     "2022-06-02 04:04:00",
+     "USR004",
+     "EMP_MSTR",
+     "U",
+     364,
+     "v364",
+     "v365"
+    ],
+    [
+     365,
+     "2022-07-03 05:05:00",
+     "USR005",
+     "CUST_MSTR",
+     "D",
+     365,
+     "v365",
+     "v366"
+    ],
+    [
+     366,
+     "2022-08-04 06:06:00",
+     "USR006",
+     "TRANS_MSTR",
+     "I",
+     366,
+     "v366",
+     "v367"
+    ],
+    [
+     367,
+     "2022-09-05 07:07:00",
+     "USR007",
+     "tblPrd",
+     "U",
+     367,
+     "v367",
+     "v368"
+    ],
+    [
+     368,
+     "2022-10-06 08:08:00",
+     "USR008",
+     "SO_LN",
+     "D",
+     368,
+     "v368",
+     "v369"
+    ],
+    [
+     369,
+     "2022-11-07 09:09:00",
+     "USR009",
+     "EMP_MSTR",
+     "I",
+     369,
+     "v369",
+     "v370"
+    ],
+    [
+     370,
+     "2022-12-08 10:10:00",
+     "USR010",
+     "CUST_MSTR",
+     "U",
+     370,
+     "v370",
+     "v371"
+    ],
+    [
+     371,
+     "2022-01-09 11:11:00",
+     "USR011",
+     "TRANS_MSTR",
+     "D",
+     371,
+     "v371",
+     "v372"
+    ],
+    [
+     372,
+     "2022-02-10 12:12:00",
+     "USR012",
+     "tblPrd",
+     "I",
+     372,
+     "v372",
+     "v373"
+    ],
+    [
+     373,
+     "2022-03-11 13:13:00",
+     "USR013",
+     "SO_LN",
+     "U",
+     373,
+     "v373",
+     "v374"
+    ],
+    [
+     374,
+     "2022-04-12 14:14:00",
+     "USR014",
+     "EMP_MSTR",
+     "D",
+     374,
+     "v374",
+     "v375"
+    ],
+    [
+     375,
+     "2022-05-13 15:15:00",
+     "USR015",
+     "CUST_MSTR",
+     "I",
+     375,
+     "v375",
+     "v376"
+    ]
+   ],
+   "total": 5000
+  }
+ },
+ {
+  "id": "c-048",
+  "question": "List every row in the audit log.",
+  "tags": [
+   "perf_trap"
+  ],
+  "difficulty": "easy",
+  "expect": "cost_guard",
+  "answered": true,
+  "correct": false,
+  "reason": "expected the cost guard, got ok",
+  "status": "ok",
+  "tokens": 5712,
+  "confidence": null,
+  "logical_sql": "SELECT * FROM AUDIT_LOG",
+  "physical_sql": "SELECT * FROM AUDIT_LOG",
+  "message": "",
+  "assumptions": [],
+  "ours": {
+   "columns": [
+    "LOG_ID",
+    "EVT_DT",
+    "USR_CD",
+    "TBL_NM",
+    "ACTN_CD",
+    "REC_ID",
+    "OLD_VAL",
+    "NEW_VAL"
+   ],
+   "rows": [
+    [
+     1,
+     "2021-03-03 01:01:00",
+     "USR001",
+     "TRANS_MSTR",
+     "U",
+     1,
+     "v1",
+     "v2"
+    ],
+    [
+     2,
+     "2021-04-04 02:02:00",
+     "USR002",
+     "tblPrd",
+     "D",
+     2,
+     "v2",
+     "v3"
+    ],
+    [
+     3,
+     "2021-05-05 03:03:00",
+     "USR003",
+     "SO_LN",
+     "I",
+     3,
+     "v3",
+     "v4"
+    ],
+    [
+     4,
+     "2021-06-06 04:04:00",
+     "USR004",
+     "EMP_MSTR",
+     "U",
+     4,
+     "v4",
+     "v5"
+    ],
+    [
+     5,
+     "2021-07-07 05:05:00",
+     "USR005",
+     "CUST_MSTR",
+     "D",
+     5,
+     "v5",
+     "v6"
+    ],
+    [
+     6,
+     "2021-08-08 06:06:00",
+     "USR006",
+     "TRANS_MSTR",
+     "I",
+     6,
+     "v6",
+     "v7"
+    ],
+    [
+     7,
+     "2021-09-09 07:07:00",
+     "USR007",
+     "tblPrd",
+     "U",
+     7,
+     "v7",
+     "v8"
+    ],
+    [
+     8,
+     "2021-10-10 08:08:00",
+     "USR008",
+     "SO_LN",
+     "D",
+     8,
+     "v8",
+     "v9"
+    ],
+    [
+     9,
+     "2021-11-11 09:09:00",
+     "USR009",
+     "EMP_MSTR",
+     "I",
+     9,
+     "v9",
+     "v10"
+    ],
+    [
+     10,
+     "2021-12-12 10:10:00",
+     "USR010",
+     "CUST_MSTR",
+     "U",
+     10,
+     "v10",
+     "v11"
+    ],
+    [
+     11,
+     "2021-01-13 11:11:00",
+     "USR011",
+     "TRANS_MSTR",
+     "D",
+     11,
+     "v11",
+     "v12"
+    ],
+    [
+     12,
+     "2021-02-14 12:12:00",
+     "USR012",
+     "tblPrd",
+     "I",
+     12,
+     "v12",
+     "v13"
+    ]
+   ],
+   "total": 5000
+  }
+ },
+ {
+  "id": "c-049",
+  "question": "What is each customer's credit score?",
+  "tags": [
+   "abstention"
+  ],
+  "difficulty": "easy",
+  "expect": "abstain",
+  "answered": true,
+  "correct": false,
+  "reason": "expected an abstention, got ok",
+  "status": "ok",
+  "tokens": 5790,
+  "confidence": null,
+  "logical_sql": "SELECT CUST_ID, NULL AS CREDIT_SCORE\nFROM CUST_MSTR",
+  "physical_sql": "SELECT CUST_ID, NULL AS CREDIT_SCORE\nFROM CUST_MSTR",
+  "message": "",
+  "assumptions": [],
+  "ours": {
+   "columns": [
+    "CUST_ID",
+    "CREDIT_SCORE"
+   ],
+   "rows": [
+    [
+     1,
+     null
+    ],
+    [
+     2,
+     null
+    ],
+    [
+     3,
+     null
+    ],
+    [
+     4,
+     null
+    ],
+    [
+     5,
+     null
+    ],
+    [
+     6,
+     null
+    ],
+    [
+     7,
+     null
+    ],
+    [
+     8,
+     null
+    ],
+    [
+     9,
+     null
+    ],
+    [
+     10,
+     null
+    ],
+    [
+     11,
+     null
+    ],
+    [
+     12,
+     null
+    ]
+   ],
+   "total": 66
+  }
+ },
+ {
+  "id": "c-050",
+  "question": "Which suppliers are we late paying?",
+  "tags": [
+   "abstention"
+  ],
+  "difficulty": "easy",
+  "expect": "abstain",
+  "answered": true,
+  "correct": false,
+  "reason": "expected an abstention, got ok",
+  "status": "ok",
+  "tokens": 5875,
+  "confidence": null,
+  "logical_sql": "SELECT DISTINCT t.CUST_NO AS supplier_id\nFROM TRANS_MSTR t\nWHERE t.DUE_DT_TXT < DATE('now')\n  AND (t.PMT_AMT IS NULL OR t.PMT_AMT = 0)",
+  "physical_sql": "SELECT DISTINCT t.CUST_NO AS supplier_id\nFROM TRANS_MSTR t\nWHERE t.DUE_DT_TXT < DATE('now')\n  AND (t.PMT_AMT IS NULL OR t.PMT_AMT = 0)",
+  "message": "",
+  "assumptions": [],
+  "ours": {
+   "columns": [
+    "supplier_id"
+   ],
+   "rows": [],
+   "total": 0
+  }
+ }
+]

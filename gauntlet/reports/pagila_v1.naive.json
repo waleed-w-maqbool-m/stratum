@@ -1,0 +1,268 @@
+{
+  "suite": "pagila_v1",
+  "database": "pagila_legacy",
+  "questions_scored": 26,
+  "execution_accuracy": 0.308,
+  "per_tag": {
+    "composite_key": {
+      "correct": 0,
+      "total": 2,
+      "ex": 0.0
+    },
+    "cryptic_names": {
+      "correct": 5,
+      "total": 7,
+      "ex": 0.714
+    },
+    "dialect_friction": {
+      "correct": 0,
+      "total": 2,
+      "ex": 0.0
+    },
+    "drift": {
+      "correct": 0,
+      "total": 13,
+      "ex": 0.0
+    },
+    "god_table": {
+      "correct": 1,
+      "total": 11,
+      "ex": 0.091
+    },
+    "inconsistent_types": {
+      "correct": 1,
+      "total": 9,
+      "ex": 0.111
+    },
+    "magic_numbers": {
+      "correct": 2,
+      "total": 2,
+      "ex": 1.0
+    },
+    "misleading_docs": {
+      "correct": 0,
+      "total": 2,
+      "ex": 0.0
+    },
+    "missing_fk": {
+      "correct": 2,
+      "total": 8,
+      "ex": 0.25
+    },
+    "soft_delete": {
+      "correct": 2,
+      "total": 5,
+      "ex": 0.4
+    },
+    "string_quality": {
+      "correct": 1,
+      "total": 3,
+      "ex": 0.333
+    }
+  },
+  "per_difficulty": {
+    "easy": {
+      "correct": 5,
+      "total": 7,
+      "ex": 0.714
+    },
+    "medium": {
+      "correct": 3,
+      "total": 16,
+      "ex": 0.188
+    },
+    "hard": {
+      "correct": 0,
+      "total": 3,
+      "ex": 0.0
+    }
+  },
+  "clarification": {
+    "precision": 0.0,
+    "recall": 0.0,
+    "f1": 0.0
+  },
+  "behaviour": {
+    "cost_guard": {
+      "triggered": 0,
+      "total": 2,
+      "rate": 0.0
+    },
+    "abstain": {
+      "triggered": 0,
+      "total": 2,
+      "rate": 0.0
+    },
+    "false_abstentions": {
+      "count": 0,
+      "of": 45
+    }
+  },
+  "verified_hit_rate": 0.0,
+  "mean_tokens": 3711,
+  "max_tokens": 4195,
+  "mean_latency_ms": 2149,
+  "failures": [
+    {
+      "id": "p-001",
+      "reason": "no system column matches a gold column (0/1 matched)",
+      "tags": [
+        "cryptic_names",
+        "soft_delete"
+      ]
+    },
+    {
+      "id": "p-002",
+      "reason": "error: relation \"tblfilm\" does not exist\nLINE 1: SELECT COUNT(*) FROM tblFilm LIMIT 5000\n                             ^",
+      "tags": [
+        "cryptic_names",
+        "soft_delete",
+        "dialect_friction"
+      ]
+    },
+    {
+      "id": "p-008",
+      "reason": "no system column matches a gold column (0/1 matched)",
+      "tags": [
+        "god_table",
+        "drift",
+        "misleading_docs",
+        "inconsistent_types"
+      ]
+    },
+    {
+      "id": "p-009",
+      "reason": "no system column matches a gold column (1/2 matched)",
+      "tags": [
+        "god_table",
+        "drift",
+        "inconsistent_types"
+      ]
+    },
+    {
+      "id": "p-010",
+      "reason": "no system column matches a gold column (0/1 matched)",
+      "tags": [
+        "god_table",
+        "drift",
+        "inconsistent_types"
+      ]
+    },
+    {
+      "id": "p-011",
+      "reason": "no system column matches a gold column (0/1 matched)",
+      "tags": [
+        "god_table",
+        "drift",
+        "misleading_docs"
+      ]
+    },
+    {
+      "id": "p-012",
+      "reason": "no system column matches a gold column (0/2 matched)",
+      "tags": [
+        "god_table",
+        "drift"
+      ]
+    },
+    {
+      "id": "p-013",
+      "reason": "no system column matches a gold column (0/2 matched)",
+      "tags": [
+        "god_table",
+        "drift",
+        "missing_fk"
+      ]
+    },
+    {
+      "id": "p-014",
+      "reason": "no system column matches a gold column (0/1 matched)",
+      "tags": [
+        "god_table",
+        "drift",
+        "missing_fk"
+      ]
+    },
+    {
+      "id": "p-015",
+      "reason": "no system column matches a gold column (0/1 matched)",
+      "tags": [
+        "god_table",
+        "drift",
+        "string_quality"
+      ]
+    },
+    {
+      "id": "p-016",
+      "reason": "no system column matches a gold column (0/3 matched)",
+      "tags": [
+        "god_table",
+        "drift",
+        "string_quality",
+        "missing_fk"
+      ]
+    },
+    {
+      "id": "p-017",
+      "reason": "error: operator does not exist: character varying = integer\nLINE 1: ...f_no = rh.rntl_id JOIN invtry AS inv ON rh.inv_no = inv.inv_...\n            ",
+      "tags": [
+        "god_table",
+        "drift",
+        "missing_fk",
+        "inconsistent_types",
+        "composite_key"
+      ]
+    },
+    {
+      "id": "p-020",
+      "reason": "no system column matches a gold column (0/1 matched)",
+      "tags": [
+        "inconsistent_types"
+      ]
+    },
+    {
+      "id": "p-021",
+      "reason": "no system column matches a gold column (0/1 matched)",
+      "tags": [
+        "drift"
+      ]
+    },
+    {
+      "id": "p-022",
+      "reason": "no system column matches a gold column (0/1 matched)",
+      "tags": [
+        "drift",
+        "inconsistent_types"
+      ]
+    },
+    {
+      "id": "p-023",
+      "reason": "error: date/time field value out of range: \"26/05/2022\"\nHINT:  Perhaps you need a different \"datestyle\" setting.",
+      "tags": [
+        "drift",
+        "inconsistent_types"
+      ]
+    },
+    {
+      "id": "p-024",
+      "reason": "error: could not parse SQL: Required keyword: 'expressions' missing for <class 'sqlglot.expressions.query.Order'>. Line 6, Col: 8.\n  invtry i ON r.",
+      "tags": [
+        "inconsistent_types",
+        "missing_fk",
+        "dialect_friction"
+      ]
+    },
+    {
+      "id": "p-027",
+      "reason": "no system column matches a gold column (1/2 matched)",
+      "tags": [
+        "composite_key",
+        "soft_delete",
+        "missing_fk"
+      ]
+    }
+  ],
+  "mode": "naive",
+  "partial": true,
+  "questions_answered": 26
+}

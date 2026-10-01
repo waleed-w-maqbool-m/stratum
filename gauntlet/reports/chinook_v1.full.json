@@ -1,0 +1,501 @@
+{
+  "suite": "chinook_v1",
+  "database": "chinook_legacy",
+  "questions_scored": 46,
+  "execution_accuracy": 0.609,
+  "per_tag": {
+    "ambiguous": {
+      "correct": 3,
+      "total": 5,
+      "ex": 0.6
+    },
+    "composite_key": {
+      "correct": 5,
+      "total": 7,
+      "ex": 0.714
+    },
+    "cryptic_names": {
+      "correct": 11,
+      "total": 21,
+      "ex": 0.524
+    },
+    "drift": {
+      "correct": 9,
+      "total": 14,
+      "ex": 0.643
+    },
+    "embedded_format": {
+      "correct": 1,
+      "total": 5,
+      "ex": 0.2
+    },
+    "god_table": {
+      "correct": 12,
+      "total": 19,
+      "ex": 0.632
+    },
+    "inconsistent_types": {
+      "correct": 8,
+      "total": 10,
+      "ex": 0.8
+    },
+    "missing_fk": {
+      "correct": 11,
+      "total": 19,
+      "ex": 0.579
+    },
+    "soft_delete": {
+      "correct": 19,
+      "total": 30,
+      "ex": 0.633
+    },
+    "sprawl": {
+      "correct": 0,
+      "total": 1,
+      "ex": 0.0
+    },
+    "string_quality": {
+      "correct": 3,
+      "total": 8,
+      "ex": 0.375
+    }
+  },
+  "per_difficulty": {
+    "easy": {
+      "correct": 5,
+      "total": 9,
+      "ex": 0.556
+    },
+    "medium": {
+      "correct": 15,
+      "total": 24,
+      "ex": 0.625
+    },
+    "hard": {
+      "correct": 8,
+      "total": 13,
+      "ex": 0.615
+    }
+  },
+  "clarification": {
+    "precision": 0.0,
+    "recall": 0.0,
+    "f1": 0.0
+  },
+  "behaviour": {
+    "cost_guard": {
+      "triggered": 2,
+      "total": 2,
+      "rate": 1.0
+    },
+    "abstain": {
+      "triggered": 0,
+      "total": 2,
+      "rate": 0.0
+    },
+    "false_abstentions": {
+      "count": 0,
+      "of": 46
+    }
+  },
+  "verified_hit_rate": 0.0,
+  "mean_tokens": 3095,
+  "max_tokens": 5482,
+  "mean_latency_ms": 8737,
+  "failures": [
+    {
+      "id": "c-005",
+      "reason": "no system column matches a gold column (0/2 matched)",
+      "tags": [
+        "god_table",
+        "drift",
+        "string_quality"
+      ]
+    },
+    {
+      "id": "c-006",
+      "reason": "no system column matches a gold column (0/3 matched)",
+      "tags": [
+        "god_table",
+        "drift",
+        "missing_fk",
+        "inconsistent_types",
+        "cryptic_names"
+      ]
+    },
+    {
+      "id": "c-010",
+      "reason": "no system column matches a gold column (0/1 matched)",
+      "tags": [
+        "cryptic_names",
+        "missing_fk"
+      ]
+    },
+    {
+      "id": "c-011",
+      "reason": "no system column matches a gold column (1/2 matched)",
+      "tags": [
+        "cryptic_names",
+        "missing_fk",
+        "embedded_format",
+        "soft_delete"
+      ]
+    },
+    {
+      "id": "c-012",
+      "reason": "no system column matches a gold column (0/1 matched)",
+      "tags": [
+        "string_quality",
+        "soft_delete",
+        "cryptic_names"
+      ]
+    },
+    {
+      "id": "c-013",
+      "reason": "no system column matches a gold column (0/1 matched)",
+      "tags": [
+        "string_quality",
+        "embedded_format",
+        "soft_delete"
+      ]
+    },
+    {
+      "id": "c-019",
+      "reason": "no system column matches a gold column (0/1 matched)",
+      "tags": [
+        "cryptic_names",
+        "soft_delete"
+      ]
+    },
+    {
+      "id": "c-021",
+      "reason": "row count differs: gold 71 vs system 200",
+      "tags": [
+        "missing_fk",
+        "cryptic_names",
+        "sprawl"
+      ]
+    },
+    {
+      "id": "c-023",
+      "reason": "no system column matches a gold column (0/1 matched)",
+      "tags": [
+        "cryptic_names",
+        "soft_delete"
+      ]
+    },
+    {
+      "id": "c-025",
+      "reason": "no system column matches a gold column (0/2 matched)",
+      "tags": [
+        "embedded_format",
+        "string_quality",
+        "soft_delete"
+      ]
+    },
+    {
+      "id": "c-026",
+      "reason": "no system column matches a gold column (0/2 matched)",
+      "tags": [
+        "missing_fk",
+        "composite_key",
+        "god_table",
+        "drift",
+        "cryptic_names"
+      ]
+    },
+    {
+      "id": "c-028",
+      "reason": "no system column matches a gold column (0/1 matched)",
+      "tags": [
+        "composite_key",
+        "god_table",
+        "soft_delete"
+      ]
+    },
+    {
+      "id": "c-030",
+      "reason": "no system column matches a gold column (1/2 matched)",
+      "tags": [
+        "missing_fk",
+        "embedded_format",
+        "soft_delete"
+      ]
+    },
+    {
+      "id": "c-036",
+      "reason": "row count differs: gold 24 vs system 33",
+      "tags": [
+        "god_table",
+        "string_quality",
+        "soft_delete"
+      ]
+    },
+    {
+      "id": "c-038",
+      "reason": "no system column matches a gold column (0/1 matched)",
+      "tags": [
+        "cryptic_names",
+        "soft_delete"
+      ]
+    },
+    {
+      "id": "c-040",
+      "reason": "no system column matches a gold column (1/2 matched)",
+      "tags": [
+        "missing_fk",
+        "cryptic_names",
+        "soft_delete"
+      ]
+    },
+    {
+      "id": "c-042",
+      "reason": "no system column matches a gold column (0/3 matched)",
+      "tags": [
+        "ambiguous",
+        "god_table",
+        "drift",
+        "missing_fk"
+      ]
+    },
+    {
+      "id": "c-045",
+      "reason": "row count differs: gold 80 vs system 200",
+      "tags": [
+        "ambiguous",
+        "god_table",
+        "drift",
+        "inconsistent_types"
+      ]
+    }
+  ],
+  "mode": "full",
+  "offline": false,
+  "models": {
+    "groq:openai/gpt-oss-120b": 106
+  },
+  "providers_pinned": [
+    "groq"
+  ],
+  "calibration": {
+    "weights": {
+      "mapping_confidence": -0.5995,
+      "join_confidence": 0.2535,
+      "candidate_agreement": 0.7123,
+      "validation": 0.5539,
+      "repairs": -0.0716,
+      "linking_margin": -0.3574
+    },
+    "intercept": -0.2413,
+    "observations": 48,
+    "ece_before": 0.2283,
+    "ece_after": 0.0808,
+    "monotonic": true,
+    "reliability_before": [
+      {
+        "range": [
+          0.0,
+          0.1
+        ],
+        "count": 0,
+        "predicted": 0.0,
+        "observed": 0.0,
+        "gap": 0.0
+      },
+      {
+        "range": [
+          0.1,
+          0.2
+        ],
+        "count": 0,
+        "predicted": 0.0,
+        "observed": 0.0,
+        "gap": 0.0
+      },
+      {
+        "range": [
+          0.2,
+          0.3
+        ],
+        "count": 0,
+        "predicted": 0.0,
+        "observed": 0.0,
+        "gap": 0.0
+      },
+      {
+        "range": [
+          0.3,
+          0.4
+        ],
+        "count": 0,
+        "predicted": 0.0,
+        "observed": 0.0,
+        "gap": 0.0
+      },
+      {
+        "range": [
+          0.4,
+          0.5
+        ],
+        "count": 0,
+        "predicted": 0.0,
+        "observed": 0.0,
+        "gap": 0.0
+      },
+      {
+        "range": [
+          0.5,
+          0.6
+        ],
+        "count": 0,
+        "predicted": 0.0,
+        "observed": 0.0,
+        "gap": 0.0
+      },
+      {
+        "range": [
+          0.6,
+          0.7
+        ],
+        "count": 5,
+        "predicted": 0.658,
+        "observed": 0.6,
+        "gap": -0.058
+      },
+      {
+        "range": [
+          0.7,
+          0.8
+        ],
+        "count": 20,
+        "predicted": 0.761,
+        "observed": 0.55,
+        "gap": -0.211
+      },
+      {
+        "range": [
+          0.8,
+          0.9
+        ],
+        "count": 15,
+        "predicted": 0.859,
+        "observed": 0.533,
+        "gap": -0.326
+      },
+      {
+        "range": [
+          0.9,
+          1.0
+        ],
+        "count": 8,
+        "predicted": 0.944,
+        "observed": 0.75,
+        "gap": -0.194
+      }
+    ],
+    "reliability_after": [
+      {
+        "range": [
+          0.0,
+          0.1
+        ],
+        "count": 0,
+        "predicted": 0.0,
+        "observed": 0.0,
+        "gap": 0.0
+      },
+      {
+        "range": [
+          0.1,
+          0.2
+        ],
+        "count": 0,
+        "predicted": 0.0,
+        "observed": 0.0,
+        "gap": 0.0
+      },
+      {
+        "range": [
+          0.2,
+          0.3
+        ],
+        "count": 0,
+        "predicted": 0.0,
+        "observed": 0.0,
+        "gap": 0.0
+      },
+      {
+        "range": [
+          0.3,
+          0.4
+        ],
+        "count": 0,
+        "predicted": 0.0,
+        "observed": 0.0,
+        "gap": 0.0
+      },
+      {
+        "range": [
+          0.4,
+          0.5
+        ],
+        "count": 3,
+        "predicted": 0.479,
+        "observed": 0.0,
+        "gap": -0.479
+      },
+      {
+        "range": [
+          0.5,
+          0.6
+        ],
+        "count": 26,
+        "predicted": 0.558,
+        "observed": 0.538,
+        "gap": -0.019
+      },
+      {
+        "range": [
+          0.6,
+          0.7
+        ],
+        "count": 19,
+        "predicted": 0.635,
+        "observed": 0.737,
+        "gap": 0.102
+      },
+      {
+        "range": [
+          0.7,
+          0.8
+        ],
+        "count": 0,
+        "predicted": 0.0,
+        "observed": 0.0,
+        "gap": 0.0
+      },
+      {
+        "range": [
+          0.8,
+          0.9
+        ],
+        "count": 0,
+        "predicted": 0.0,
+        "observed": 0.0,
+        "gap": 0.0
+      },
+      {
+        "range": [
+          0.9,
+          1.0
+        ],
+        "count": 0,
+        "predicted": 0.0,
+        "observed": 0.0,
+        "gap": 0.0
+      }
+    ],
+    "note": "fitted on 48 answers; calibration error 0.228 -> 0.081"
+  },
+  "ablations": []
+}

@@ -1,0 +1,568 @@
+# Pagila v1 question suite.
+#
+# Gold SQL is written against the CLEAN database (pagila_clean on the local Postgres).
+# The system under test only ever sees pagila_legacy. Two independent formulations per
+# question; `python -m gauntlet.scorer --check-gold --suite pagila_v1` fails if they
+# disagree.
+#
+# Tags name the anti-patterns a question exercises, so accuracy can be broken down per
+# anti-pattern. Three tags exist here that Chinook cannot carry:
+#   magic_numbers    - a coded column (ratings as 1-5, status as A/I/X)
+#   misleading_docs  - a column comment that says something false
+#   dialect_friction - the quoted mixed-case "tblFilm" table
+#
+# `order_sensitive` is set only where the question itself asks for an order — a
+# ranking or a time series — never because the gold query happens to sort.
+
+suite: pagila_v1
+database: pagila_legacy
+clean: pagila_clean
+dialect: postgres
+
+questions:
+  # ------------------------------------------------------------------ counting things
+
+  - id: p-001
+    question: How many customers do we have?
+    tags: [cryptic_names, soft_delete]
+    difficulty: easy
+    gold_sql: SELECT COUNT(*) AS n FROM customer
+    gold_sql_alt: SELECT COUNT(DISTINCT customer_id) AS n FROM customer
+
+  - id: p-002
+    question: How many films are in the catalogue?
+    tags: [cryptic_names, soft_delete, dialect_friction]
+    difficulty: easy
+    gold_sql: SELECT COUNT(*) AS n FROM film
+    gold_sql_alt: SELECT COUNT(DISTINCT film_id) AS n FROM film
+
+  - id: p-003
+    question: How many actors are there?
+    tags: [cryptic_names]
+    difficulty: easy
+    gold_sql: SELECT COUNT(*) AS n FROM actor
+    gold_sql_alt: SELECT MAX(rn) AS n FROM (SELECT ROW_NUMBER() OVER () AS rn FROM actor) x
+
+  - id: p-004
+    question: How many rentals have been made in total?
+    tags: [cryptic_names]
+    difficulty: easy
+    gold_sql: SELECT COUNT(*) AS n FROM rental
+    gold_sql_alt: SELECT COUNT(rental_id) AS n FROM rental
+
+  - id: p-005
+    question: How many payments have been received?
+    tags: [god_table, cryptic_names]
+    difficulty: easy
+    gold_sql: SELECT COUNT(*) AS n FROM payment
+    gold_sql_alt: SELECT SUM(c) AS n FROM (SELECT COUNT(*) AS c FROM payment GROUP BY staff_id) x
+
+  - id: p-006
+    question: How many customers are currently marked as active?
+    tags: [magic_numbers, soft_delete]
+    difficulty: easy
+    gold_sql: SELECT COUNT(*) AS n FROM customer WHERE active = 1
+    gold_sql_alt: SELECT COUNT(*) AS n FROM customer WHERE activebool AND active <> 0
+
+  - id: p-007
+    question: How many customers are inactive?
+    tags: [magic_numbers, soft_delete]
+    difficulty: easy
+    gold_sql: SELECT COUNT(*) AS n FROM customer WHERE active = 0
+    gold_sql_alt: SELECT (SELECT COUNT(*) FROM customer) - (SELECT COUNT(*) FROM customer WHERE active = 1) AS n
+
+  # ------------------------------------------------------------------------- money
+
+  - id: p-008
+    question: What is the total revenue from all payments?
+    tags: [god_table, drift, misleading_docs, inconsistent_types]
+    difficulty: medium
+    gold_sql: SELECT ROUND(SUM(amount), 2) AS revenue FROM payment
+    gold_sql_alt: |
+      SELECT ROUND(SUM(m), 2) AS revenue FROM (
+        SELECT SUM(amount) AS m FROM payment GROUP BY TO_CHAR(payment_date, 'YYYY-MM')
+      ) x
+
+  - id: p-009
+    question: Show total revenue per month.
+    tags: [god_table, drift, inconsistent_types]
+    difficulty: medium
+    gold_sql: |
+      SELECT TO_CHAR(payment_date, 'YYYY-MM') AS month, ROUND(SUM(amount), 2) AS revenue
+      FROM payment GROUP BY 1 ORDER BY 1
+    gold_sql_alt: |
+      SELECT TO_CHAR(DATE_TRUNC('month', payment_date), 'YYYY-MM') AS month,
+             ROUND(SUM(amount), 2) AS revenue
+      FROM payment GROUP BY DATE_TRUNC('month', payment_date) ORDER BY 1
+    order_sensitive: true
+
+  - id: p-010
+    question: What was the average payment amount?
+    tags: [god_table, drift, inconsistent_types]
+    difficulty: medium
+    gold_sql: SELECT ROUND(AVG(amount), 2) AS avg_payment FROM payment
+    gold_sql_alt: SELECT ROUND(SUM(amount) / COUNT(*), 2) AS avg_payment FROM payment
+
+  - id: p-011
+    question: How many payments were larger than 5 dollars?
+    tags: [god_table, drift, misleading_docs]
+    difficulty: medium
+    gold_sql: SELECT COUNT(*) AS n FROM payment WHERE amount > 5
+    gold_sql_alt: SELECT COUNT(*) AS n FROM payment WHERE NOT amount <= 5
+
+  - id: p-012
+    question: Which month had the highest revenue?
+    tags: [god_table, drift]
+    difficulty: medium
+    gold_sql: |
+      SELECT TO_CHAR(payment_date, 'YYYY-MM') AS month, ROUND(SUM(amount), 2) AS revenue
+      FROM payment GROUP BY 1 ORDER BY 2 DESC LIMIT 1
+    gold_sql_alt: |
+      SELECT month, revenue FROM (
+        SELECT TO_CHAR(payment_date, 'YYYY-MM') AS month, ROUND(SUM(amount), 2) AS revenue,
+               RANK() OVER (ORDER BY SUM(amount) DESC) AS r
+        FROM payment GROUP BY 1
+      ) x WHERE r = 1
+
+  - id: p-013
+    question: Show revenue per store.
+    tags: [god_table, drift, missing_fk]
+    difficulty: medium
+    gold_sql: |
+      SELECT s.store_id, ROUND(SUM(p.amount), 2) AS revenue
+      FROM payment p JOIN staff s ON s.staff_id = p.staff_id
+      GROUP BY s.store_id
+    gold_sql_alt: |
+      SELECT st.store_id, ROUND(SUM(p.amount), 2) AS revenue
+      FROM store st JOIN staff s ON s.store_id = st.store_id
+      JOIN payment p ON p.staff_id = s.staff_id GROUP BY st.store_id
+
+  - id: p-014
+    question: How much revenue came from payments processed by Jon Stephens?
+    tags: [god_table, drift, missing_fk]
+    difficulty: medium
+    gold_sql: |
+      SELECT ROUND(SUM(p.amount), 2) AS revenue FROM payment p
+      JOIN staff s ON s.staff_id = p.staff_id
+      WHERE s.first_name = 'Jon' AND s.last_name = 'Stephens'
+    gold_sql_alt: |
+      SELECT ROUND(SUM(amount), 2) AS revenue FROM payment
+      WHERE staff_id IN (SELECT staff_id FROM staff WHERE last_name = 'Stephens')
+
+  - id: p-015
+    question: What is the total amount paid by customer Mary Smith?
+    tags: [god_table, drift, string_quality]
+    difficulty: medium
+    gold_sql: |
+      SELECT ROUND(SUM(p.amount), 2) AS total FROM payment p
+      JOIN customer c ON c.customer_id = p.customer_id
+      WHERE c.first_name = 'MARY' AND c.last_name = 'SMITH'
+    gold_sql_alt: |
+      SELECT ROUND(SUM(amount), 2) AS total FROM payment
+      WHERE customer_id = (SELECT customer_id FROM customer WHERE last_name = 'SMITH')
+
+  - id: p-016
+    question: Who are the top 10 customers by total amount paid? Give first name, last name and the total.
+    tags: [god_table, drift, string_quality, missing_fk]
+    difficulty: medium
+    gold_sql: |
+      SELECT c.first_name, c.last_name, ROUND(SUM(p.amount), 2) AS total
+      FROM payment p JOIN customer c ON c.customer_id = p.customer_id
+      GROUP BY c.customer_id, c.first_name, c.last_name
+      ORDER BY SUM(p.amount) DESC LIMIT 10
+    gold_sql_alt: |
+      SELECT c.first_name, c.last_name, t.total FROM (
+        SELECT customer_id, ROUND(SUM(amount), 2) AS total FROM payment
+        GROUP BY customer_id ORDER BY SUM(amount) DESC LIMIT 10
+      ) t JOIN customer c ON c.customer_id = t.customer_id ORDER BY t.total DESC
+    # Scored as a set: positions 4 and 5 tie at 194.61, so any strict order
+    # is a coin flip. Which ten customers is unambiguous, and is what is asked.
+    order_sensitive: false
+
+  - id: p-017
+    question: What is the total revenue from films in the Sports category?
+    tags: [god_table, drift, missing_fk, inconsistent_types, composite_key]
+    difficulty: hard
+    gold_sql: |
+      SELECT ROUND(SUM(p.amount), 2) AS revenue FROM payment p
+      JOIN rental r ON r.rental_id = p.rental_id
+      JOIN inventory i ON i.inventory_id = r.inventory_id
+      JOIN film_category fc ON fc.film_id = i.film_id
+      JOIN category c ON c.category_id = fc.category_id
+      WHERE c.name = 'Sports'
+    gold_sql_alt: |
+      SELECT ROUND(SUM(p.amount), 2) AS revenue FROM payment p
+      WHERE p.rental_id IN (
+        SELECT r.rental_id FROM rental r JOIN inventory i USING (inventory_id)
+        WHERE i.film_id IN (
+          SELECT film_id FROM film_category
+          WHERE category_id = (SELECT category_id FROM category WHERE name = 'Sports')))
+
+  - id: p-018
+    question: Which film category has earned the most revenue?
+    tags: [god_table, drift, missing_fk, inconsistent_types, composite_key]
+    difficulty: hard
+    gold_sql: |
+      SELECT c.name, ROUND(SUM(p.amount), 2) AS revenue FROM payment p
+      JOIN rental r ON r.rental_id = p.rental_id
+      JOIN inventory i ON i.inventory_id = r.inventory_id
+      JOIN film_category fc ON fc.film_id = i.film_id
+      JOIN category c ON c.category_id = fc.category_id
+      GROUP BY c.name ORDER BY SUM(p.amount) DESC LIMIT 1
+    gold_sql_alt: |
+      SELECT name, revenue FROM (
+        SELECT c.name, ROUND(SUM(p.amount), 2) AS revenue,
+               RANK() OVER (ORDER BY SUM(p.amount) DESC) AS rk
+        FROM category c JOIN film_category fc USING (category_id)
+        JOIN inventory i USING (film_id) JOIN rental r USING (inventory_id)
+        JOIN payment p USING (rental_id) GROUP BY c.name
+      ) x WHERE rk = 1
+
+  # ---------------------------------------------------------------------- rentals
+
+  - id: p-019
+    question: How many rentals were made in each month?
+    tags: [inconsistent_types, cryptic_names]
+    difficulty: medium
+    gold_sql: |
+      SELECT TO_CHAR(rental_date, 'YYYY-MM') AS month, COUNT(*) AS rentals
+      FROM rental GROUP BY 1 ORDER BY 1
+    gold_sql_alt: |
+      SELECT EXTRACT(YEAR FROM rental_date)::int || '-' ||
+             LPAD(EXTRACT(MONTH FROM rental_date)::int::text, 2, '0') AS month,
+             COUNT(*) AS rentals
+      FROM rental GROUP BY 1 ORDER BY 1
+    order_sensitive: true
+
+  - id: p-020
+    question: How many distinct customers rented something in July 2022?
+    tags: [inconsistent_types]
+    difficulty: medium
+    gold_sql: |
+      SELECT COUNT(DISTINCT customer_id) AS n FROM rental
+      WHERE rental_date >= '2022-07-01' AND rental_date < '2022-08-01'
+    gold_sql_alt: |
+      SELECT COUNT(*) AS n FROM (SELECT DISTINCT customer_id FROM rental
+      WHERE TO_CHAR(rental_date, 'YYYY-MM') = '2022-07') x
+
+  - id: p-021
+    question: How many rentals have not been returned yet?
+    tags: [drift]
+    difficulty: medium
+    gold_sql: SELECT COUNT(*) AS n FROM rental WHERE return_date IS NULL
+    gold_sql_alt: SELECT COUNT(*) - COUNT(return_date) AS n FROM rental
+
+  - id: p-022
+    question: How many rentals were returned in June 2022?
+    tags: [drift, inconsistent_types]
+    difficulty: hard
+    gold_sql: |
+      SELECT COUNT(*) AS n FROM rental
+      WHERE return_date >= '2022-06-01' AND return_date < '2022-07-01'
+    gold_sql_alt: |
+      SELECT COUNT(*) AS n FROM rental WHERE TO_CHAR(return_date, 'YYYY-MM') = '2022-06'
+
+  - id: p-023
+    question: On average, how many days does a customer keep a rental before returning it?
+    tags: [drift, inconsistent_types]
+    difficulty: hard
+    gold_sql: |
+      SELECT ROUND(AVG(return_date::date - rental_date::date), 2) AS avg_days
+      FROM rental WHERE return_date IS NOT NULL
+    gold_sql_alt: |
+      SELECT ROUND(SUM(return_date::date - rental_date::date)::numeric
+                   / COUNT(return_date), 2) AS avg_days
+      FROM rental
+
+  - id: p-024
+    question: Which film has been rented the most times?
+    tags: [inconsistent_types, missing_fk, dialect_friction]
+    difficulty: medium
+    gold_sql: |
+      SELECT f.title, COUNT(*) AS rentals FROM rental r
+      JOIN inventory i ON i.inventory_id = r.inventory_id
+      JOIN film f ON f.film_id = i.film_id
+      GROUP BY f.film_id, f.title ORDER BY COUNT(*) DESC LIMIT 1
+    gold_sql_alt: |
+      SELECT title, rentals FROM (
+        SELECT f.title, COUNT(*) AS rentals,
+               RANK() OVER (ORDER BY COUNT(*) DESC) AS rk
+        FROM film f JOIN inventory i USING (film_id) JOIN rental r USING (inventory_id)
+        GROUP BY f.film_id, f.title
+      ) x WHERE rk = 1
+
+  - id: p-025
+    question: How many rentals has each staff member processed? Show their names.
+    tags: [cryptic_names, missing_fk]
+    difficulty: medium
+    gold_sql: |
+      SELECT s.first_name, s.last_name, COUNT(*) AS rentals FROM rental r
+      JOIN staff s ON s.staff_id = r.staff_id GROUP BY s.staff_id, s.first_name, s.last_name
+    gold_sql_alt: |
+      SELECT s.first_name, s.last_name,
+             (SELECT COUNT(*) FROM rental r WHERE r.staff_id = s.staff_id) AS rentals
+      FROM staff s
+
+  - id: p-026
+    question: Which customers have rented more than 40 films? Give their first and last names.
+    tags: [string_quality, missing_fk]
+    difficulty: medium
+    gold_sql: |
+      SELECT c.first_name, c.last_name FROM rental r
+      JOIN customer c ON c.customer_id = r.customer_id
+      GROUP BY c.customer_id, c.first_name, c.last_name HAVING COUNT(*) > 40
+    gold_sql_alt: |
+      SELECT first_name, last_name FROM customer c
+      WHERE (SELECT COUNT(*) FROM rental r WHERE r.customer_id = c.customer_id) > 40
+
+  # ---------------------------------------------------------------------- catalogue
+
+  - id: p-027
+    question: How many films are there in each category?
+    tags: [composite_key, soft_delete, missing_fk]
+    difficulty: medium
+    gold_sql: |
+      SELECT c.name, COUNT(*) AS films FROM film_category fc
+      JOIN category c ON c.category_id = fc.category_id GROUP BY c.name
+    gold_sql_alt: |
+      SELECT c.name, (SELECT COUNT(*) FROM film_category fc
+                      WHERE fc.category_id = c.category_id) AS films
+      FROM category c
+
+  - id: p-028
+    question: Which actor has appeared in the most films?
+    tags: [composite_key, soft_delete, string_quality]
+    difficulty: medium
+    gold_sql: |
+      SELECT a.first_name, a.last_name, COUNT(*) AS films FROM film_actor fa
+      JOIN actor a ON a.actor_id = fa.actor_id
+      GROUP BY a.actor_id, a.first_name, a.last_name ORDER BY COUNT(*) DESC LIMIT 1
+    gold_sql_alt: |
+      SELECT first_name, last_name, films FROM (
+        SELECT a.first_name, a.last_name, COUNT(*) AS films,
+               RANK() OVER (ORDER BY COUNT(*) DESC) AS rk
+        FROM actor a JOIN film_actor fa USING (actor_id) GROUP BY a.actor_id
+      ) x WHERE rk = 1
+
+  - id: p-029
+    question: In how many films has an actor with the surname Guiness appeared?
+    tags: [string_quality, composite_key, soft_delete]
+    difficulty: medium
+    gold_sql: |
+      SELECT COUNT(DISTINCT fa.film_id) AS films FROM film_actor fa
+      JOIN actor a ON a.actor_id = fa.actor_id WHERE a.last_name = 'GUINESS'
+    gold_sql_alt: |
+      SELECT COUNT(*) AS films FROM film f WHERE EXISTS (
+        SELECT 1 FROM film_actor fa JOIN actor a USING (actor_id)
+        WHERE fa.film_id = f.film_id AND UPPER(a.last_name) = 'GUINESS')
+
+  - id: p-030
+    question: What is the average number of films per actor?
+    tags: [composite_key, soft_delete]
+    difficulty: medium
+    gold_sql: |
+      SELECT ROUND(AVG(n), 2) AS avg_films FROM (
+        SELECT actor_id, COUNT(*) AS n FROM film_actor GROUP BY actor_id) x
+    gold_sql_alt: |
+      SELECT ROUND(COUNT(*)::numeric / COUNT(DISTINCT actor_id), 2) AS avg_films
+      FROM film_actor
+
+  - id: p-031
+    question: How many films are rated PG-13?
+    tags: [magic_numbers, dialect_friction]
+    difficulty: easy
+    gold_sql: SELECT COUNT(*) AS n FROM film WHERE rating = 'PG-13'
+    gold_sql_alt: SELECT COUNT(*) AS n FROM film WHERE rating::text = 'PG-13'
+
+  - id: p-032
+    question: How many films are there of each rating?
+    tags: [magic_numbers, dialect_friction]
+    difficulty: medium
+    gold_sql: SELECT rating::text AS rating, COUNT(*) AS films FROM film GROUP BY rating
+    gold_sql_alt: |
+      SELECT r AS rating, (SELECT COUNT(*) FROM film f WHERE f.rating::text = r) AS films
+      FROM (SELECT DISTINCT rating::text AS r FROM film) x
+
+  - id: p-033
+    question: What is the average film length for each rating?
+    tags: [magic_numbers, dialect_friction]
+    difficulty: medium
+    gold_sql: |
+      SELECT rating::text AS rating, ROUND(AVG(length), 2) AS avg_length
+      FROM film GROUP BY rating
+    gold_sql_alt: |
+      SELECT rating::text AS rating, ROUND(SUM(length)::numeric / COUNT(length), 2) AS avg_length
+      FROM film GROUP BY rating::text
+
+  - id: p-034
+    question: What is the average replacement cost of films rated R?
+    tags: [magic_numbers, cryptic_names]
+    difficulty: medium
+    gold_sql: SELECT ROUND(AVG(replacement_cost), 2) AS avg_cost FROM film WHERE rating = 'R'
+    gold_sql_alt: |
+      SELECT ROUND(SUM(replacement_cost) / COUNT(*), 2) AS avg_cost FROM film
+      WHERE rating::text = 'R'
+
+  - id: p-035
+    question: What is the average rental rate of films in the Comedy category?
+    tags: [composite_key, missing_fk]
+    difficulty: medium
+    gold_sql: |
+      SELECT ROUND(AVG(f.rental_rate), 2) AS avg_rate FROM film f
+      JOIN film_category fc ON fc.film_id = f.film_id
+      JOIN category c ON c.category_id = fc.category_id WHERE c.name = 'Comedy'
+    gold_sql_alt: |
+      SELECT ROUND(AVG(rental_rate), 2) AS avg_rate FROM film WHERE film_id IN (
+        SELECT film_id FROM film_category WHERE category_id =
+          (SELECT category_id FROM category WHERE name = 'Comedy'))
+
+  - id: p-036
+    question: How many films include Behind the Scenes as a special feature?
+    tags: [embedded_format, dialect_friction]
+    difficulty: medium
+    gold_sql: SELECT COUNT(*) AS n FROM film WHERE 'Behind the Scenes' = ANY(special_features)
+    gold_sql_alt: |
+      SELECT COUNT(*) AS n FROM film
+      WHERE ARRAY_TO_STRING(special_features, '|') LIKE '%Behind the Scenes%'
+
+  - id: p-037
+    question: How many copies of the film ACADEMY DINOSAUR are in inventory?
+    tags: [missing_fk, dialect_friction]
+    difficulty: easy
+    gold_sql: |
+      SELECT COUNT(*) AS copies FROM inventory i JOIN film f ON f.film_id = i.film_id
+      WHERE f.title = 'ACADEMY DINOSAUR'
+    gold_sql_alt: |
+      SELECT COUNT(*) AS copies FROM inventory
+      WHERE film_id = (SELECT film_id FROM film WHERE title = 'ACADEMY DINOSAUR')
+
+  - id: p-038
+    question: How many films in inventory does each store hold?
+    tags: [cryptic_names]
+    difficulty: easy
+    gold_sql: SELECT store_id, COUNT(*) AS copies FROM inventory GROUP BY store_id
+    gold_sql_alt: |
+      SELECT s.store_id, (SELECT COUNT(*) FROM inventory i WHERE i.store_id = s.store_id)
+             AS copies FROM store s
+
+  # ---------------------------------------------------------------- people and places
+
+  - id: p-039
+    question: What are the 5 countries with the most customers?
+    tags: [missing_fk, soft_delete]
+    difficulty: medium
+    gold_sql: |
+      SELECT co.country, COUNT(*) AS customers FROM customer cu
+      JOIN address a ON a.address_id = cu.address_id
+      JOIN city ci ON ci.city_id = a.city_id
+      JOIN country co ON co.country_id = ci.country_id
+      GROUP BY co.country ORDER BY COUNT(*) DESC LIMIT 5
+    gold_sql_alt: |
+      SELECT country, customers FROM (
+        SELECT co.country, COUNT(*) AS customers,
+               RANK() OVER (ORDER BY COUNT(*) DESC) AS rk
+        FROM country co JOIN city ci USING (country_id) JOIN address a USING (city_id)
+        JOIN customer cu USING (address_id) GROUP BY co.country
+      ) x WHERE rk <= 5 ORDER BY customers DESC
+    order_sensitive: true
+
+  - id: p-040
+    question: How many customers live in the city of Aurora?
+    tags: [string_quality, missing_fk]
+    difficulty: medium
+    gold_sql: |
+      SELECT COUNT(*) AS n FROM customer cu JOIN address a ON a.address_id = cu.address_id
+      JOIN city ci ON ci.city_id = a.city_id WHERE ci.city = 'Aurora'
+    gold_sql_alt: |
+      SELECT COUNT(*) AS n FROM customer WHERE address_id IN (
+        SELECT address_id FROM address WHERE city_id IN (
+          SELECT city_id FROM city WHERE LOWER(city) = 'aurora'))
+
+  - id: p-041
+    question: What is the email address of customer Austin Cintron?
+    tags: [drift, embedded_format, string_quality]
+    difficulty: medium
+    gold_sql: |
+      SELECT email FROM customer WHERE first_name = 'AUSTIN' AND last_name = 'CINTRON'
+    gold_sql_alt: |
+      SELECT email FROM customer WHERE UPPER(last_name) = 'CINTRON'
+
+  - id: p-042
+    question: How many customers have an email address on file?
+    tags: [drift, embedded_format]
+    difficulty: medium
+    gold_sql: SELECT COUNT(*) AS n FROM customer WHERE email IS NOT NULL
+    gold_sql_alt: SELECT COUNT(email) AS n FROM customer
+
+  - id: p-043
+    question: How many customers does each store have?
+    tags: [soft_delete, cryptic_names]
+    difficulty: easy
+    gold_sql: SELECT store_id, COUNT(*) AS customers FROM customer GROUP BY store_id
+    gold_sql_alt: |
+      SELECT s.store_id, (SELECT COUNT(*) FROM customer c WHERE c.store_id = s.store_id)
+             AS customers FROM store s
+
+  # -------------------------------------------------------------------- ambiguous
+
+  - id: p-044
+    question: Who are our best customers?
+    tags: [ambiguous, god_table, drift]
+    difficulty: medium
+    ambiguity:
+      type: intent
+      clarification: The top 10 customers by total amount paid
+    gold_sql: |
+      SELECT c.first_name, c.last_name, ROUND(SUM(p.amount), 2) AS total
+      FROM payment p JOIN customer c ON c.customer_id = p.customer_id
+      GROUP BY c.customer_id, c.first_name, c.last_name
+      ORDER BY SUM(p.amount) DESC LIMIT 10
+    gold_sql_alt: |
+      SELECT c.first_name, c.last_name, t.total FROM (
+        SELECT customer_id, ROUND(SUM(amount), 2) AS total FROM payment
+        GROUP BY customer_id ORDER BY SUM(amount) DESC LIMIT 10
+      ) t JOIN customer c ON c.customer_id = t.customer_id ORDER BY t.total DESC
+    # Scored as a set: positions 4 and 5 tie at 194.61, so any strict order
+    # is a coin flip. Which ten customers is unambiguous, and is what is asked.
+    order_sensitive: false
+
+  - id: p-045
+    question: How much did we make last month?
+    tags: [ambiguous, god_table, drift]
+    difficulty: medium
+    ambiguity:
+      type: implementation
+      clarification: July 2022, the most recent full calendar month with payments
+    gold_sql: |
+      SELECT ROUND(SUM(amount), 2) AS revenue FROM payment
+      WHERE payment_date >= '2022-07-01' AND payment_date < '2022-08-01'
+    gold_sql_alt: |
+      SELECT ROUND(SUM(amount), 2) AS revenue FROM payment
+      WHERE TO_CHAR(payment_date, 'YYYY-MM') = '2022-07'
+
+  # -------------------------------------------------------------------- behaviour
+  # evt_log exists only in the legacy copy, with 400,000 rows and no index on evt_ts.
+
+  - id: p-046
+    question: Show me every event log entry from 2021 with the old and new values.
+    tags: [perf_trap]
+    difficulty: medium
+    expect: cost_guard
+
+  - id: p-047
+    question: List every row in the audit log.
+    tags: [perf_trap]
+    difficulty: easy
+    expect: cost_guard
+
+  - id: p-048
+    question: What is each customer's loyalty points balance?
+    tags: [abstention]
+    difficulty: easy
+    expect: abstain
+
+  - id: p-049
+    question: Which suppliers ship our DVDs to the stores?
+    tags: [abstention]
+    difficulty: easy
+    expect: abstain

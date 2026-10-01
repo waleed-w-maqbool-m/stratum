@@ -1,0 +1,2061 @@
+[
+ {
+  "id": "p-001",
+  "question": "How many customers do we have?",
+  "tags": [
+   "cryptic_names",
+   "soft_delete"
+  ],
+  "difficulty": "easy",
+  "expect": null,
+  "answered": true,
+  "gold": {
+   "columns": [
+    "n"
+   ],
+   "rows": [
+    [
+     599
+    ]
+   ],
+   "total": 1
+  },
+  "gold_sql": "SELECT COUNT(*) AS n FROM customer",
+  "correct": false,
+  "reason": "no system column matches a gold column (0/1 matched)",
+  "status": "ok",
+  "tokens": 3539,
+  "confidence": null,
+  "logical_sql": "SELECT COUNT(*) FROM cstmr",
+  "physical_sql": "SELECT COUNT(*) FROM cstmr",
+  "message": "",
+  "assumptions": [],
+  "ours": {
+   "columns": [
+    "count"
+   ],
+   "rows": [
+    [
+     608
+    ]
+   ],
+   "total": 1
+  }
+ },
+ {
+  "id": "p-002",
+  "question": "How many films are in the catalogue?",
+  "tags": [
+   "cryptic_names",
+   "soft_delete",
+   "dialect_friction"
+  ],
+  "difficulty": "easy",
+  "expect": null,
+  "answered": true,
+  "gold": {
+   "columns": [
+    "n"
+   ],
+   "rows": [
+    [
+     1000
+    ]
+   ],
+   "total": 1
+  },
+  "gold_sql": "SELECT COUNT(*) AS n FROM film",
+  "correct": false,
+  "reason": "error: relation \"tblfilm\" does not exist\nLINE 1: SELECT COUNT(*) FROM tblFilm LIMIT 5000\n                             ^",
+  "status": "error",
+  "tokens": 3542,
+  "confidence": null,
+  "logical_sql": "SELECT COUNT(*) FROM tblFilm",
+  "physical_sql": "SELECT COUNT(*) FROM tblFilm",
+  "message": "relation \"tblfilm\" does not exist\nLINE 1: SELECT COUNT(*) FROM tblFilm LIMIT 5000\n                             ^",
+  "assumptions": [],
+  "ours": {
+   "columns": [],
+   "rows": [],
+   "total": 0
+  }
+ },
+ {
+  "id": "p-003",
+  "question": "How many actors are there?",
+  "tags": [
+   "cryptic_names"
+  ],
+  "difficulty": "easy",
+  "expect": null,
+  "answered": true,
+  "gold": {
+   "columns": [
+    "n"
+   ],
+   "rows": [
+    [
+     200
+    ]
+   ],
+   "total": 1
+  },
+  "gold_sql": "SELECT COUNT(*) AS n FROM actor",
+  "correct": true,
+  "reason": "",
+  "status": "ok",
+  "tokens": 3545,
+  "confidence": null,
+  "logical_sql": "SELECT COUNT(*) FROM actr",
+  "physical_sql": "SELECT COUNT(*) FROM actr",
+  "message": "",
+  "assumptions": [],
+  "ours": {
+   "columns": [
+    "count"
+   ],
+   "rows": [
+    [
+     200
+    ]
+   ],
+   "total": 1
+  }
+ },
+ {
+  "id": "p-004",
+  "question": "How many rentals have been made in total?",
+  "tags": [
+   "cryptic_names"
+  ],
+  "difficulty": "easy",
+  "expect": null,
+  "answered": true,
+  "gold": {
+   "columns": [
+    "n"
+   ],
+   "rows": [
+    [
+     16044
+    ]
+   ],
+   "total": 1
+  },
+  "gold_sql": "SELECT COUNT(*) AS n FROM rental",
+  "correct": true,
+  "reason": "",
+  "status": "ok",
+  "tokens": 3627,
+  "confidence": null,
+  "logical_sql": "SELECT (SELECT COUNT(*) FROM rntl_hdr)\n     + (SELECT COUNT(*) FROM rntl_hdr_2020)\n     + (SELECT COUNT(*) FROM rntl_hdr_2021) AS total_rentals",
+  "physical_sql": "SELECT (SELECT COUNT(*) FROM rntl_hdr)\n     + (SELECT COUNT(*) FROM rntl_hdr_2020)\n     + (SELECT COUNT(*) FROM rntl_hdr_2021) AS total_rentals",
+  "message": "",
+  "assumptions": [],
+  "ours": {
+   "columns": [
+    "total_rentals"
+   ],
+   "rows": [
+    [
+     16044
+    ]
+   ],
+   "total": 1
+  }
+ },
+ {
+  "id": "p-005",
+  "question": "How many payments have been received?",
+  "tags": [
+   "god_table",
+   "cryptic_names"
+  ],
+  "difficulty": "easy",
+  "expect": null,
+  "answered": true,
+  "gold": {
+   "columns": [
+    "n"
+   ],
+   "rows": [
+    [
+     16049
+    ]
+   ],
+   "total": 1
+  },
+  "gold_sql": "SELECT COUNT(*) AS n FROM payment",
+  "correct": true,
+  "reason": "",
+  "status": "ok",
+  "tokens": 3719,
+  "confidence": null,
+  "logical_sql": "SELECT COUNT(*) FROM fin_txn WHERE txn_typ = 'P'",
+  "physical_sql": "SELECT COUNT(*) FROM fin_txn WHERE txn_typ = 'P'",
+  "message": "",
+  "assumptions": [],
+  "ours": {
+   "columns": [
+    "count"
+   ],
+   "rows": [
+    [
+     16049
+    ]
+   ],
+   "total": 1
+  }
+ },
+ {
+  "id": "p-006",
+  "question": "How many customers are currently marked as active?",
+  "tags": [
+   "magic_numbers",
+   "soft_delete"
+  ],
+  "difficulty": "easy",
+  "expect": null,
+  "answered": true,
+  "gold": {
+   "columns": [
+    "n"
+   ],
+   "rows": [
+    [
+     584
+    ]
+   ],
+   "total": 1
+  },
+  "gold_sql": "SELECT COUNT(*) AS n FROM customer WHERE active = 1",
+  "correct": true,
+  "reason": "",
+  "status": "ok",
+  "tokens": 3595,
+  "confidence": null,
+  "logical_sql": "SELECT COUNT(*) FROM cstmr WHERE sts_cd = 'A'",
+  "physical_sql": "SELECT COUNT(*) FROM cstmr WHERE sts_cd = 'A'",
+  "message": "",
+  "assumptions": [],
+  "ours": {
+   "columns": [
+    "count"
+   ],
+   "rows": [
+    [
+     584
+    ]
+   ],
+   "total": 1
+  }
+ },
+ {
+  "id": "p-007",
+  "question": "How many customers are inactive?",
+  "tags": [
+   "magic_numbers",
+   "soft_delete"
+  ],
+  "difficulty": "easy",
+  "expect": null,
+  "answered": true,
+  "gold": {
+   "columns": [
+    "n"
+   ],
+   "rows": [
+    [
+     15
+    ]
+   ],
+   "total": 1
+  },
+  "gold_sql": "SELECT COUNT(*) AS n FROM customer WHERE active = 0",
+  "correct": true,
+  "reason": "",
+  "status": "ok",
+  "tokens": 3636,
+  "confidence": null,
+  "logical_sql": "SELECT COUNT(*) FROM cstmr WHERE sts_cd = 'I'",
+  "physical_sql": "SELECT COUNT(*) FROM cstmr WHERE sts_cd = 'I'",
+  "message": "",
+  "assumptions": [],
+  "ours": {
+   "columns": [
+    "count"
+   ],
+   "rows": [
+    [
+     15
+    ]
+   ],
+   "total": 1
+  }
+ },
+ {
+  "id": "p-008",
+  "question": "What is the total revenue from all payments?",
+  "tags": [
+   "god_table",
+   "drift",
+   "misleading_docs",
+   "inconsistent_types"
+  ],
+  "difficulty": "medium",
+  "expect": null,
+  "answered": true,
+  "gold": {
+   "columns": [
+    "revenue"
+   ],
+   "rows": [
+    [
+     "67416.51"
+    ]
+   ],
+   "total": 1
+  },
+  "gold_sql": "SELECT ROUND(SUM(amount), 2) AS revenue FROM payment",
+  "correct": false,
+  "reason": "no system column matches a gold column (0/1 matched)",
+  "status": "ok",
+  "tokens": 3897,
+  "confidence": null,
+  "logical_sql": "SELECT SUM(amt) FROM fin_txn",
+  "physical_sql": "SELECT SUM(amt) FROM fin_txn",
+  "message": "",
+  "assumptions": [],
+  "ours": {
+   "columns": [
+    "sum"
+   ],
+   "rows": [
+    [
+     "24430.27"
+    ]
+   ],
+   "total": 1
+  }
+ },
+ {
+  "id": "p-009",
+  "question": "Show total revenue per month.",
+  "tags": [
+   "god_table",
+   "drift",
+   "inconsistent_types"
+  ],
+  "difficulty": "medium",
+  "expect": null,
+  "answered": true,
+  "gold": {
+   "columns": [
+    "month",
+    "revenue"
+   ],
+   "rows": [
+    [
+     "2022-01",
+     "3094.78"
+    ],
+    [
+     "2022-02",
+     "10164.97"
+    ],
+    [
+     "2022-03",
+     "11413.86"
+    ],
+    [
+     "2022-04",
+     "10759.52"
+    ],
+    [
+     "2022-05",
+     "11347.28"
+    ],
+    [
+     "2022-06",
+     "10923.45"
+    ],
+    [
+     "2022-07",
+     "9712.65"
+    ]
+   ],
+   "total": 7
+  },
+  "gold_sql": "SELECT TO_CHAR(payment_date, 'YYYY-MM') AS month, ROUND(SUM(amount), 2) AS revenue\nFROM payment GROUP BY 1 ORDER BY 1",
+  "correct": false,
+  "reason": "no system column matches a gold column (1/2 matched)",
+  "status": "ok",
+  "tokens": 3634,
+  "confidence": null,
+  "logical_sql": "SELECT mth, SUM(rev) AS total_revenue\nFROM rpt_mthly_rev\nGROUP BY mth\nORDER BY mth",
+  "physical_sql": "SELECT mth, SUM(rev) AS total_revenue\nFROM rpt_mthly_rev\nGROUP BY mth\nORDER BY mth",
+  "message": "",
+  "assumptions": [],
+  "ours": {
+   "columns": [
+    "mth",
+    "total_revenue"
+   ],
+   "rows": [
+    [
+     "2022-01",
+     "3094.78"
+    ],
+    [
+     "2022-02",
+     "10164.97"
+    ],
+    [
+     "2022-03",
+     "11413.86"
+    ],
+    [
+     "2022-04",
+     null
+    ],
+    [
+     "2022-05",
+     null
+    ],
+    [
+     "2022-06",
+     null
+    ],
+    [
+     "2022-07",
+     null
+    ]
+   ],
+   "total": 7
+  }
+ },
+ {
+  "id": "p-010",
+  "question": "What was the average payment amount?",
+  "tags": [
+   "god_table",
+   "drift",
+   "inconsistent_types"
+  ],
+  "difficulty": "medium",
+  "expect": null,
+  "answered": true,
+  "gold": {
+   "columns": [
+    "avg_payment"
+   ],
+   "rows": [
+    [
+     "4.20"
+    ]
+   ],
+   "total": 1
+  },
+  "gold_sql": "SELECT ROUND(AVG(amount), 2) AS avg_payment FROM payment",
+  "correct": false,
+  "reason": "no system column matches a gold column (0/1 matched)",
+  "status": "ok",
+  "tokens": 3553,
+  "confidence": null,
+  "logical_sql": "SELECT AVG(amt) FROM fin_txn",
+  "physical_sql": "SELECT AVG(amt) FROM fin_txn",
+  "message": "",
+  "assumptions": [],
+  "ours": {
+   "columns": [
+    "avg"
+   ],
+   "rows": [
+    [
+     "4.1386193460952058"
+    ]
+   ],
+   "total": 1
+  }
+ },
+ {
+  "id": "p-011",
+  "question": "How many payments were larger than 5 dollars?",
+  "tags": [
+   "god_table",
+   "drift",
+   "misleading_docs"
+  ],
+  "difficulty": "medium",
+  "expect": null,
+  "answered": true,
+  "gold": {
+   "columns": [
+    "n"
+   ],
+   "rows": [
+    [
+     3957
+    ]
+   ],
+   "total": 1
+  },
+  "gold_sql": "SELECT COUNT(*) AS n FROM payment WHERE amount > 5",
+  "correct": false,
+  "reason": "no system column matches a gold column (0/1 matched)",
+  "status": "ok",
+  "tokens": 3571,
+  "confidence": null,
+  "logical_sql": "SELECT COUNT(*) FROM fin_txn WHERE amt > 5",
+  "physical_sql": "SELECT COUNT(*) FROM fin_txn WHERE amt > 5",
+  "message": "",
+  "assumptions": [],
+  "ours": {
+   "columns": [
+    "count"
+   ],
+   "rows": [
+    [
+     1444
+    ]
+   ],
+   "total": 1
+  }
+ },
+ {
+  "id": "p-012",
+  "question": "Which month had the highest revenue?",
+  "tags": [
+   "god_table",
+   "drift"
+  ],
+  "difficulty": "medium",
+  "expect": null,
+  "answered": true,
+  "gold": {
+   "columns": [
+    "month",
+    "revenue"
+   ],
+   "rows": [
+    [
+     "2022-03",
+     "11413.86"
+    ]
+   ],
+   "total": 1
+  },
+  "gold_sql": "SELECT TO_CHAR(payment_date, 'YYYY-MM') AS month, ROUND(SUM(amount), 2) AS revenue\nFROM payment GROUP BY 1 ORDER BY 2 DESC LIMIT 1",
+  "correct": false,
+  "reason": "no system column matches a gold column (0/2 matched)",
+  "status": "ok",
+  "tokens": 3584,
+  "confidence": null,
+  "logical_sql": "SELECT mth\nFROM rpt_mthly_rev\nORDER BY rev DESC\nLIMIT 1",
+  "physical_sql": "SELECT mth\nFROM rpt_mthly_rev\nORDER BY rev DESC\nLIMIT 1",
+  "message": "",
+  "assumptions": [],
+  "ours": {
+   "columns": [
+    "mth"
+   ],
+   "rows": [
+    [
+     "2022-04"
+    ]
+   ],
+   "total": 1
+  }
+ },
+ {
+  "id": "p-013",
+  "question": "Show revenue per store.",
+  "tags": [
+   "god_table",
+   "drift",
+   "missing_fk"
+  ],
+  "difficulty": "medium",
+  "expect": null,
+  "answered": true,
+  "gold": {
+   "columns": [
+    "store_id",
+    "revenue"
+   ],
+   "rows": [
+    [
+     2,
+     "33927.04"
+    ],
+    [
+     1,
+     "33489.47"
+    ]
+   ],
+   "total": 2
+  },
+  "gold_sql": "SELECT s.store_id, ROUND(SUM(p.amount), 2) AS revenue\nFROM payment p JOIN staff s ON s.staff_id = p.staff_id\nGROUP BY s.store_id",
+  "correct": false,
+  "reason": "no system column matches a gold column (0/2 matched)",
+  "status": "ok",
+  "tokens": 3756,
+  "confidence": null,
+  "logical_sql": "SELECT str_cd, SUM(amt) AS revenue\nFROM fin_txn\nGROUP BY str_cd\nORDER BY str_cd",
+  "physical_sql": "SELECT str_cd, SUM(amt) AS revenue\nFROM fin_txn\nGROUP BY str_cd\nORDER BY str_cd",
+  "message": "",
+  "assumptions": [],
+  "ours": {
+   "columns": [
+    "str_cd",
+    "revenue"
+   ],
+   "rows": [
+    [
+     "S01",
+     "12165.02"
+    ],
+    [
+     "S02",
+     "12265.25"
+    ]
+   ],
+   "total": 2
+  }
+ },
+ {
+  "id": "p-014",
+  "question": "How much revenue came from payments processed by Jon Stephens?",
+  "tags": [
+   "god_table",
+   "drift",
+   "missing_fk"
+  ],
+  "difficulty": "medium",
+  "expect": null,
+  "answered": true,
+  "gold": {
+   "columns": [
+    "revenue"
+   ],
+   "rows": [
+    [
+     "33927.04"
+    ]
+   ],
+   "total": 1
+  },
+  "gold_sql": "SELECT ROUND(SUM(p.amount), 2) AS revenue FROM payment p\nJOIN staff s ON s.staff_id = p.staff_id\nWHERE s.first_name = 'Jon' AND s.last_name = 'Stephens'",
+  "correct": false,
+  "reason": "no system column matches a gold column (0/1 matched)",
+  "status": "ok",
+  "tokens": 3767,
+  "confidence": null,
+  "logical_sql": "SELECT SUM(ft.amt)\nFROM fin_txn ft\nJOIN stf s ON ft.stf_no = s.stf_id\nWHERE s.stf_fnm = 'Jon' AND s.stf_lnm = 'Stephens'",
+  "physical_sql": "SELECT SUM(ft.amt)\nFROM fin_txn ft\nJOIN stf s ON ft.stf_no = s.stf_id\nWHERE s.stf_fnm = 'Jon' AND s.stf_lnm = 'Stephens'",
+  "message": "",
+  "assumptions": [],
+  "ours": {
+   "columns": [
+    "sum"
+   ],
+   "rows": [
+    [
+     "12265.25"
+    ]
+   ],
+   "total": 1
+  }
+ },
+ {
+  "id": "p-015",
+  "question": "What is the total amount paid by customer Mary Smith?",
+  "tags": [
+   "god_table",
+   "drift",
+   "string_quality"
+  ],
+  "difficulty": "medium",
+  "expect": null,
+  "answered": true,
+  "gold": {
+   "columns": [
+    "total"
+   ],
+   "rows": [
+    [
+     "118.68"
+    ]
+   ],
+   "total": 1
+  },
+  "gold_sql": "SELECT ROUND(SUM(p.amount), 2) AS total FROM payment p\nJOIN customer c ON c.customer_id = p.customer_id\nWHERE c.first_name = 'MARY' AND c.last_name = 'SMITH'",
+  "correct": false,
+  "reason": "no system column matches a gold column (0/1 matched)",
+  "status": "ok",
+  "tokens": 3740,
+  "confidence": null,
+  "logical_sql": "SELECT SUM(ft.amt)\nFROM fin_txn ft\nJOIN cstmr c ON ft.cstmr_no = c.cstmr_id\nWHERE c.cfnm = 'Mary' AND c.clnm = 'Smith'",
+  "physical_sql": "SELECT SUM(ft.amt)\nFROM fin_txn ft\nJOIN cstmr c ON ft.cstmr_no = c.cstmr_id\nWHERE c.cfnm = 'Mary' AND c.clnm = 'Smith'",
+  "message": "",
+  "assumptions": [],
+  "ours": {
+   "columns": [
+    "sum"
+   ],
+   "rows": [
+    [
+     null
+    ]
+   ],
+   "total": 1
+  }
+ },
+ {
+  "id": "p-016",
+  "question": "Who are the top 10 customers by total amount paid? Give first name, last name and the total.",
+  "tags": [
+   "god_table",
+   "drift",
+   "string_quality",
+   "missing_fk"
+  ],
+  "difficulty": "medium",
+  "expect": null,
+  "answered": true,
+  "gold": {
+   "columns": [
+    "first_name",
+    "last_name",
+    "total"
+   ],
+   "rows": [
+    [
+     "KARL",
+     "SEAL",
+     "221.55"
+    ],
+    [
+     "ELEANOR",
+     "HUNT",
+     "216.54"
+    ],
+    [
+     "CLARA",
+     "SHAW",
+     "195.58"
+    ],
+    [
+     "MARION",
+     "SNYDER",
+     "194.61"
+    ],
+    [
+     "RHONDA",
+     "KENNEDY",
+     "194.61"
+    ],
+    [
+     "TOMMY",
+     "COLLAZO",
+     "186.62"
+    ],
+    [
+     "WESLEY",
+     "BULL",
+     "177.60"
+    ],
+    [
+     "TIM",
+     "CARY",
+     "175.61"
+    ],
+    [
+     "MARCIA",
+     "DEAN",
+     "175.58"
+    ],
+    [
+     "ANA",
+     "BRADLEY",
+     "174.66"
+    ]
+   ],
+   "total": 10
+  },
+  "gold_sql": "SELECT c.first_name, c.last_name, ROUND(SUM(p.amount), 2) AS total\nFROM payment p JOIN customer c ON c.customer_id = p.customer_id\nGROUP BY c.customer_id, c.first_name, c.last_name\nORDER BY SUM(p.amount) DESC LIMIT 10",
+  "correct": false,
+  "reason": "no system column matches a gold column (0/3 matched)",
+  "status": "ok",
+  "tokens": 3704,
+  "confidence": null,
+  "logical_sql": "SELECT c.cfnm, c.clnm, SUM(ft.amt) AS total\nFROM cstmr c\nJOIN fin_txn ft ON c.cstmr_id = ft.cstmr_no\nGROUP BY c.cstmr_id, c.cfnm, c.clnm\nORDER BY total DESC\nLIMIT 10",
+  "physical_sql": "SELECT c.cfnm, c.clnm, SUM(ft.amt) AS total\nFROM cstmr c\nJOIN fin_txn ft ON c.cstmr_id = ft.cstmr_no\nGROUP BY c.cstmr_id, c.cfnm, c.clnm\nORDER BY total DESC\nLIMIT 10",
+  "message": "",
+  "assumptions": [],
+  "ours": {
+   "columns": [
+    "cfnm",
+    "clnm",
+    "total"
+   ],
+   "rows": [
+    [
+     "TOMMY                                        ",
+     "COLLAZO                                      ",
+     "91.81"
+    ],
+    [
+     "TIM                                          ",
+     "CARY                                         ",
+     "90.81"
+    ],
+    [
+     "KARL                                         ",
+     "SEAL                                         ",
+     "89.84"
+    ],
+    [
+     "STEVE                                        ",
+     "MACKENZIE                                    ",
+     "87.83"
+    ],
+    [
+     "ELEANOR                                      ",
+     "HUNT                                         ",
+     "85.83"
+    ],
+    [
+     "ROY                                          ",
+     "WHITING                                      ",
+     "82.84"
+    ],
+    [
+     "ANA                                          ",
+     "BRADLEY                                      ",
+     "78.86"
+    ],
+    [
+     "JEFFERY                                      ",
+     "PINSON                                       ",
+     "78.81"
+    ],
+    [
+     "BERNICE                                      ",
+     "WILLIS                                       ",
+     "77.84"
+    ],
+    [
+     "MARION                                       ",
+     "SNYDER                                       ",
+     "76.84"
+    ]
+   ],
+   "total": 10
+  }
+ },
+ {
+  "id": "p-017",
+  "question": "What is the total revenue from films in the Sports category?",
+  "tags": [
+   "god_table",
+   "drift",
+   "missing_fk",
+   "inconsistent_types",
+   "composite_key"
+  ],
+  "difficulty": "hard",
+  "expect": null,
+  "answered": true,
+  "gold": {
+   "columns": [
+    "revenue"
+   ],
+   "rows": [
+    [
+     "5314.21"
+    ]
+   ],
+   "total": 1
+  },
+  "gold_sql": "SELECT ROUND(SUM(p.amount), 2) AS revenue FROM payment p\nJOIN rental r ON r.rental_id = p.rental_id\nJOIN inventory i ON i.inventory_id = r.inventory_id\nJOIN film_category fc ON fc.film_id = i.film_id\nJOIN category c ON c.category_id = fc.category_id\nWHERE c.name = 'Sports'",
+  "correct": false,
+  "reason": "error: operator does not exist: character varying = integer\nLINE 1: ...f_no = rh.rntl_id JOIN invtry AS inv ON rh.inv_no = inv.inv_...\n            ",
+  "status": "error",
+  "tokens": 4195,
+  "confidence": null,
+  "logical_sql": "SELECT SUM(ft.amt) AS total_revenue\nFROM fin_txn ft\nJOIN rntl_hdr rh ON ft.ref_no = rh.rntl_id\nJOIN invtry inv ON rh.inv_no = inv.inv_id\nJOIN film_ctgry fc ON inv.film_no = fc.film_no\nJOIN ctgry c ON fc.ctgry_no = c.ctgry_id\nWHERE c.ctgry_nm = 'Sports'",
+  "physical_sql": "SELECT SUM(ft.amt) AS total_revenue\nFROM fin_txn ft\nJOIN rntl_hdr rh ON ft.ref_no = rh.rntl_id\nJOIN invtry inv ON rh.inv_no = inv.inv_id\nJOIN film_ctgry fc ON inv.film_no = fc.film_no\nJOIN ctgry c ON fc.ctgry_no = c.ctgry_id\nWHERE c.ctgry_nm = 'Sports'",
+  "message": "operator does not exist: character varying = integer\nLINE 1: ...f_no = rh.rntl_id JOIN invtry AS inv ON rh.inv_no = inv.inv_...\n                                                             ^\nHINT:  No operator matches the given name and argument types. You might need to add explicit type casts.",
+  "assumptions": [],
+  "ours": {
+   "columns": [],
+   "rows": [],
+   "total": 0
+  }
+ },
+ {
+  "id": "p-018",
+  "question": "Which film category has earned the most revenue?",
+  "tags": [
+   "god_table",
+   "drift",
+   "missing_fk",
+   "inconsistent_types",
+   "composite_key"
+  ],
+  "difficulty": "hard",
+  "expect": null,
+  "answered": false,
+  "gold": {
+   "columns": [
+    "name",
+    "revenue"
+   ],
+   "rows": [
+    [
+     "Sports",
+     "5314.21"
+    ]
+   ],
+   "total": 1
+  },
+  "gold_sql": "SELECT c.name, ROUND(SUM(p.amount), 2) AS revenue FROM payment p\nJOIN rental r ON r.rental_id = p.rental_id\nJOIN inventory i ON i.inventory_id = r.inventory_id\nJOIN film_category fc ON fc.film_id = i.film_id\nJOIN category c ON c.category_id = fc.category_id\nGROUP BY c.name ORDER BY SUM(p.amount) DESC LIMIT 1"
+ },
+ {
+  "id": "p-019",
+  "question": "How many rentals were made in each month?",
+  "tags": [
+   "inconsistent_types",
+   "cryptic_names"
+  ],
+  "difficulty": "medium",
+  "expect": null,
+  "answered": true,
+  "gold": {
+   "columns": [
+    "month",
+    "rentals"
+   ],
+   "rows": [
+    [
+     "2022-02",
+     182
+    ],
+    [
+     "2022-05",
+     1156
+    ],
+    [
+     "2022-06",
+     2311
+    ],
+    [
+     "2022-07",
+     6739
+    ],
+    [
+     "2022-08",
+     5656
+    ]
+   ],
+   "total": 5
+  },
+  "gold_sql": "SELECT TO_CHAR(rental_date, 'YYYY-MM') AS month, COUNT(*) AS rentals\nFROM rental GROUP BY 1 ORDER BY 1",
+  "correct": true,
+  "reason": "",
+  "status": "ok",
+  "tokens": 3902,
+  "confidence": null,
+  "logical_sql": "SELECT to_char(rntl_dt::date, 'YYYY-MM') AS month, COUNT(*) AS rental_count\nFROM rntl_hdr\nGROUP BY to_char(rntl_dt::date, 'YYYY-MM')\nORDER BY month",
+  "physical_sql": "SELECT to_char(rntl_dt::date, 'YYYY-MM') AS month, COUNT(*) AS rental_count\nFROM rntl_hdr\nGROUP BY to_char(rntl_dt::date, 'YYYY-MM')\nORDER BY month",
+  "message": "",
+  "assumptions": [],
+  "ours": {
+   "columns": [
+    "month",
+    "rental_count"
+   ],
+   "rows": [
+    [
+     "2022-02",
+     182
+    ],
+    [
+     "2022-05",
+     1156
+    ],
+    [
+     "2022-06",
+     2311
+    ],
+    [
+     "2022-07",
+     6739
+    ],
+    [
+     "2022-08",
+     5656
+    ]
+   ],
+   "total": 5
+  }
+ },
+ {
+  "id": "p-020",
+  "question": "How many distinct customers rented something in July 2022?",
+  "tags": [
+   "inconsistent_types"
+  ],
+  "difficulty": "medium",
+  "expect": null,
+  "answered": true,
+  "gold": {
+   "columns": [
+    "n"
+   ],
+   "rows": [
+    [
+     599
+    ]
+   ],
+   "total": 1
+  },
+  "gold_sql": "SELECT COUNT(DISTINCT customer_id) AS n FROM rental\nWHERE rental_date >= '2022-07-01' AND rental_date < '2022-08-01'",
+  "correct": false,
+  "reason": "no system column matches a gold column (0/1 matched)",
+  "status": "ok",
+  "tokens": 3774,
+  "confidence": null,
+  "logical_sql": "SELECT COUNT(DISTINCT cstmr_no)\nFROM rntl_hdr\nWHERE rntl_dt LIKE '2022-07%'",
+  "physical_sql": "SELECT COUNT(DISTINCT cstmr_no)\nFROM rntl_hdr\nWHERE rntl_dt LIKE '2022-07%'",
+  "message": "",
+  "assumptions": [],
+  "ours": {
+   "columns": [
+    "count"
+   ],
+   "rows": [
+    [
+     0
+    ]
+   ],
+   "total": 1
+  }
+ },
+ {
+  "id": "p-021",
+  "question": "How many rentals have not been returned yet?",
+  "tags": [
+   "drift"
+  ],
+  "difficulty": "medium",
+  "expect": null,
+  "answered": true,
+  "gold": {
+   "columns": [
+    "n"
+   ],
+   "rows": [
+    [
+     183
+    ]
+   ],
+   "total": 1
+  },
+  "gold_sql": "SELECT COUNT(*) AS n FROM rental WHERE return_date IS NULL",
+  "correct": false,
+  "reason": "no system column matches a gold column (0/1 matched)",
+  "status": "ok",
+  "tokens": 3576,
+  "confidence": null,
+  "logical_sql": "SELECT COUNT(*) FROM rntl_hdr WHERE rtn_ts IS NULL",
+  "physical_sql": "SELECT COUNT(*) FROM rntl_hdr WHERE rtn_ts IS NULL",
+  "message": "",
+  "assumptions": [],
+  "ours": {
+   "columns": [
+    "count"
+   ],
+   "rows": [
+    [
+     1339
+    ]
+   ],
+   "total": 1
+  }
+ },
+ {
+  "id": "p-022",
+  "question": "How many rentals were returned in June 2022?",
+  "tags": [
+   "drift",
+   "inconsistent_types"
+  ],
+  "difficulty": "hard",
+  "expect": null,
+  "answered": true,
+  "gold": {
+   "columns": [
+    "n"
+   ],
+   "rows": [
+    [
+     3064
+    ]
+   ],
+   "total": 1
+  },
+  "gold_sql": "SELECT COUNT(*) AS n FROM rental\nWHERE return_date >= '2022-06-01' AND return_date < '2022-07-01'",
+  "correct": false,
+  "reason": "no system column matches a gold column (0/1 matched)",
+  "status": "ok",
+  "tokens": 3712,
+  "confidence": null,
+  "logical_sql": "SELECT COUNT(*)\nFROM rntl_hdr\nWHERE rtn_ts >= '2022-06-01' AND rtn_ts < '2022-07-01'",
+  "physical_sql": "SELECT COUNT(*)\nFROM rntl_hdr\nWHERE rtn_ts >= '2022-06-01' AND rtn_ts < '2022-07-01'",
+  "message": "",
+  "assumptions": [],
+  "ours": {
+   "columns": [
+    "count"
+   ],
+   "rows": [
+    [
+     2310
+    ]
+   ],
+   "total": 1
+  }
+ },
+ {
+  "id": "p-023",
+  "question": "On average, how many days does a customer keep a rental before returning it?",
+  "tags": [
+   "drift",
+   "inconsistent_types"
+  ],
+  "difficulty": "hard",
+  "expect": null,
+  "answered": true,
+  "gold": {
+   "columns": [
+    "avg_days"
+   ],
+   "rows": [
+    [
+     "5.02"
+    ]
+   ],
+   "total": 1
+  },
+  "gold_sql": "SELECT ROUND(AVG(return_date::date - rental_date::date), 2) AS avg_days\nFROM rental WHERE return_date IS NOT NULL",
+  "correct": false,
+  "reason": "error: date/time field value out of range: \"26/05/2022\"\nHINT:  Perhaps you need a different \"datestyle\" setting.",
+  "status": "error",
+  "tokens": 3780,
+  "confidence": null,
+  "logical_sql": "SELECT AVG(rtn_dt_txt::date - rntl_dt::date) AS avg_days\nFROM rntl_hdr\nWHERE rtn_dt_txt IS NOT NULL AND rtn_dt_txt <> ''",
+  "physical_sql": "SELECT AVG(rtn_dt_txt::date - rntl_dt::date) AS avg_days\nFROM rntl_hdr\nWHERE rtn_dt_txt IS NOT NULL AND rtn_dt_txt <> ''",
+  "message": "date/time field value out of range: \"26/05/2022\"\nHINT:  Perhaps you need a different \"datestyle\" setting.",
+  "assumptions": [],
+  "ours": {
+   "columns": [],
+   "rows": [],
+   "total": 0
+  }
+ },
+ {
+  "id": "p-024",
+  "question": "Which film has been rented the most times?",
+  "tags": [
+   "inconsistent_types",
+   "missing_fk",
+   "dialect_friction"
+  ],
+  "difficulty": "medium",
+  "expect": null,
+  "answered": true,
+  "gold": {
+   "columns": [
+    "title",
+    "rentals"
+   ],
+   "rows": [
+    [
+     "BUCKET BROTHERHOOD",
+     34
+    ]
+   ],
+   "total": 1
+  },
+  "gold_sql": "SELECT f.title, COUNT(*) AS rentals FROM rental r\nJOIN inventory i ON i.inventory_id = r.inventory_id\nJOIN film f ON f.film_id = i.film_id\nGROUP BY f.film_id, f.title ORDER BY COUNT(*) DESC LIMIT 1",
+  "correct": false,
+  "reason": "error: could not parse SQL: Required keyword: 'expressions' missing for <class 'sqlglot.expressions.query.Order'>. Line 6, Col: 8.\n  invtry i ON r.",
+  "status": "error",
+  "tokens": 3978,
+  "confidence": null,
+  "logical_sql": "SELECT t.strTitle\nFROM rntl_hdr r\nJOIN invtry i ON r.inv_no = i.inv_id::text\nJOIN tblFilm t ON i.film_no = t.intFilmID\nGROUP BY t.strTitle\nORDER BY",
+  "physical_sql": "SELECT t.strTitle\nFROM rntl_hdr r\nJOIN invtry i ON r.inv_no = i.inv_id::text\nJOIN tblFilm t ON i.film_no = t.intFilmID\nGROUP BY t.strTitle\nORDER BY",
+  "message": "could not parse SQL: Required keyword: 'expressions' missing for <class 'sqlglot.expressions.query.Order'>. Line 6, Col: 8.\n  invtry i ON r.inv_no = i.inv_id::text\nJOIN tblFilm t ON i.film_no = t.intFilmID\nGROUP BY t.strTitle\n\u001b[4mORDER BY\u001b[0m",
+  "assumptions": [],
+  "ours": {
+   "columns": [],
+   "rows": [],
+   "total": 0
+  }
+ },
+ {
+  "id": "p-025",
+  "question": "How many rentals has each staff member processed? Show their names.",
+  "tags": [
+   "cryptic_names",
+   "missing_fk"
+  ],
+  "difficulty": "medium",
+  "expect": null,
+  "answered": true,
+  "gold": {
+   "columns": [
+    "first_name",
+    "last_name",
+    "rentals"
+   ],
+   "rows": [
+    [
+     "Jon",
+     "Stephens",
+     8004
+    ],
+    [
+     "Mike",
+     "Hillyer",
+     8040
+    ]
+   ],
+   "total": 2
+  },
+  "gold_sql": "SELECT s.first_name, s.last_name, COUNT(*) AS rentals FROM rental r\nJOIN staff s ON s.staff_id = r.staff_id GROUP BY s.staff_id, s.first_name, s.last_name",
+  "correct": true,
+  "reason": "",
+  "status": "ok",
+  "tokens": 3697,
+  "confidence": null,
+  "logical_sql": "SELECT s.stf_fnm, s.stf_lnm, COUNT(r.rntl_id) AS rental_count\nFROM stf s\nJOIN rntl_hdr r ON s.stf_id = r.stf_no\nGROUP BY s.stf_fnm, s.stf_lnm\nORDER BY rental_count DESC",
+  "physical_sql": "SELECT s.stf_fnm, s.stf_lnm, COUNT(r.rntl_id) AS rental_count\nFROM stf s\nJOIN rntl_hdr r ON s.stf_id = r.stf_no\nGROUP BY s.stf_fnm, s.stf_lnm\nORDER BY rental_count DESC",
+  "message": "",
+  "assumptions": [],
+  "ours": {
+   "columns": [
+    "stf_fnm",
+    "stf_lnm",
+    "rental_count"
+   ],
+   "rows": [
+    [
+     "Mike",
+     "Hillyer",
+     8040
+    ],
+    [
+     "Jon",
+     "Stephens",
+     8004
+    ]
+   ],
+   "total": 2
+  }
+ },
+ {
+  "id": "p-026",
+  "question": "Which customers have rented more than 40 films? Give their first and last names.",
+  "tags": [
+   "string_quality",
+   "missing_fk"
+  ],
+  "difficulty": "medium",
+  "expect": null,
+  "answered": true,
+  "gold": {
+   "columns": [
+    "first_name",
+    "last_name"
+   ],
+   "rows": [
+    [
+     "TAMMY",
+     "SANDERS"
+    ],
+    [
+     "CLARA",
+     "SHAW"
+    ],
+    [
+     "KARL",
+     "SEAL"
+    ],
+    [
+     "MARCIA",
+     "DEAN"
+    ],
+    [
+     "ELEANOR",
+     "HUNT"
+    ]
+   ],
+   "total": 5
+  },
+  "gold_sql": "SELECT c.first_name, c.last_name FROM rental r\nJOIN customer c ON c.customer_id = r.customer_id\nGROUP BY c.customer_id, c.first_name, c.last_name HAVING COUNT(*) > 40",
+  "correct": true,
+  "reason": "",
+  "status": "ok",
+  "tokens": 3798,
+  "confidence": null,
+  "logical_sql": "SELECT c.cfnm, c.clnm\nFROM cstmr c\nJOIN rntl_hdr r ON c.cstmr_id = r.cstmr_no\nGROUP BY c.cstmr_id, c.cfnm, c.clnm\nHAVING COUNT(*) > 40",
+  "physical_sql": "SELECT c.cfnm, c.clnm\nFROM cstmr c\nJOIN rntl_hdr r ON c.cstmr_id = r.cstmr_no\nGROUP BY c.cstmr_id, c.cfnm, c.clnm\nHAVING COUNT(*) > 40",
+  "message": "",
+  "assumptions": [],
+  "ours": {
+   "columns": [
+    "cfnm",
+    "clnm"
+   ],
+   "rows": [
+    [
+     "TAMMY                                        ",
+     "SANDERS                                      "
+    ],
+    [
+     "CLARA                                        ",
+     "SHAW                                         "
+    ],
+    [
+     "KARL                                         ",
+     "SEAL                                         "
+    ],
+    [
+     "MARCIA                                       ",
+     "DEAN                                         "
+    ],
+    [
+     "ELEANOR                                      ",
+     "HUNT                                         "
+    ]
+   ],
+   "total": 5
+  }
+ },
+ {
+  "id": "p-027",
+  "question": "How many films are there in each category?",
+  "tags": [
+   "composite_key",
+   "soft_delete",
+   "missing_fk"
+  ],
+  "difficulty": "medium",
+  "expect": null,
+  "answered": true,
+  "gold": {
+   "columns": [
+    "name",
+    "films"
+   ],
+   "rows": [
+    [
+     "Sports",
+     74
+    ],
+    [
+     "Classics",
+     57
+    ],
+    [
+     "New",
+     63
+    ],
+    [
+     "Family",
+     69
+    ],
+    [
+     "Comedy",
+     58
+    ],
+    [
+     "Animation",
+     66
+    ],
+    [
+     "Travel",
+     57
+    ],
+    [
+     "Music",
+     51
+    ],
+    [
+     "Drama",
+     62
+    ],
+    [
+     "Horror",
+     56
+    ],
+    [
+     "Sci-Fi",
+     61
+    ],
+    [
+     "Games",
+     61
+    ]
+   ],
+   "total": 16
+  },
+  "gold_sql": "SELECT c.name, COUNT(*) AS films FROM film_category fc\nJOIN category c ON c.category_id = fc.category_id GROUP BY c.name",
+  "correct": false,
+  "reason": "no system column matches a gold column (1/2 matched)",
+  "status": "ok",
+  "tokens": 3655,
+  "confidence": null,
+  "logical_sql": "SELECT c.ctgry_nm, COUNT(fc.film_no) AS film_count\nFROM film_ctgry fc\nJOIN ctgry c ON fc.ctgry_no = c.ctgry_id\nGROUP BY c.ctgry_nm",
+  "physical_sql": "SELECT c.ctgry_nm, COUNT(fc.film_no) AS film_count\nFROM film_ctgry fc\nJOIN ctgry c ON fc.ctgry_no = c.ctgry_id\nGROUP BY c.ctgry_nm",
+  "message": "",
+  "assumptions": [],
+  "ours": {
+   "columns": [
+    "ctgry_nm",
+    "film_count"
+   ],
+   "rows": [
+    [
+     "Family",
+     70
+    ],
+    [
+     "Games",
+     62
+    ],
+    [
+     "Animation",
+     67
+    ],
+    [
+     "Classics",
+     58
+    ],
+    [
+     "Documentary",
+     69
+    ],
+    [
+     "New",
+     63
+    ],
+    [
+     "Sports",
+     74
+    ],
+    [
+     "Children",
+     61
+    ],
+    [
+     "Music",
+     52
+    ],
+    [
+     "Travel",
+     57
+    ],
+    [
+     "Foreign",
+     74
+    ],
+    [
+     "Drama",
+     63
+    ]
+   ],
+   "total": 16
+  }
+ },
+ {
+  "id": "p-028",
+  "question": "Which actor has appeared in the most films?",
+  "tags": [
+   "composite_key",
+   "soft_delete",
+   "string_quality"
+  ],
+  "difficulty": "medium",
+  "expect": null,
+  "answered": false,
+  "gold": {
+   "columns": [
+    "first_name",
+    "last_name",
+    "films"
+   ],
+   "rows": [
+    [
+     "GINA",
+     "DEGENERES",
+     42
+    ]
+   ],
+   "total": 1
+  },
+  "gold_sql": "SELECT a.first_name, a.last_name, COUNT(*) AS films FROM film_actor fa\nJOIN actor a ON a.actor_id = fa.actor_id\nGROUP BY a.actor_id, a.first_name, a.last_name ORDER BY COUNT(*) DESC LIMIT 1"
+ },
+ {
+  "id": "p-029",
+  "question": "In how many films has an actor with the surname Guiness appeared?",
+  "tags": [
+   "string_quality",
+   "composite_key",
+   "soft_delete"
+  ],
+  "difficulty": "medium",
+  "expect": null,
+  "answered": false,
+  "gold": {
+   "columns": [
+    "films"
+   ],
+   "rows": [
+    [
+     80
+    ]
+   ],
+   "total": 1
+  },
+  "gold_sql": "SELECT COUNT(DISTINCT fa.film_id) AS films FROM film_actor fa\nJOIN actor a ON a.actor_id = fa.actor_id WHERE a.last_name = 'GUINESS'"
+ },
+ {
+  "id": "p-030",
+  "question": "What is the average number of films per actor?",
+  "tags": [
+   "composite_key",
+   "soft_delete"
+  ],
+  "difficulty": "medium",
+  "expect": null,
+  "answered": false,
+  "gold": {
+   "columns": [
+    "avg_films"
+   ],
+   "rows": [
+    [
+     "27.31"
+    ]
+   ],
+   "total": 1
+  },
+  "gold_sql": "SELECT ROUND(AVG(n), 2) AS avg_films FROM (\n  SELECT actor_id, COUNT(*) AS n FROM film_actor GROUP BY actor_id) x"
+ },
+ {
+  "id": "p-031",
+  "question": "How many films are rated PG-13?",
+  "tags": [
+   "magic_numbers",
+   "dialect_friction"
+  ],
+  "difficulty": "easy",
+  "expect": null,
+  "answered": false,
+  "gold": {
+   "columns": [
+    "n"
+   ],
+   "rows": [
+    [
+     223
+    ]
+   ],
+   "total": 1
+  },
+  "gold_sql": "SELECT COUNT(*) AS n FROM film WHERE rating = 'PG-13'"
+ },
+ {
+  "id": "p-032",
+  "question": "How many films are there of each rating?",
+  "tags": [
+   "magic_numbers",
+   "dialect_friction"
+  ],
+  "difficulty": "medium",
+  "expect": null,
+  "answered": false,
+  "gold": {
+   "columns": [
+    "rating",
+    "films"
+   ],
+   "rows": [
+    [
+     "NC-17",
+     210
+    ],
+    [
+     "R",
+     195
+    ],
+    [
+     "PG-13",
+     223
+    ],
+    [
+     "PG",
+     194
+    ],
+    [
+     "G",
+     178
+    ]
+   ],
+   "total": 5
+  },
+  "gold_sql": "SELECT rating::text AS rating, COUNT(*) AS films FROM film GROUP BY rating"
+ },
+ {
+  "id": "p-033",
+  "question": "What is the average film length for each rating?",
+  "tags": [
+   "magic_numbers",
+   "dialect_friction"
+  ],
+  "difficulty": "medium",
+  "expect": null,
+  "answered": false,
+  "gold": {
+   "columns": [
+    "rating",
+    "avg_length"
+   ],
+   "rows": [
+    [
+     "NC-17",
+     "113.23"
+    ],
+    [
+     "R",
+     "118.66"
+    ],
+    [
+     "PG-13",
+     "120.44"
+    ],
+    [
+     "PG",
+     "112.01"
+    ],
+    [
+     "G",
+     "111.05"
+    ]
+   ],
+   "total": 5
+  },
+  "gold_sql": "SELECT rating::text AS rating, ROUND(AVG(length), 2) AS avg_length\nFROM film GROUP BY rating"
+ },
+ {
+  "id": "p-034",
+  "question": "What is the average replacement cost of films rated R?",
+  "tags": [
+   "magic_numbers",
+   "cryptic_names"
+  ],
+  "difficulty": "medium",
+  "expect": null,
+  "answered": false,
+  "gold": {
+   "columns": [
+    "avg_cost"
+   ],
+   "rows": [
+    [
+     "20.23"
+    ]
+   ],
+   "total": 1
+  },
+  "gold_sql": "SELECT ROUND(AVG(replacement_cost), 2) AS avg_cost FROM film WHERE rating = 'R'"
+ },
+ {
+  "id": "p-035",
+  "question": "What is the average rental rate of films in the Comedy category?",
+  "tags": [
+   "composite_key",
+   "missing_fk"
+  ],
+  "difficulty": "medium",
+  "expect": null,
+  "answered": false,
+  "gold": {
+   "columns": [
+    "avg_rate"
+   ],
+   "rows": [
+    [
+     "3.16"
+    ]
+   ],
+   "total": 1
+  },
+  "gold_sql": "SELECT ROUND(AVG(f.rental_rate), 2) AS avg_rate FROM film f\nJOIN film_category fc ON fc.film_id = f.film_id\nJOIN category c ON c.category_id = fc.category_id WHERE c.name = 'Comedy'"
+ },
+ {
+  "id": "p-036",
+  "question": "How many films include Behind the Scenes as a special feature?",
+  "tags": [
+   "embedded_format",
+   "dialect_friction"
+  ],
+  "difficulty": "medium",
+  "expect": null,
+  "answered": false,
+  "gold": {
+   "columns": [
+    "n"
+   ],
+   "rows": [
+    [
+     538
+    ]
+   ],
+   "total": 1
+  },
+  "gold_sql": "SELECT COUNT(*) AS n FROM film WHERE 'Behind the Scenes' = ANY(special_features)"
+ },
+ {
+  "id": "p-037",
+  "question": "How many copies of the film ACADEMY DINOSAUR are in inventory?",
+  "tags": [
+   "missing_fk",
+   "dialect_friction"
+  ],
+  "difficulty": "easy",
+  "expect": null,
+  "answered": false,
+  "gold": {
+   "columns": [
+    "copies"
+   ],
+   "rows": [
+    [
+     8
+    ]
+   ],
+   "total": 1
+  },
+  "gold_sql": "SELECT COUNT(*) AS copies FROM inventory i JOIN film f ON f.film_id = i.film_id\nWHERE f.title = 'ACADEMY DINOSAUR'"
+ },
+ {
+  "id": "p-038",
+  "question": "How many films in inventory does each store hold?",
+  "tags": [
+   "cryptic_names"
+  ],
+  "difficulty": "easy",
+  "expect": null,
+  "answered": false,
+  "gold": {
+   "columns": [
+    "store_id",
+    "copies"
+   ],
+   "rows": [
+    [
+     1,
+     2270
+    ],
+    [
+     2,
+     2311
+    ]
+   ],
+   "total": 2
+  },
+  "gold_sql": "SELECT store_id, COUNT(*) AS copies FROM inventory GROUP BY store_id"
+ },
+ {
+  "id": "p-039",
+  "question": "What are the 5 countries with the most customers?",
+  "tags": [
+   "missing_fk",
+   "soft_delete"
+  ],
+  "difficulty": "medium",
+  "expect": null,
+  "answered": false,
+  "gold": {
+   "columns": [
+    "country",
+    "customers"
+   ],
+   "rows": [
+    [
+     "India",
+     60
+    ],
+    [
+     "China",
+     53
+    ],
+    [
+     "United States",
+     36
+    ],
+    [
+     "Japan",
+     31
+    ],
+    [
+     "Mexico",
+     30
+    ]
+   ],
+   "total": 5
+  },
+  "gold_sql": "SELECT co.country, COUNT(*) AS customers FROM customer cu\nJOIN address a ON a.address_id = cu.address_id\nJOIN city ci ON ci.city_id = a.city_id\nJOIN country co ON co.country_id = ci.country_id\nGROUP BY co.country ORDER BY COUNT(*) DESC LIMIT 5"
+ },
+ {
+  "id": "p-040",
+  "question": "How many customers live in the city of Aurora?",
+  "tags": [
+   "string_quality",
+   "missing_fk"
+  ],
+  "difficulty": "medium",
+  "expect": null,
+  "answered": false,
+  "gold": {
+   "columns": [
+    "n"
+   ],
+   "rows": [
+    [
+     2
+    ]
+   ],
+   "total": 1
+  },
+  "gold_sql": "SELECT COUNT(*) AS n FROM customer cu JOIN address a ON a.address_id = cu.address_id\nJOIN city ci ON ci.city_id = a.city_id WHERE ci.city = 'Aurora'"
+ },
+ {
+  "id": "p-041",
+  "question": "What is the email address of customer Austin Cintron?",
+  "tags": [
+   "drift",
+   "embedded_format",
+   "string_quality"
+  ],
+  "difficulty": "medium",
+  "expect": null,
+  "answered": false,
+  "gold": {
+   "columns": [
+    "email"
+   ],
+   "rows": [
+    [
+     "AUSTIN.CINTRON@sakilacustomer.org"
+    ]
+   ],
+   "total": 1
+  },
+  "gold_sql": "SELECT email FROM customer WHERE first_name = 'AUSTIN' AND last_name = 'CINTRON'"
+ },
+ {
+  "id": "p-042",
+  "question": "How many customers have an email address on file?",
+  "tags": [
+   "drift",
+   "embedded_format"
+  ],
+  "difficulty": "medium",
+  "expect": null,
+  "answered": false,
+  "gold": {
+   "columns": [
+    "n"
+   ],
+   "rows": [
+    [
+     599
+    ]
+   ],
+   "total": 1
+  },
+  "gold_sql": "SELECT COUNT(*) AS n FROM customer WHERE email IS NOT NULL"
+ },
+ {
+  "id": "p-043",
+  "question": "How many customers does each store have?",
+  "tags": [
+   "soft_delete",
+   "cryptic_names"
+  ],
+  "difficulty": "easy",
+  "expect": null,
+  "answered": false,
+  "gold": {
+   "columns": [
+    "store_id",
+    "customers"
+   ],
+   "rows": [
+    [
+     1,
+     326
+    ],
+    [
+     2,
+     273
+    ]
+   ],
+   "total": 2
+  },
+  "gold_sql": "SELECT store_id, COUNT(*) AS customers FROM customer GROUP BY store_id"
+ },
+ {
+  "id": "p-044",
+  "question": "Who are our best customers?",
+  "tags": [
+   "ambiguous",
+   "god_table",
+   "drift"
+  ],
+  "difficulty": "medium",
+  "expect": null,
+  "answered": false,
+  "gold": {
+   "columns": [
+    "first_name",
+    "last_name",
+    "total"
+   ],
+   "rows": [
+    [
+     "KARL",
+     "SEAL",
+     "221.55"
+    ],
+    [
+     "ELEANOR",
+     "HUNT",
+     "216.54"
+    ],
+    [
+     "CLARA",
+     "SHAW",
+     "195.58"
+    ],
+    [
+     "MARION",
+     "SNYDER",
+     "194.61"
+    ],
+    [
+     "RHONDA",
+     "KENNEDY",
+     "194.61"
+    ],
+    [
+     "TOMMY",
+     "COLLAZO",
+     "186.62"
+    ],
+    [
+     "WESLEY",
+     "BULL",
+     "177.60"
+    ],
+    [
+     "TIM",
+     "CARY",
+     "175.61"
+    ],
+    [
+     "MARCIA",
+     "DEAN",
+     "175.58"
+    ],
+    [
+     "ANA",
+     "BRADLEY",
+     "174.66"
+    ]
+   ],
+   "total": 10
+  },
+  "gold_sql": "SELECT c.first_name, c.last_name, ROUND(SUM(p.amount), 2) AS total\nFROM payment p JOIN customer c ON c.customer_id = p.customer_id\nGROUP BY c.customer_id, c.first_name, c.last_name\nORDER BY SUM(p.amount) DESC LIMIT 10"
+ },
+ {
+  "id": "p-045",
+  "question": "How much did we make last month?",
+  "tags": [
+   "ambiguous",
+   "god_table",
+   "drift"
+  ],
+  "difficulty": "medium",
+  "expect": null,
+  "answered": false,
+  "gold": {
+   "columns": [
+    "revenue"
+   ],
+   "rows": [
+    [
+     "9712.65"
+    ]
+   ],
+   "total": 1
+  },
+  "gold_sql": "SELECT ROUND(SUM(amount), 2) AS revenue FROM payment\nWHERE payment_date >= '2022-07-01' AND payment_date < '2022-08-01'"
+ },
+ {
+  "id": "p-046",
+  "question": "Show me every event log entry from 2021 with the old and new values.",
+  "tags": [
+   "perf_trap"
+  ],
+  "difficulty": "medium",
+  "expect": "cost_guard",
+  "answered": false
+ },
+ {
+  "id": "p-047",
+  "question": "List every row in the audit log.",
+  "tags": [
+   "perf_trap"
+  ],
+  "difficulty": "easy",
+  "expect": "cost_guard",
+  "answered": false
+ },
+ {
+  "id": "p-048",
+  "question": "What is each customer's loyalty points balance?",
+  "tags": [
+   "abstention"
+  ],
+  "difficulty": "easy",
+  "expect": "abstain",
+  "answered": false
+ },
+ {
+  "id": "p-049",
+  "question": "Which suppliers ship our DVDs to the stores?",
+  "tags": [
+   "abstention"
+  ],
+  "difficulty": "easy",
+  "expect": "abstain",
+  "answered": false
+ }
+]

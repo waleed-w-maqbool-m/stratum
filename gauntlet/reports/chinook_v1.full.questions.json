@@ -1,0 +1,3230 @@
+[
+ {
+  "id": "c-001",
+  "question": "How many customers do we have?",
+  "tags": [
+   "cryptic_names",
+   "soft_delete"
+  ],
+  "difficulty": "easy",
+  "expect": null,
+  "answered": true,
+  "gold": {
+   "columns": [
+    "n"
+   ],
+   "rows": [
+    [
+     59
+    ]
+   ],
+   "total": 1
+  },
+  "gold_sql": "SELECT COUNT(*) AS n FROM Customer",
+  "correct": true,
+  "reason": "",
+  "status": "ok",
+  "tokens": 3247,
+  "confidence": 0.815,
+  "logical_sql": "SELECT COUNT(*) AS customer_count FROM customer",
+  "physical_sql": "SELECT COUNT(*) AS customer_count FROM (SELECT CUST_ID AS id, RTRIM(LTRIM(RTRIM(CFNM1))) AS first_name, RTRIM(LTRIM(RTRIM(CLNM1))) AS last_name, CASE WHEN TRIM(COALESCE(CO_NM, '')) = '' OR UPPER(TRIM(CO_NM)) IN ('-', 'N/A', 'UNKNOWN') THEN NULL ELSE CO_NM END AS company_name, ADDR_XML AS address_xml, COALESCE(PHN_NBR, PHONE) AS phone, FAX_NBR AS fax_number, COALESCE(EML, (SELECT MAX(c.CNTCT_VAL) FROM CUST_CNTCT AS c WHERE c.CUST_ID = CUST_MSTR.CUST_ID)) AS email, CAST(REP_NO AS INTEGER) AS representative_number, CASE UPPER(TRIM(DEL_FLG)) WHEN 'N' THEN 'N' WHEN 'N' THEN 'n' ELSE DEL_FLG END AS deleted_flag, PREFS AS preferences, SUBSTRING(CRT_DT, 1, 10) AS created_date, CASE WHEN INSTR(ADDR_XML, '<c>') > 0 THEN SUBSTRING(ADDR_XML, INSTR(ADDR_XML, '<c>') + 3, INSTR(ADDR_XML, '</c>') - INSTR(ADDR_XML, '<c>') - 3) END AS city, CASE WHEN INSTR(ADDR_XML, '<cy>') > 0 THEN SUBSTRING(ADDR_XML, INSTR(ADDR_XML, '<cy>') + 4, INSTR(ADDR_XML, '</cy>') - INSTR(ADDR_XML, '<cy>') - 4) END AS country_code, CASE WHEN INSTR(ADDR_XML, '<pc>') > 0 THEN SUBSTRING(ADDR_XML, INSTR(ADDR_XML, '<pc>') + 4, INSTR(ADDR_XML, '</pc>') - INSTR(ADDR_XML, '<pc>') - 4) END AS postal_code, CASE WHEN INSTR(ADDR_XML, '<s1>') > 0 THEN SUBSTRING(ADDR_XML, INSTR(ADDR_XML, '<s1>') + 4, INSTR(ADDR_XML, '</s1>') - INSTR(ADDR_XML, '<s1>') - 4) END AS street_address, CASE WHEN INSTR(ADDR_XML, '<st>') > 0 THEN SUBSTRING(ADDR_XML, INSTR(ADDR_XML, '<st>') + 4, INSTR(ADDR_XML, '</st>') - INSTR(ADDR_XML, '<st>') - 4) END AS state, JSON_EXTRACT(PREFS, '$.channel') AS channel, JSON_EXTRACT(PREFS, '$.newsletter') AS newsletter, JSON_EXTRACT(PREFS, '$.tier') AS tier FROM CUST_MSTR WHERE UPPER(COALESCE(DEL_FLG, 'N')) <> 'Y') AS customer",
+  "message": "",
+  "assumptions": [
+   "DEL_FLG is a two-valued flag named for deletion or activity"
+  ],
+  "ours": {
+   "columns": [
+    "customer_count"
+   ],
+   "rows": [
+    [
+     59
+    ]
+   ],
+   "total": 1
+  }
+ },
+ {
+  "id": "c-002",
+  "question": "How many tracks are in the catalog?",
+  "tags": [
+   "cryptic_names",
+   "soft_delete"
+  ],
+  "difficulty": "easy",
+  "expect": null,
+  "answered": true,
+  "gold": {
+   "columns": [
+    "n"
+   ],
+   "rows": [
+    [
+     3503
+    ]
+   ],
+   "total": 1
+  },
+  "gold_sql": "SELECT COUNT(*) AS n FROM Track",
+  "correct": true,
+  "reason": "",
+  "status": "ok",
+  "tokens": 2585,
+  "confidence": 0.891,
+  "logical_sql": "SELECT COUNT(*) AS track_count FROM product",
+  "physical_sql": "SELECT COUNT(*) AS track_count FROM (SELECT PRD_ID AS id, strNm AS name, ALBM_ID AS album_id, MTYP_ID AS media_type_id, GNR_ID AS genre_id, CASE WHEN TRIM(COALESCE(strCmpsr, '')) = '' OR UPPER(TRIM(strCmpsr)) IN ('-', 'N/A', 'UNKNOWN') THEN NULL ELSE strCmpsr END AS composer, intMs AS milliseconds, intByt AS bytes, fltPrc AS price, ATTRS AS attributes, SUBSTRING(DLT_DT, 1, 10) AS deleted_date, CASE WHEN INSTR(ATTRS, 'genre=') > 0 THEN CASE WHEN INSTR(SUBSTRING(ATTRS, INSTR(ATTRS, 'genre=') + 6), '|') > 0 THEN SUBSTRING(SUBSTRING(ATTRS, INSTR(ATTRS, 'genre=') + 6), 1, INSTR(SUBSTRING(ATTRS, INSTR(ATTRS, 'genre=') + 6), '|') - 1) ELSE SUBSTRING(ATTRS, INSTR(ATTRS, 'genre=') + 6) END END AS genre, CASE WHEN INSTR(ATTRS, 'media=') > 0 THEN CASE WHEN INSTR(SUBSTRING(ATTRS, INSTR(ATTRS, 'media=') + 6), '|') > 0 THEN SUBSTRING(SUBSTRING(ATTRS, INSTR(ATTRS, 'media=') + 6), 1, INSTR(SUBSTRING(ATTRS, INSTR(ATTRS, 'media=') + 6), '|') - 1) ELSE SUBSTRING(ATTRS, INSTR(ATTRS, 'media=') + 6) END END AS media, CASE WHEN INSTR(ATTRS, 'secs=') > 0 THEN CASE WHEN INSTR(SUBSTRING(ATTRS, INSTR(ATTRS, 'secs=') + 5), '|') > 0 THEN SUBSTRING(SUBSTRING(ATTRS, INSTR(ATTRS, 'secs=') + 5), 1, INSTR(SUBSTRING(ATTRS, INSTR(ATTRS, 'secs=') + 5), '|') - 1) ELSE SUBSTRING(ATTRS, INSTR(ATTRS, 'secs=') + 5) END END AS secs FROM tblPrd WHERE DLT_DT IS NULL) AS product",
+  "message": "",
+  "assumptions": [
+   "DLT_DT is a deletion date that is NULL on 97.8% of rows"
+  ],
+  "ours": {
+   "columns": [
+    "track_count"
+   ],
+   "rows": [
+    [
+     3503
+    ]
+   ],
+   "total": 1
+  }
+ },
+ {
+  "id": "c-003",
+  "question": "What is our total revenue across all invoices?",
+  "tags": [
+   "god_table",
+   "drift",
+   "soft_delete"
+  ],
+  "difficulty": "medium",
+  "expect": null,
+  "answered": true,
+  "gold": {
+   "columns": [
+    "revenue"
+   ],
+   "rows": [
+    [
+     2328.6
+    ]
+   ],
+   "total": 1
+  },
+  "gold_sql": "SELECT ROUND(SUM(Total), 2) AS revenue FROM Invoice",
+  "correct": true,
+  "reason": "",
+  "status": "ok",
+  "tokens": 2818,
+  "confidence": 0.94,
+  "logical_sql": "SELECT SUM(billing.total_amount) AS total_revenue FROM billing WHERE billing.type_code = 'I'",
+  "physical_sql": "SELECT SUM(billing.total_amount) AS total_revenue FROM (SELECT TRANS_TYP_CD AS type_code, STORE_CD AS store_code, ORD_NO AS order_number, CAST(CUST_NO AS INTEGER) AS customer_number, SUBSTRING(ORD_DT_TXT, 1, 4) || '-' || SUBSTRING(ORD_DT_TXT, 5, 2) || '-' || SUBSTRING(ORD_DT_TXT, 7, 2) AS order_date_text, SUBSTRING(ORD_TS, 7, 4) || '-' || SUBSTRING(ORD_TS, 4, 2) || '-' || SUBSTRING(ORD_TS, 1, 2) AS order_timestamp, CASE WHEN ORD_DT_TXT >= '20230102' THEN TOT_AMT_C / 100.0 ELSE TOT_AMT END AS total_amount, ORD_STS AS order_status, REF_ID AS reference_id, REF_TYP AS reference_type, NOTES AS notes, BILL_ADDR1 AS billing_address1, BILL_CTY AS billing_city, CASE WHEN TRIM(COALESCE(BILL_ST, '')) = '' OR UPPER(TRIM(BILL_ST)) IN ('-', 'N/A', 'UNKNOWN') THEN NULL ELSE BILL_ST END AS billing_state, CASE UPPER(TRIM(BILL_CTRY)) WHEN 'BRA' THEN 'BR' WHEN 'CAN' THEN 'CA' WHEN 'CANADA' THEN 'CA' WHEN 'CANADA' THEN 'CA' WHEN 'GER' THEN 'DE' WHEN 'GERMANY' THEN 'DE' WHEN 'US' THEN 'U.S.A.' WHEN 'USA' THEN 'U.S.A.' WHEN 'UNITED STATES' THEN 'U.S.A.' WHEN 'USA' THEN 'USA' WHEN 'U.S.A.' THEN 'USA' WHEN 'CANADA' THEN 'canada' ELSE BILL_CTRY END AS billing_country, BILL_PC AS billing_postal_code FROM TRANS_MSTR WHERE (TRANS_TYP_CD = 'I' AND (ORD_STS <> 9 OR ORD_STS IS NULL)) AND TRANS_TYP_CD = 'I') AS billing WHERE billing.type_code = 'I'",
+  "message": "",
+  "assumptions": [
+   "TRANS_MSTR holds several kinds of record in one table; this predicate selects the ones this entity is about",
+   "ORD_STS = 9 sits outside the contiguous run 2..6 and covers only 3.9% of rows"
+  ],
+  "ours": {
+   "columns": [
+    "total_revenue"
+   ],
+   "rows": [
+    [
+     2328.6
+    ]
+   ],
+   "total": 1
+  }
+ },
+ {
+  "id": "c-004",
+  "question": "How many invoices were issued in 2022?",
+  "tags": [
+   "god_table",
+   "inconsistent_types",
+   "soft_delete"
+  ],
+  "difficulty": "medium",
+  "expect": null,
+  "answered": true,
+  "gold": {
+   "columns": [
+    "n"
+   ],
+   "rows": [
+    [
+     83
+    ]
+   ],
+   "total": 1
+  },
+  "gold_sql": "SELECT COUNT(*) AS n FROM Invoice\nWHERE InvoiceDate >= '2022-01-01' AND InvoiceDate < '2023-01-01'",
+  "correct": true,
+  "reason": "",
+  "status": "ok",
+  "tokens": 2906,
+  "confidence": 0.94,
+  "logical_sql": "SELECT COUNT(*) AS invoice_count\nFROM billing\nWHERE type_code = 'I'\n  AND STRFTIME('%Y', order_date_text) = '2022'",
+  "physical_sql": "SELECT COUNT(*) AS invoice_count FROM (SELECT TRANS_TYP_CD AS type_code, STORE_CD AS store_code, ORD_NO AS order_number, CAST(CUST_NO AS INTEGER) AS customer_number, SUBSTRING(ORD_DT_TXT, 1, 4) || '-' || SUBSTRING(ORD_DT_TXT, 5, 2) || '-' || SUBSTRING(ORD_DT_TXT, 7, 2) AS order_date_text, SUBSTRING(ORD_TS, 7, 4) || '-' || SUBSTRING(ORD_TS, 4, 2) || '-' || SUBSTRING(ORD_TS, 1, 2) AS order_timestamp, CASE WHEN ORD_DT_TXT >= '20230102' THEN TOT_AMT_C / 100.0 ELSE TOT_AMT END AS total_amount, ORD_STS AS order_status, REF_ID AS reference_id, REF_TYP AS reference_type, NOTES AS notes, BILL_ADDR1 AS billing_address1, BILL_CTY AS billing_city, CASE WHEN TRIM(COALESCE(BILL_ST, '')) = '' OR UPPER(TRIM(BILL_ST)) IN ('-', 'N/A', 'UNKNOWN') THEN NULL ELSE BILL_ST END AS billing_state, CASE UPPER(TRIM(BILL_CTRY)) WHEN 'BRA' THEN 'BR' WHEN 'CAN' THEN 'CA' WHEN 'CANADA' THEN 'CA' WHEN 'CANADA' THEN 'CA' WHEN 'GER' THEN 'DE' WHEN 'GERMANY' THEN 'DE' WHEN 'US' THEN 'U.S.A.' WHEN 'USA' THEN 'U.S.A.' WHEN 'UNITED STATES' THEN 'U.S.A.' WHEN 'USA' THEN 'USA' WHEN 'U.S.A.' THEN 'USA' WHEN 'CANADA' THEN 'canada' ELSE BILL_CTRY END AS billing_country, BILL_PC AS billing_postal_code FROM TRANS_MSTR WHERE TRANS_TYP_CD = 'I' AND (ORD_STS <> 9 OR ORD_STS IS NULL)) AS billing WHERE type_code = 'I' AND STRFTIME('%Y', order_date_text) = '2022'",
+  "message": "",
+  "assumptions": [
+   "TRANS_MSTR holds several kinds of record in one table; this predicate selects the ones this entity is about",
+   "ORD_STS = 9 sits outside the contiguous run 2..6 and covers only 3.9% of rows"
+  ],
+  "ours": {
+   "columns": [
+    "invoice_count"
+   ],
+   "rows": [
+    [
+     83
+    ]
+   ],
+   "total": 1
+  }
+ },
+ {
+  "id": "c-005",
+  "question": "Which billing country generated the most revenue?",
+  "tags": [
+   "god_table",
+   "drift",
+   "string_quality"
+  ],
+  "difficulty": "medium",
+  "expect": null,
+  "answered": true,
+  "gold": {
+   "columns": [
+    "BillingCountry",
+    "revenue"
+   ],
+   "rows": [
+    [
+     "USA",
+     523.06
+    ]
+   ],
+   "total": 1
+  },
+  "gold_sql": "SELECT BillingCountry, ROUND(SUM(Total), 2) AS revenue\nFROM Invoice GROUP BY BillingCountry\nORDER BY revenue DESC, BillingCountry ASC LIMIT 1",
+  "correct": false,
+  "reason": "no system column matches a gold column (0/2 matched)",
+  "status": "ok",
+  "tokens": 3005,
+  "confidence": 0.766,
+  "logical_sql": "SELECT billing.billing_country,\n       SUM(billing.total_amount) AS total_revenue\nFROM billing\nGROUP BY billing.billing_country\nORDER BY total_revenue DESC\nLIMIT 1",
+  "physical_sql": "SELECT billing.billing_country, SUM(billing.total_amount) AS total_revenue FROM (SELECT TRANS_TYP_CD AS type_code, STORE_CD AS store_code, ORD_NO AS order_number, CAST(CUST_NO AS INTEGER) AS customer_number, SUBSTRING(ORD_DT_TXT, 1, 4) || '-' || SUBSTRING(ORD_DT_TXT, 5, 2) || '-' || SUBSTRING(ORD_DT_TXT, 7, 2) AS order_date_text, SUBSTRING(ORD_TS, 7, 4) || '-' || SUBSTRING(ORD_TS, 4, 2) || '-' || SUBSTRING(ORD_TS, 1, 2) AS order_timestamp, CASE WHEN ORD_DT_TXT >= '20230102' THEN TOT_AMT_C / 100.0 ELSE TOT_AMT END AS total_amount, ORD_STS AS order_status, REF_ID AS reference_id, REF_TYP AS reference_type, NOTES AS notes, BILL_ADDR1 AS billing_address1, BILL_CTY AS billing_city, CASE WHEN TRIM(COALESCE(BILL_ST, '')) = '' OR UPPER(TRIM(BILL_ST)) IN ('-', 'N/A', 'UNKNOWN') THEN NULL ELSE BILL_ST END AS billing_state, CASE UPPER(TRIM(BILL_CTRY)) WHEN 'BRA' THEN 'BR' WHEN 'CAN' THEN 'CA' WHEN 'CANADA' THEN 'CA' WHEN 'CANADA' THEN 'CA' WHEN 'GER' THEN 'DE' WHEN 'GERMANY' THEN 'DE' WHEN 'US' THEN 'U.S.A.' WHEN 'USA' THEN 'U.S.A.' WHEN 'UNITED STATES' THEN 'U.S.A.' WHEN 'USA' THEN 'USA' WHEN 'U.S.A.' THEN 'USA' WHEN 'CANADA' THEN 'canada' ELSE BILL_CTRY END AS billing_country, BILL_PC AS billing_postal_code FROM TRANS_MSTR WHERE TRANS_TYP_CD = 'I' AND (ORD_STS <> 9 OR ORD_STS IS NULL)) AS billing GROUP BY billing.billing_country ORDER BY total_revenue DESC LIMIT 1",
+  "message": "",
+  "assumptions": [
+   "TRANS_MSTR holds several kinds of record in one table; this predicate selects the ones this entity is about",
+   "ORD_STS = 9 sits outside the contiguous run 2..6 and covers only 3.9% of rows"
+  ],
+  "ours": {
+   "columns": [
+    "billing_country",
+    "total_revenue"
+   ],
+   "rows": [
+    [
+     "U.S.A.",
+     420.07
+    ]
+   ],
+   "total": 1
+  }
+ },
+ {
+  "id": "c-006",
+  "question": "Who are the top 10 customers by total amount spent? Give first and last name and the amount.",
+  "tags": [
+   "god_table",
+   "drift",
+   "missing_fk",
+   "inconsistent_types",
+   "cryptic_names"
+  ],
+  "difficulty": "hard",
+  "expect": null,
+  "answered": true,
+  "gold": {
+   "columns": [
+    "FirstName",
+    "LastName",
+    "spend"
+   ],
+   "rows": [
+    [
+     "Helena",
+     "Hol\u00fd",
+     49.62
+    ],
+    [
+     "Richard",
+     "Cunningham",
+     47.62
+    ],
+    [
+     "Luis",
+     "Rojas",
+     46.62
+    ],
+    [
+     "Ladislav",
+     "Kov\u00e1cs",
+     45.62
+    ],
+    [
+     "Hugh",
+     "O'Reilly",
+     45.62
+    ],
+    [
+     "Julia",
+     "Barnett",
+     43.62
+    ],
+    [
+     "Frank",
+     "Ralston",
+     43.62
+    ],
+    [
+     "Fynn",
+     "Zimmermann",
+     43.62
+    ],
+    [
+     "Astrid",
+     "Gruber",
+     42.62
+    ],
+    [
+     "Victor",
+     "Stevens",
+     42.62
+    ]
+   ],
+   "total": 10
+  },
+  "gold_sql": "SELECT c.FirstName, c.LastName, ROUND(SUM(i.Total), 2) AS spend\nFROM Customer c JOIN Invoice i ON i.CustomerId = c.CustomerId\nGROUP BY c.CustomerId, c.FirstName, c.LastName\nORDER BY spend DESC, c.LastName ASC LIMIT 10",
+  "correct": false,
+  "reason": "no system column matches a gold column (0/3 matched)",
+  "status": "ok",
+  "tokens": 3191,
+  "confidence": 0.791,
+  "logical_sql": "SELECT\n  customer.first_name,\n  customer.last_name,\n  SUM(billing.total_amount) AS total_spent\nFROM billing\nJOIN customer ON customer.id = billing.customer_number\nGROUP BY customer.first_name, customer.last_name\nORDER BY total_spent DESC\nLIMIT 10",
+  "physical_sql": "SELECT customer.first_name, customer.last_name, SUM(billing.total_amount) AS total_spent FROM (SELECT TRANS_TYP_CD AS type_code, STORE_CD AS store_code, ORD_NO AS order_number, CAST(CUST_NO AS INTEGER) AS customer_number, SUBSTRING(ORD_DT_TXT, 1, 4) || '-' || SUBSTRING(ORD_DT_TXT, 5, 2) || '-' || SUBSTRING(ORD_DT_TXT, 7, 2) AS order_date_text, SUBSTRING(ORD_TS, 7, 4) || '-' || SUBSTRING(ORD_TS, 4, 2) || '-' || SUBSTRING(ORD_TS, 1, 2) AS order_timestamp, CASE WHEN ORD_DT_TXT >= '20230102' THEN TOT_AMT_C / 100.0 ELSE TOT_AMT END AS total_amount, ORD_STS AS order_status, REF_ID AS reference_id, REF_TYP AS reference_type, NOTES AS notes, BILL_ADDR1 AS billing_address1, BILL_CTY AS billing_city, CASE WHEN TRIM(COALESCE(BILL_ST, '')) = '' OR UPPER(TRIM(BILL_ST)) IN ('-', 'N/A', 'UNKNOWN') THEN NULL ELSE BILL_ST END AS billing_state, CASE UPPER(TRIM(BILL_CTRY)) WHEN 'BRA' THEN 'BR' WHEN 'CAN' THEN 'CA' WHEN 'CANADA' THEN 'CA' WHEN 'CANADA' THEN 'CA' WHEN 'GER' THEN 'DE' WHEN 'GERMANY' THEN 'DE' WHEN 'US' THEN 'U.S.A.' WHEN 'USA' THEN 'U.S.A.' WHEN 'UNITED STATES' THEN 'U.S.A.' WHEN 'USA' THEN 'USA' WHEN 'U.S.A.' THEN 'USA' WHEN 'CANADA' THEN 'canada' ELSE BILL_CTRY END AS billing_country, BILL_PC AS billing_postal_code FROM TRANS_MSTR WHERE TRANS_TYP_CD = 'I' AND (ORD_STS <> 9 OR ORD_STS IS NULL)) AS billing JOIN (SELECT CUST_ID AS id, RTRIM(LTRIM(RTRIM(CFNM1))) AS first_name, RTRIM(LTRIM(RTRIM(CLNM1))) AS last_name, CASE WHEN TRIM(COALESCE(CO_NM, '')) = '' OR UPPER(TRIM(CO_NM)) IN ('-', 'N/A', 'UNKNOWN') THEN NULL ELSE CO_NM END AS company_name, ADDR_XML AS address_xml, COALESCE(PHN_NBR, PHONE) AS phone, FAX_NBR AS fax_number, COALESCE(EML, (SELECT MAX(c.CNTCT_VAL) FROM CUST_CNTCT AS c WHERE c.CUST_ID = CUST_MSTR.CUST_ID)) AS email, CAST(REP_NO AS INTEGER) AS representative_number, CASE UPPER(TRIM(DEL_FLG)) WHEN 'N' THEN 'N' WHEN 'N' THEN 'n' ELSE DEL_FLG END AS deleted_flag, PREFS AS preferences, SUBSTRING(CRT_DT, 1, 10) AS created_date, CASE WHEN INSTR(ADDR_XML, '<c>') > 0 THEN SUBSTRING(ADDR_XML, INSTR(ADDR_XML, '<c>') + 3, INSTR(ADDR_XML, '</c>') - INSTR(ADDR_XML, '<c>') - 3) END AS city, CASE WHEN INSTR(ADDR_XML, '<cy>') > 0 THEN SUBSTRING(ADDR_XML, INSTR(ADDR_XML, '<cy>') + 4, INSTR(ADDR_XML, '</cy>') - INSTR(ADDR_XML, '<cy>') - 4) END AS country_code, CASE WHEN INSTR(ADDR_XML, '<pc>') > 0 THEN SUBSTRING(ADDR_XML, INSTR(ADDR_XML, '<pc>') + 4, INSTR(ADDR_XML, '</pc>') - INSTR(ADDR_XML, '<pc>') - 4) END AS postal_code, CASE WHEN INSTR(ADDR_XML, '<s1>') > 0 THEN SUBSTRING(ADDR_XML, INSTR(ADDR_XML, '<s1>') + 4, INSTR(ADDR_XML, '</s1>') - INSTR(ADDR_XML, '<s1>') - 4) END AS street_address, CASE WHEN INSTR(ADDR_XML, '<st>') > 0 THEN SUBSTRING(ADDR_XML, INSTR(ADDR_XML, '<st>') + 4, INSTR(ADDR_XML, '</st>') - INSTR(ADDR_XML, '<st>') - 4) END AS state, JSON_EXTRACT(PREFS, '$.channel') AS channel, JSON_EXTRACT(PREFS, '$.newsletter') AS newsletter, JSON_EXTRACT(PREFS, '$.tier') AS tier FROM CUST_MSTR WHERE UPPER(COALESCE(DEL_FLG, 'N')) <> 'Y') AS customer ON customer.id = billing.customer_number GROUP BY customer.first_name, customer.last_name ORDER BY total_spent DESC LIMIT 10",
+  "message": "",
+  "assumptions": [
+   "TRANS_MSTR holds several kinds of record in one table; this predicate selects the ones this entity is about",
+   "ORD_STS = 9 sits outside the contiguous run 2..6 and covers only 3.9% of rows",
+   "DEL_FLG is a two-valued flag named for deletion or activity"
+  ],
+  "ours": {
+   "columns": [
+    "first_name",
+    "last_name",
+    "total_spent"
+   ],
+   "rows": [
+    [
+     "Helena",
+     "Hol\u00fd",
+     49.62
+    ],
+    [
+     "Richard",
+     "Cunningham",
+     47.62
+    ],
+    [
+     "Luis",
+     "Rojas",
+     46.62
+    ],
+    [
+     "Hugh",
+     "O'Reilly",
+     45.62
+    ],
+    [
+     "Ladislav",
+     "Kov\u00e1cs",
+     45.62
+    ],
+    [
+     "Frank",
+     "Ralston",
+     43.62
+    ],
+    [
+     "Fynn",
+     "Zimmermann",
+     43.62
+    ],
+    [
+     "Julia",
+     "Barnett",
+     43.62
+    ],
+    [
+     "Astrid",
+     "Gruber",
+     42.62
+    ],
+    [
+     "Victor",
+     "Stevens",
+     42.62
+    ]
+   ],
+   "total": 10
+  }
+ },
+ {
+  "id": "c-007",
+  "question": "How many employees report to Nancy Edwards?",
+  "tags": [
+   "cryptic_names",
+   "missing_fk",
+   "soft_delete",
+   "string_quality"
+  ],
+  "difficulty": "medium",
+  "expect": null,
+  "answered": true,
+  "gold": {
+   "columns": [
+    "n"
+   ],
+   "rows": [
+    [
+     3
+    ]
+   ],
+   "total": 1
+  },
+  "gold_sql": "SELECT COUNT(*) AS n FROM Employee e\nJOIN Employee m ON m.EmployeeId = e.ReportsTo\nWHERE m.FirstName = 'Nancy' AND m.LastName = 'Edwards'",
+  "correct": true,
+  "reason": "",
+  "status": "ok",
+  "tokens": 3352,
+  "confidence": 0.748,
+  "logical_sql": "SELECT COUNT(*) AS employee_count\nFROM employee e\nJOIN employee m ON e.manager_id = m.id\nWHERE m.first_name = 'Nancy' AND m.last_name = 'Edwards'",
+  "physical_sql": "SELECT COUNT(*) AS employee_count FROM (SELECT EMP_ID AS id, RTRIM(LTRIM(RTRIM(ELNM))) AS last_name, RTRIM(LTRIM(RTRIM(EFNM))) AS first_name, TTL AS title, MGR_ID AS manager_id, SUBSTRING(BRTH_DT, 1, 4) || '-' || SUBSTRING(BRTH_DT, 5, 2) || '-' || SUBSTRING(BRTH_DT, 7, 2) AS birth_date, SUBSTRING(HIRE_DT, 7, 4) || '-' || SUBSTRING(HIRE_DT, 4, 2) || '-' || SUBSTRING(HIRE_DT, 1, 2) AS hire_date, ADDR1 AS address, CASE UPPER(TRIM(CTY)) WHEN 'CALGARY' THEN 'Calgary' ELSE CTY END AS city, ST AS state, CASE UPPER(TRIM(CTRY)) WHEN 'CAN' THEN 'CA' WHEN 'CANADA' THEN 'CA' WHEN 'CANADA' THEN 'CA' WHEN 'CANADA' THEN 'Canada' ELSE CTRY END AS country, PSTL AS postal, EPHN AS phone, EFAX AS efax, EEML AS eeml, STS AS status FROM EMP_MSTR WHERE (STS <> 9 OR STS IS NULL)) AS e JOIN (SELECT EMP_ID AS id, RTRIM(LTRIM(RTRIM(ELNM))) AS last_name, RTRIM(LTRIM(RTRIM(EFNM))) AS first_name, TTL AS title, MGR_ID AS manager_id, SUBSTRING(BRTH_DT, 1, 4) || '-' || SUBSTRING(BRTH_DT, 5, 2) || '-' || SUBSTRING(BRTH_DT, 7, 2) AS birth_date, SUBSTRING(HIRE_DT, 7, 4) || '-' || SUBSTRING(HIRE_DT, 4, 2) || '-' || SUBSTRING(HIRE_DT, 1, 2) AS hire_date, ADDR1 AS address, CASE UPPER(TRIM(CTY)) WHEN 'CALGARY' THEN 'Calgary' ELSE CTY END AS city, ST AS state, CASE UPPER(TRIM(CTRY)) WHEN 'CAN' THEN 'CA' WHEN 'CANADA' THEN 'CA' WHEN 'CANADA' THEN 'CA' WHEN 'CANADA' THEN 'Canada' ELSE CTRY END AS country, PSTL AS postal, EPHN AS phone, EFAX AS efax, EEML AS eeml, STS AS status FROM EMP_MSTR WHERE ((STS <> 9 OR STS IS NULL) AND (RTRIM(LTRIM(RTRIM(EFNM)))) = 'Nancy') AND (RTRIM(LTRIM(RTRIM(ELNM)))) = 'Edwards') AS m ON e.manager_id = m.id WHERE m.first_name = 'Nancy' AND m.last_name = 'Edwards'",
+  "message": "",
+  "assumptions": [
+   "STS = 9 sits outside the contiguous run 1..1 and covers only 20.0% of rows"
+  ],
+  "ours": {
+   "columns": [
+    "employee_count"
+   ],
+   "rows": [
+    [
+     3
+    ]
+   ],
+   "total": 1
+  }
+ },
+ {
+  "id": "c-008",
+  "question": "What is the average invoice total?",
+  "tags": [
+   "god_table",
+   "drift",
+   "soft_delete"
+  ],
+  "difficulty": "medium",
+  "expect": null,
+  "answered": true,
+  "gold": {
+   "columns": [
+    "avg_total"
+   ],
+   "rows": [
+    [
+     5.65
+    ]
+   ],
+   "total": 1
+  },
+  "gold_sql": "SELECT ROUND(AVG(Total), 2) AS avg_total FROM Invoice",
+  "correct": true,
+  "reason": "",
+  "status": "ok",
+  "tokens": 2766,
+  "confidence": 0.94,
+  "logical_sql": "SELECT AVG(total_amount) AS average_invoice_total\nFROM billing\nWHERE type_code = 'I'",
+  "physical_sql": "SELECT AVG(total_amount) AS average_invoice_total FROM (SELECT TRANS_TYP_CD AS type_code, STORE_CD AS store_code, ORD_NO AS order_number, CAST(CUST_NO AS INTEGER) AS customer_number, SUBSTRING(ORD_DT_TXT, 1, 4) || '-' || SUBSTRING(ORD_DT_TXT, 5, 2) || '-' || SUBSTRING(ORD_DT_TXT, 7, 2) AS order_date_text, SUBSTRING(ORD_TS, 7, 4) || '-' || SUBSTRING(ORD_TS, 4, 2) || '-' || SUBSTRING(ORD_TS, 1, 2) AS order_timestamp, CASE WHEN ORD_DT_TXT >= '20230102' THEN TOT_AMT_C / 100.0 ELSE TOT_AMT END AS total_amount, ORD_STS AS order_status, REF_ID AS reference_id, REF_TYP AS reference_type, NOTES AS notes, BILL_ADDR1 AS billing_address1, BILL_CTY AS billing_city, CASE WHEN TRIM(COALESCE(BILL_ST, '')) = '' OR UPPER(TRIM(BILL_ST)) IN ('-', 'N/A', 'UNKNOWN') THEN NULL ELSE BILL_ST END AS billing_state, CASE UPPER(TRIM(BILL_CTRY)) WHEN 'BRA' THEN 'BR' WHEN 'CAN' THEN 'CA' WHEN 'CANADA' THEN 'CA' WHEN 'CANADA' THEN 'CA' WHEN 'GER' THEN 'DE' WHEN 'GERMANY' THEN 'DE' WHEN 'US' THEN 'U.S.A.' WHEN 'USA' THEN 'U.S.A.' WHEN 'UNITED STATES' THEN 'U.S.A.' WHEN 'USA' THEN 'USA' WHEN 'U.S.A.' THEN 'USA' WHEN 'CANADA' THEN 'canada' ELSE BILL_CTRY END AS billing_country, BILL_PC AS billing_postal_code FROM TRANS_MSTR WHERE TRANS_TYP_CD = 'I' AND (ORD_STS <> 9 OR ORD_STS IS NULL)) AS billing WHERE type_code = 'I'",
+  "message": "",
+  "assumptions": [
+   "TRANS_MSTR holds several kinds of record in one table; this predicate selects the ones this entity is about",
+   "ORD_STS = 9 sits outside the contiguous run 2..6 and covers only 3.9% of rows"
+  ],
+  "ours": {
+   "columns": [
+    "average_invoice_total"
+   ],
+   "rows": [
+    [
+     5.651941747572815
+    ]
+   ],
+   "total": 1
+  }
+ },
+ {
+  "id": "c-009",
+  "question": "List the 5 longest tracks by duration, with their length in milliseconds.",
+  "tags": [
+   "cryptic_names",
+   "soft_delete"
+  ],
+  "difficulty": "easy",
+  "expect": null,
+  "answered": true,
+  "gold": {
+   "columns": [
+    "Name",
+    "Milliseconds"
+   ],
+   "rows": [
+    [
+     "Occupation / Precipice",
+     5286953
+    ],
+    [
+     "Through a Looking Glass",
+     5088838
+    ],
+    [
+     "Greetings from Earth, Pt. 1",
+     2960293
+    ],
+    [
+     "The Man With Nine Lives",
+     2956998
+    ],
+    [
+     "Battlestar Galactica, Pt. 2",
+     2956081
+    ]
+   ],
+   "total": 5
+  },
+  "gold_sql": "SELECT Name, Milliseconds FROM Track\nORDER BY Milliseconds DESC, Name ASC LIMIT 5",
+  "correct": true,
+  "reason": "",
+  "status": "ok",
+  "tokens": 2662,
+  "confidence": 0.791,
+  "logical_sql": "SELECT product.name, product.milliseconds\nFROM product\nORDER BY product.milliseconds DESC\nLIMIT 5",
+  "physical_sql": "SELECT product.name, product.milliseconds FROM (SELECT PRD_ID AS id, strNm AS name, ALBM_ID AS album_id, MTYP_ID AS media_type_id, GNR_ID AS genre_id, CASE WHEN TRIM(COALESCE(strCmpsr, '')) = '' OR UPPER(TRIM(strCmpsr)) IN ('-', 'N/A', 'UNKNOWN') THEN NULL ELSE strCmpsr END AS composer, intMs AS milliseconds, intByt AS bytes, fltPrc AS price, ATTRS AS attributes, SUBSTRING(DLT_DT, 1, 10) AS deleted_date, CASE WHEN INSTR(ATTRS, 'genre=') > 0 THEN CASE WHEN INSTR(SUBSTRING(ATTRS, INSTR(ATTRS, 'genre=') + 6), '|') > 0 THEN SUBSTRING(SUBSTRING(ATTRS, INSTR(ATTRS, 'genre=') + 6), 1, INSTR(SUBSTRING(ATTRS, INSTR(ATTRS, 'genre=') + 6), '|') - 1) ELSE SUBSTRING(ATTRS, INSTR(ATTRS, 'genre=') + 6) END END AS genre, CASE WHEN INSTR(ATTRS, 'media=') > 0 THEN CASE WHEN INSTR(SUBSTRING(ATTRS, INSTR(ATTRS, 'media=') + 6), '|') > 0 THEN SUBSTRING(SUBSTRING(ATTRS, INSTR(ATTRS, 'media=') + 6), 1, INSTR(SUBSTRING(ATTRS, INSTR(ATTRS, 'media=') + 6), '|') - 1) ELSE SUBSTRING(ATTRS, INSTR(ATTRS, 'media=') + 6) END END AS media, CASE WHEN INSTR(ATTRS, 'secs=') > 0 THEN CASE WHEN INSTR(SUBSTRING(ATTRS, INSTR(ATTRS, 'secs=') + 5), '|') > 0 THEN SUBSTRING(SUBSTRING(ATTRS, INSTR(ATTRS, 'secs=') + 5), 1, INSTR(SUBSTRING(ATTRS, INSTR(ATTRS, 'secs=') + 5), '|') - 1) ELSE SUBSTRING(ATTRS, INSTR(ATTRS, 'secs=') + 5) END END AS secs FROM tblPrd WHERE DLT_DT IS NULL) AS product ORDER BY product.milliseconds DESC LIMIT 5",
+  "message": "",
+  "assumptions": [
+   "DLT_DT is a deletion date that is NULL on 97.8% of rows"
+  ],
+  "ours": {
+   "columns": [
+    "name",
+    "milliseconds"
+   ],
+   "rows": [
+    [
+     "Occupation / Precipice",
+     5286953
+    ],
+    [
+     "Through a Looking Glass",
+     5088838
+    ],
+    [
+     "Greetings from Earth, Pt. 1",
+     2960293
+    ],
+    [
+     "The Man With Nine Lives",
+     2956998
+    ],
+    [
+     "Battlestar Galactica, Pt. 2",
+     2956081
+    ]
+   ],
+   "total": 5
+  }
+ },
+ {
+  "id": "c-010",
+  "question": "How many albums does Led Zeppelin have?",
+  "tags": [
+   "cryptic_names",
+   "missing_fk"
+  ],
+  "difficulty": "easy",
+  "expect": null,
+  "answered": true,
+  "gold": {
+   "columns": [
+    "n"
+   ],
+   "rows": [
+    [
+     14
+    ]
+   ],
+   "total": 1
+  },
+  "gold_sql": "SELECT COUNT(*) AS n FROM Album al\nJOIN Artist ar ON ar.ArtistId = al.ArtistId WHERE ar.Name = 'Led Zeppelin'",
+  "correct": false,
+  "reason": "no system column matches a gold column (0/1 matched)",
+  "status": "ok",
+  "tokens": 2938,
+  "confidence": 0.797,
+  "logical_sql": "SELECT COUNT(DISTINCT album.id) AS album_count\nFROM album\nWHERE album.title LIKE '%Led Zeppelin%'",
+  "physical_sql": "SELECT COUNT(DISTINCT album.id) AS album_count FROM (SELECT ALBM_ID AS id, ALBM_TTL AS title, ARTST_ID AS artist_id FROM ALBM WHERE ALBM_TTL LIKE '%Led Zeppelin%') AS album WHERE album.title LIKE '%Led Zeppelin%'",
+  "message": "",
+  "assumptions": [],
+  "ours": {
+   "columns": [
+    "album_count"
+   ],
+   "rows": [
+    [
+     3
+    ]
+   ],
+   "total": 1
+  }
+ },
+ {
+  "id": "c-011",
+  "question": "Which genre has the most tracks?",
+  "tags": [
+   "cryptic_names",
+   "missing_fk",
+   "embedded_format",
+   "soft_delete"
+  ],
+  "difficulty": "medium",
+  "expect": null,
+  "answered": true,
+  "gold": {
+   "columns": [
+    "Name",
+    "n"
+   ],
+   "rows": [
+    [
+     "Rock",
+     1297
+    ]
+   ],
+   "total": 1
+  },
+  "gold_sql": "SELECT g.Name, COUNT(*) AS n FROM Track t\nJOIN Genre g ON g.GenreId = t.GenreId\nGROUP BY g.GenreId, g.Name ORDER BY n DESC, g.Name ASC LIMIT 1",
+  "correct": false,
+  "reason": "no system column matches a gold column (1/2 matched)",
+  "status": "ok",
+  "tokens": 2645,
+  "confidence": 0.882,
+  "logical_sql": "SELECT genre.name, COUNT(*) AS track_count\nFROM playlist_track\nJOIN product ON playlist_track.product_id = product.id\nJOIN genre ON product.genre_id = genre.id\nGROUP BY genre.id, genre.name\nORDER BY track_count DESC\nLIMIT 1",
+  "physical_sql": "SELECT genre.name, COUNT(*) AS track_count FROM (SELECT PLST_ID AS playlist_id, PRD_ID AS product_id FROM PLST_TRK) AS playlist_track JOIN (SELECT PRD_ID AS id, strNm AS name, ALBM_ID AS album_id, MTYP_ID AS media_type_id, GNR_ID AS genre_id, CASE WHEN TRIM(COALESCE(strCmpsr, '')) = '' OR UPPER(TRIM(strCmpsr)) IN ('-', 'N/A', 'UNKNOWN') THEN NULL ELSE strCmpsr END AS composer, intMs AS milliseconds, intByt AS bytes, fltPrc AS price, ATTRS AS attributes, SUBSTRING(DLT_DT, 1, 10) AS deleted_date, CASE WHEN INSTR(ATTRS, 'genre=') > 0 THEN CASE WHEN INSTR(SUBSTRING(ATTRS, INSTR(ATTRS, 'genre=') + 6), '|') > 0 THEN SUBSTRING(SUBSTRING(ATTRS, INSTR(ATTRS, 'genre=') + 6), 1, INSTR(SUBSTRING(ATTRS, INSTR(ATTRS, 'genre=') + 6), '|') - 1) ELSE SUBSTRING(ATTRS, INSTR(ATTRS, 'genre=') + 6) END END AS genre, CASE WHEN INSTR(ATTRS, 'media=') > 0 THEN CASE WHEN INSTR(SUBSTRING(ATTRS, INSTR(ATTRS, 'media=') + 6), '|') > 0 THEN SUBSTRING(SUBSTRING(ATTRS, INSTR(ATTRS, 'media=') + 6), 1, INSTR(SUBSTRING(ATTRS, INSTR(ATTRS, 'media=') + 6), '|') - 1) ELSE SUBSTRING(ATTRS, INSTR(ATTRS, 'media=') + 6) END END AS media, CASE WHEN INSTR(ATTRS, 'secs=') > 0 THEN CASE WHEN INSTR(SUBSTRING(ATTRS, INSTR(ATTRS, 'secs=') + 5), '|') > 0 THEN SUBSTRING(SUBSTRING(ATTRS, INSTR(ATTRS, 'secs=') + 5), 1, INSTR(SUBSTRING(ATTRS, INSTR(ATTRS, 'secs=') + 5), '|') - 1) ELSE SUBSTRING(ATTRS, INSTR(ATTRS, 'secs=') + 5) END END AS secs FROM tblPrd WHERE DLT_DT IS NULL) AS product ON playlist_track.product_id = product.id JOIN (SELECT GNR_ID AS id, GNR_NM AS name FROM GNR) AS genre ON product.genre_id = genre.id GROUP BY genre.id, genre.name ORDER BY track_count DESC LIMIT 1",
+  "message": "",
+  "assumptions": [
+   "DLT_DT is a deletion date that is NULL on 97.8% of rows"
+  ],
+  "ours": {
+   "columns": [
+    "name",
+    "track_count"
+   ],
+   "rows": [
+    [
+     "Rock",
+     3238
+    ]
+   ],
+   "total": 1
+  }
+ },
+ {
+  "id": "c-012",
+  "question": "How many tracks have no composer recorded?",
+  "tags": [
+   "string_quality",
+   "soft_delete",
+   "cryptic_names"
+  ],
+  "difficulty": "medium",
+  "expect": null,
+  "answered": true,
+  "gold": {
+   "columns": [
+    "n"
+   ],
+   "rows": [
+    [
+     977
+    ]
+   ],
+   "total": 1
+  },
+  "gold_sql": "SELECT COUNT(*) AS n FROM Track\nWHERE Composer IS NULL OR TRIM(Composer) = ''",
+  "correct": false,
+  "reason": "no system column matches a gold column (0/1 matched)",
+  "status": "ok",
+  "tokens": 3273,
+  "confidence": 0.83,
+  "logical_sql": "SELECT COUNT(*) AS track_count\nFROM playlist_track\nJOIN product ON playlist_track.product_id = product.id\nWHERE product.composer IS NULL",
+  "physical_sql": "SELECT COUNT(*) AS track_count FROM (SELECT PLST_ID AS playlist_id, PRD_ID AS product_id FROM PLST_TRK) AS playlist_track JOIN (SELECT PRD_ID AS id, strNm AS name, ALBM_ID AS album_id, MTYP_ID AS media_type_id, GNR_ID AS genre_id, CASE WHEN TRIM(COALESCE(strCmpsr, '')) = '' OR UPPER(TRIM(strCmpsr)) IN ('-', 'N/A', 'UNKNOWN') THEN NULL ELSE strCmpsr END AS composer, intMs AS milliseconds, intByt AS bytes, fltPrc AS price, ATTRS AS attributes, SUBSTRING(DLT_DT, 1, 10) AS deleted_date, CASE WHEN INSTR(ATTRS, 'genre=') > 0 THEN CASE WHEN INSTR(SUBSTRING(ATTRS, INSTR(ATTRS, 'genre=') + 6), '|') > 0 THEN SUBSTRING(SUBSTRING(ATTRS, INSTR(ATTRS, 'genre=') + 6), 1, INSTR(SUBSTRING(ATTRS, INSTR(ATTRS, 'genre=') + 6), '|') - 1) ELSE SUBSTRING(ATTRS, INSTR(ATTRS, 'genre=') + 6) END END AS genre, CASE WHEN INSTR(ATTRS, 'media=') > 0 THEN CASE WHEN INSTR(SUBSTRING(ATTRS, INSTR(ATTRS, 'media=') + 6), '|') > 0 THEN SUBSTRING(SUBSTRING(ATTRS, INSTR(ATTRS, 'media=') + 6), 1, INSTR(SUBSTRING(ATTRS, INSTR(ATTRS, 'media=') + 6), '|') - 1) ELSE SUBSTRING(ATTRS, INSTR(ATTRS, 'media=') + 6) END END AS media, CASE WHEN INSTR(ATTRS, 'secs=') > 0 THEN CASE WHEN INSTR(SUBSTRING(ATTRS, INSTR(ATTRS, 'secs=') + 5), '|') > 0 THEN SUBSTRING(SUBSTRING(ATTRS, INSTR(ATTRS, 'secs=') + 5), 1, INSTR(SUBSTRING(ATTRS, INSTR(ATTRS, 'secs=') + 5), '|') - 1) ELSE SUBSTRING(ATTRS, INSTR(ATTRS, 'secs=') + 5) END END AS secs FROM tblPrd WHERE DLT_DT IS NULL AND (CASE WHEN TRIM(COALESCE(strCmpsr, '')) = '' OR UPPER(TRIM(strCmpsr)) IN ('-', 'N/A', 'UNKNOWN') THEN NULL ELSE strCmpsr END) IS NULL) AS product ON playlist_track.product_id = product.id WHERE product.composer IS NULL",
+  "message": "",
+  "assumptions": [
+   "DLT_DT is a deletion date that is NULL on 97.8% of rows"
+  ],
+  "ours": {
+   "columns": [
+    "track_count"
+   ],
+   "rows": [
+    [
+     2451
+    ]
+   ],
+   "total": 1
+  }
+ },
+ {
+  "id": "c-013",
+  "question": "How many customers are based in the USA?",
+  "tags": [
+   "string_quality",
+   "embedded_format",
+   "soft_delete"
+  ],
+  "difficulty": "medium",
+  "expect": null,
+  "answered": true,
+  "gold": {
+   "columns": [
+    "n"
+   ],
+   "rows": [
+    [
+     13
+    ]
+   ],
+   "total": 1
+  },
+  "gold_sql": "SELECT COUNT(*) AS n FROM Customer WHERE Country = 'USA'",
+  "correct": false,
+  "reason": "no system column matches a gold column (0/1 matched)",
+  "status": "ok",
+  "tokens": 3459,
+  "confidence": 0.715,
+  "logical_sql": "SELECT COUNT(DISTINCT customer.id) AS customer_count\nFROM customer\nJOIN billing ON customer.id = billing.customer_number\nWHERE billing.billing_country IN ('usa', 'USA')",
+  "physical_sql": "SELECT COUNT(DISTINCT customer.id) AS customer_count FROM (SELECT CUST_ID AS id, RTRIM(LTRIM(RTRIM(CFNM1))) AS first_name, RTRIM(LTRIM(RTRIM(CLNM1))) AS last_name, CASE WHEN TRIM(COALESCE(CO_NM, '')) = '' OR UPPER(TRIM(CO_NM)) IN ('-', 'N/A', 'UNKNOWN') THEN NULL ELSE CO_NM END AS company_name, ADDR_XML AS address_xml, COALESCE(PHN_NBR, PHONE) AS phone, FAX_NBR AS fax_number, COALESCE(EML, (SELECT MAX(c.CNTCT_VAL) FROM CUST_CNTCT AS c WHERE c.CUST_ID = CUST_MSTR.CUST_ID)) AS email, CAST(REP_NO AS INTEGER) AS representative_number, CASE UPPER(TRIM(DEL_FLG)) WHEN 'N' THEN 'N' WHEN 'N' THEN 'n' ELSE DEL_FLG END AS deleted_flag, PREFS AS preferences, SUBSTRING(CRT_DT, 1, 10) AS created_date, CASE WHEN INSTR(ADDR_XML, '<c>') > 0 THEN SUBSTRING(ADDR_XML, INSTR(ADDR_XML, '<c>') + 3, INSTR(ADDR_XML, '</c>') - INSTR(ADDR_XML, '<c>') - 3) END AS city, CASE WHEN INSTR(ADDR_XML, '<cy>') > 0 THEN SUBSTRING(ADDR_XML, INSTR(ADDR_XML, '<cy>') + 4, INSTR(ADDR_XML, '</cy>') - INSTR(ADDR_XML, '<cy>') - 4) END AS country_code, CASE WHEN INSTR(ADDR_XML, '<pc>') > 0 THEN SUBSTRING(ADDR_XML, INSTR(ADDR_XML, '<pc>') + 4, INSTR(ADDR_XML, '</pc>') - INSTR(ADDR_XML, '<pc>') - 4) END AS postal_code, CASE WHEN INSTR(ADDR_XML, '<s1>') > 0 THEN SUBSTRING(ADDR_XML, INSTR(ADDR_XML, '<s1>') + 4, INSTR(ADDR_XML, '</s1>') - INSTR(ADDR_XML, '<s1>') - 4) END AS street_address, CASE WHEN INSTR(ADDR_XML, '<st>') > 0 THEN SUBSTRING(ADDR_XML, INSTR(ADDR_XML, '<st>') + 4, INSTR(ADDR_XML, '</st>') - INSTR(ADDR_XML, '<st>') - 4) END AS state, JSON_EXTRACT(PREFS, '$.channel') AS channel, JSON_EXTRACT(PREFS, '$.newsletter') AS newsletter, JSON_EXTRACT(PREFS, '$.tier') AS tier FROM CUST_MSTR WHERE UPPER(COALESCE(DEL_FLG, 'N')) <> 'Y') AS customer JOIN (SELECT TRANS_TYP_CD AS type_code, STORE_CD AS store_code, ORD_NO AS order_number, CAST(CUST_NO AS INTEGER) AS customer_number, SUBSTRING(ORD_DT_TXT, 1, 4) || '-' || SUBSTRING(ORD_DT_TXT, 5, 2) || '-' || SUBSTRING(ORD_DT_TXT, 7, 2) AS order_date_text, SUBSTRING(ORD_TS, 7, 4) || '-' || SUBSTRING(ORD_TS, 4, 2) || '-' || SUBSTRING(ORD_TS, 1, 2) AS order_timestamp, CASE WHEN ORD_DT_TXT >= '20230102' THEN TOT_AMT_C / 100.0 ELSE TOT_AMT END AS total_amount, ORD_STS AS order_status, REF_ID AS reference_id, REF_TYP AS reference_type, NOTES AS notes, BILL_ADDR1 AS billing_address1, BILL_CTY AS billing_city, CASE WHEN TRIM(COALESCE(BILL_ST, '')) = '' OR UPPER(TRIM(BILL_ST)) IN ('-', 'N/A', 'UNKNOWN') THEN NULL ELSE BILL_ST END AS billing_state, CASE UPPER(TRIM(BILL_CTRY)) WHEN 'BRA' THEN 'BR' WHEN 'CAN' THEN 'CA' WHEN 'CANADA' THEN 'CA' WHEN 'CANADA' THEN 'CA' WHEN 'GER' THEN 'DE' WHEN 'GERMANY' THEN 'DE' WHEN 'US' THEN 'U.S.A.' WHEN 'USA' THEN 'U.S.A.' WHEN 'UNITED STATES' THEN 'U.S.A.' WHEN 'USA' THEN 'USA' WHEN 'U.S.A.' THEN 'USA' WHEN 'CANADA' THEN 'canada' ELSE BILL_CTRY END AS billing_country, BILL_PC AS billing_postal_code FROM TRANS_MSTR WHERE (TRANS_TYP_CD = 'I' AND (ORD_STS <> 9 OR ORD_STS IS NULL)) AND UPPER((CASE UPPER(TRIM(BILL_CTRY)) WHEN 'BRA' THEN 'BR' WHEN 'CAN' THEN 'CA' WHEN 'CANADA' THEN 'CA' WHEN 'CANADA' THEN 'CA' WHEN 'GER' THEN 'DE' WHEN 'GERMANY' THEN 'DE' WHEN 'US' THEN 'U.S.A.' WHEN 'USA' THEN 'U.S.A.' WHEN 'UNITED STATES' THEN 'U.S.A.' WHEN 'USA' THEN 'USA' WHEN 'U.S.A.' THEN 'USA' WHEN 'CANADA' THEN 'canada' ELSE BILL_CTRY END)) IN ('USA', 'USA')) AS billing ON customer.id = billing.customer_number WHERE UPPER(billing.billing_country) IN ('USA', 'USA')",
+  "message": "",
+  "assumptions": [
+   "DEL_FLG is a two-valued flag named for deletion or activity",
+   "TRANS_MSTR holds several kinds of record in one table; this predicate selects the ones this entity is about",
+   "ORD_STS = 9 sits outside the contiguous run 2..6 and covers only 3.9% of rows"
+  ],
+  "ours": {
+   "columns": [
+    "customer_count"
+   ],
+   "rows": [
+    [
+     8
+    ]
+   ],
+   "total": 1
+  }
+ },
+ {
+  "id": "c-014",
+  "question": "Show total revenue per year.",
+  "tags": [
+   "god_table",
+   "drift",
+   "inconsistent_types"
+  ],
+  "difficulty": "medium",
+  "expect": null,
+  "answered": true,
+  "gold": {
+   "columns": [
+    "yr",
+    "revenue"
+   ],
+   "rows": [
+    [
+     "2021",
+     449.46
+    ],
+    [
+     "2022",
+     481.45
+    ],
+    [
+     "2023",
+     469.58
+    ],
+    [
+     "2024",
+     477.53
+    ],
+    [
+     "2025",
+     450.58
+    ]
+   ],
+   "total": 5
+  },
+  "gold_sql": "SELECT STRFTIME('%Y', InvoiceDate) AS yr, ROUND(SUM(Total), 2) AS revenue\nFROM Invoice GROUP BY yr ORDER BY yr",
+  "correct": true,
+  "reason": "",
+  "status": "ok",
+  "tokens": 2536,
+  "confidence": 0.86,
+  "logical_sql": "SELECT STRFTIME('%Y', billing.order_timestamp) AS year,\n       SUM(billing.total_amount) AS total_revenue\nFROM billing\nGROUP BY STRFTIME('%Y', billing.order_timestamp)\nORDER BY year",
+  "physical_sql": "SELECT STRFTIME('%Y', billing.order_timestamp) AS year, SUM(billing.total_amount) AS total_revenue FROM (SELECT TRANS_TYP_CD AS type_code, STORE_CD AS store_code, ORD_NO AS order_number, CAST(CUST_NO AS INTEGER) AS customer_number, SUBSTRING(ORD_DT_TXT, 1, 4) || '-' || SUBSTRING(ORD_DT_TXT, 5, 2) || '-' || SUBSTRING(ORD_DT_TXT, 7, 2) AS order_date_text, SUBSTRING(ORD_TS, 7, 4) || '-' || SUBSTRING(ORD_TS, 4, 2) || '-' || SUBSTRING(ORD_TS, 1, 2) AS order_timestamp, CASE WHEN ORD_DT_TXT >= '20230102' THEN TOT_AMT_C / 100.0 ELSE TOT_AMT END AS total_amount, ORD_STS AS order_status, REF_ID AS reference_id, REF_TYP AS reference_type, NOTES AS notes, BILL_ADDR1 AS billing_address1, BILL_CTY AS billing_city, CASE WHEN TRIM(COALESCE(BILL_ST, '')) = '' OR UPPER(TRIM(BILL_ST)) IN ('-', 'N/A', 'UNKNOWN') THEN NULL ELSE BILL_ST END AS billing_state, CASE UPPER(TRIM(BILL_CTRY)) WHEN 'BRA' THEN 'BR' WHEN 'CAN' THEN 'CA' WHEN 'CANADA' THEN 'CA' WHEN 'CANADA' THEN 'CA' WHEN 'GER' THEN 'DE' WHEN 'GERMANY' THEN 'DE' WHEN 'US' THEN 'U.S.A.' WHEN 'USA' THEN 'U.S.A.' WHEN 'UNITED STATES' THEN 'U.S.A.' WHEN 'USA' THEN 'USA' WHEN 'U.S.A.' THEN 'USA' WHEN 'CANADA' THEN 'canada' ELSE BILL_CTRY END AS billing_country, BILL_PC AS billing_postal_code FROM TRANS_MSTR WHERE TRANS_TYP_CD = 'I' AND (ORD_STS <> 9 OR ORD_STS IS NULL)) AS billing GROUP BY STRFTIME('%Y', billing.order_timestamp) ORDER BY year",
+  "message": "",
+  "assumptions": [
+   "TRANS_MSTR holds several kinds of record in one table; this predicate selects the ones this entity is about",
+   "ORD_STS = 9 sits outside the contiguous run 2..6 and covers only 3.9% of rows"
+  ],
+  "ours": {
+   "columns": [
+    "year",
+    "total_revenue"
+   ],
+   "rows": [
+    [
+     "2021",
+     449.46
+    ],
+    [
+     "2022",
+     481.45
+    ],
+    [
+     "2023",
+     469.58
+    ],
+    [
+     "2024",
+     477.53
+    ],
+    [
+     "2025",
+     450.58
+    ]
+   ],
+   "total": 5
+  }
+ },
+ {
+  "id": "c-015",
+  "question": "Which support rep serves the most customers?",
+  "tags": [
+   "inconsistent_types",
+   "missing_fk",
+   "soft_delete",
+   "cryptic_names"
+  ],
+  "difficulty": "hard",
+  "expect": null,
+  "answered": true,
+  "gold": {
+   "columns": [
+    "FirstName",
+    "LastName",
+    "n"
+   ],
+   "rows": [
+    [
+     "Jane",
+     "Peacock",
+     21
+    ]
+   ],
+   "total": 1
+  },
+  "gold_sql": "SELECT e.FirstName, e.LastName, COUNT(*) AS n\nFROM Customer c JOIN Employee e ON e.EmployeeId = c.SupportRepId\nGROUP BY e.EmployeeId, e.FirstName, e.LastName\nORDER BY n DESC, e.LastName ASC LIMIT 1",
+  "correct": true,
+  "reason": "",
+  "status": "ok",
+  "tokens": 3435,
+  "confidence": 0.682,
+  "logical_sql": "SELECT e.id,\n       e.first_name,\n       e.last_name,\n       COUNT(*) AS customer_count\nFROM   customer c\nJOIN   employee e ON c.representative_number = e.id\nGROUP BY e.id, e.first_name, e.last_name\nORDER BY customer_count DESC\nLIMIT 1",
+  "physical_sql": "SELECT e.id, e.first_name, e.last_name, COUNT(*) AS customer_count FROM (SELECT CUST_ID AS id, RTRIM(LTRIM(RTRIM(CFNM1))) AS first_name, RTRIM(LTRIM(RTRIM(CLNM1))) AS last_name, CASE WHEN TRIM(COALESCE(CO_NM, '')) = '' OR UPPER(TRIM(CO_NM)) IN ('-', 'N/A', 'UNKNOWN') THEN NULL ELSE CO_NM END AS company_name, ADDR_XML AS address_xml, COALESCE(PHN_NBR, PHONE) AS phone, FAX_NBR AS fax_number, COALESCE(EML, (SELECT MAX(c.CNTCT_VAL) FROM CUST_CNTCT AS c WHERE c.CUST_ID = CUST_MSTR.CUST_ID)) AS email, CAST(REP_NO AS INTEGER) AS representative_number, CASE UPPER(TRIM(DEL_FLG)) WHEN 'N' THEN 'N' WHEN 'N' THEN 'n' ELSE DEL_FLG END AS deleted_flag, PREFS AS preferences, SUBSTRING(CRT_DT, 1, 10) AS created_date, CASE WHEN INSTR(ADDR_XML, '<c>') > 0 THEN SUBSTRING(ADDR_XML, INSTR(ADDR_XML, '<c>') + 3, INSTR(ADDR_XML, '</c>') - INSTR(ADDR_XML, '<c>') - 3) END AS city, CASE WHEN INSTR(ADDR_XML, '<cy>') > 0 THEN SUBSTRING(ADDR_XML, INSTR(ADDR_XML, '<cy>') + 4, INSTR(ADDR_XML, '</cy>') - INSTR(ADDR_XML, '<cy>') - 4) END AS country_code, CASE WHEN INSTR(ADDR_XML, '<pc>') > 0 THEN SUBSTRING(ADDR_XML, INSTR(ADDR_XML, '<pc>') + 4, INSTR(ADDR_XML, '</pc>') - INSTR(ADDR_XML, '<pc>') - 4) END AS postal_code, CASE WHEN INSTR(ADDR_XML, '<s1>') > 0 THEN SUBSTRING(ADDR_XML, INSTR(ADDR_XML, '<s1>') + 4, INSTR(ADDR_XML, '</s1>') - INSTR(ADDR_XML, '<s1>') - 4) END AS street_address, CASE WHEN INSTR(ADDR_XML, '<st>') > 0 THEN SUBSTRING(ADDR_XML, INSTR(ADDR_XML, '<st>') + 4, INSTR(ADDR_XML, '</st>') - INSTR(ADDR_XML, '<st>') - 4) END AS state, JSON_EXTRACT(PREFS, '$.channel') AS channel, JSON_EXTRACT(PREFS, '$.newsletter') AS newsletter, JSON_EXTRACT(PREFS, '$.tier') AS tier FROM CUST_MSTR WHERE UPPER(COALESCE(DEL_FLG, 'N')) <> 'Y') AS c JOIN (SELECT EMP_ID AS id, RTRIM(LTRIM(RTRIM(ELNM))) AS last_name, RTRIM(LTRIM(RTRIM(EFNM))) AS first_name, TTL AS title, MGR_ID AS manager_id, SUBSTRING(BRTH_DT, 1, 4) || '-' || SUBSTRING(BRTH_DT, 5, 2) || '-' || SUBSTRING(BRTH_DT, 7, 2) AS birth_date, SUBSTRING(HIRE_DT, 7, 4) || '-' || SUBSTRING(HIRE_DT, 4, 2) || '-' || SUBSTRING(HIRE_DT, 1, 2) AS hire_date, ADDR1 AS address, CASE UPPER(TRIM(CTY)) WHEN 'CALGARY' THEN 'Calgary' ELSE CTY END AS city, ST AS state, CASE UPPER(TRIM(CTRY)) WHEN 'CAN' THEN 'CA' WHEN 'CANADA' THEN 'CA' WHEN 'CANADA' THEN 'CA' WHEN 'CANADA' THEN 'Canada' ELSE CTRY END AS country, PSTL AS postal, EPHN AS phone, EFAX AS efax, EEML AS eeml, STS AS status FROM EMP_MSTR WHERE (STS <> 9 OR STS IS NULL)) AS e ON c.representative_number = e.id GROUP BY e.id, e.first_name, e.last_name ORDER BY customer_count DESC LIMIT 1",
+  "message": "",
+  "assumptions": [
+   "DEL_FLG is a two-valued flag named for deletion or activity",
+   "STS = 9 sits outside the contiguous run 1..1 and covers only 20.0% of rows"
+  ],
+  "ours": {
+   "columns": [
+    "id",
+    "first_name",
+    "last_name",
+    "customer_count"
+   ],
+   "rows": [
+    [
+     3,
+     "Jane",
+     "Peacock",
+     21
+    ]
+   ],
+   "total": 1
+  }
+ },
+ {
+  "id": "c-016",
+  "question": "Which playlist has the most tracks?",
+  "tags": [
+   "cryptic_names",
+   "missing_fk",
+   "composite_key"
+  ],
+  "difficulty": "medium",
+  "expect": null,
+  "answered": true,
+  "gold": {
+   "columns": [
+    "Name",
+    "n"
+   ],
+   "rows": [
+    [
+     "Music",
+     3290
+    ]
+   ],
+   "total": 1
+  },
+  "gold_sql": "SELECT p.Name, COUNT(*) AS n FROM PlaylistTrack pt\nJOIN Playlist p ON p.PlaylistId = pt.PlaylistId\nGROUP BY p.PlaylistId, p.Name ORDER BY n DESC, p.Name ASC LIMIT 1",
+  "correct": true,
+  "reason": "",
+  "status": "ok",
+  "tokens": 2640,
+  "confidence": 0.782,
+  "logical_sql": "SELECT playlist.name,\n       COUNT(*) AS track_count\nFROM playlist_track\nJOIN playlist ON playlist_track.playlist_id = playlist.id\nGROUP BY playlist.id, playlist.name\nORDER BY track_count DESC\nLIMIT 1",
+  "physical_sql": "SELECT playlist.name, COUNT(*) AS track_count FROM (SELECT PLST_ID AS playlist_id, PRD_ID AS product_id FROM PLST_TRK) AS playlist_track JOIN (SELECT PLST_ID AS id, PLST_NM AS name FROM PLST) AS playlist ON playlist_track.playlist_id = playlist.id GROUP BY playlist.id, playlist.name ORDER BY track_count DESC LIMIT 1",
+  "message": "",
+  "assumptions": [],
+  "ours": {
+   "columns": [
+    "name",
+    "track_count"
+   ],
+   "rows": [
+    [
+     "Music",
+     3290
+    ]
+   ],
+   "total": 1
+  }
+ },
+ {
+  "id": "c-017",
+  "question": "How many distinct artists have at least one album?",
+  "tags": [
+   "cryptic_names",
+   "missing_fk"
+  ],
+  "difficulty": "easy",
+  "expect": null,
+  "answered": true,
+  "gold": {
+   "columns": [
+    "n"
+   ],
+   "rows": [
+    [
+     204
+    ]
+   ],
+   "total": 1
+  },
+  "gold_sql": "SELECT COUNT(DISTINCT ArtistId) AS n FROM Album",
+  "correct": true,
+  "reason": "",
+  "status": "ok",
+  "tokens": 2458,
+  "confidence": 0.784,
+  "logical_sql": "SELECT COUNT(DISTINCT artist.id) AS artist_count\nFROM album\nJOIN artist ON album.artist_id = artist.id",
+  "physical_sql": "SELECT COUNT(DISTINCT artist.id) AS artist_count FROM (SELECT ALBM_ID AS id, ALBM_TTL AS title, ARTST_ID AS artist_id FROM ALBM) AS album JOIN (SELECT ARTST_ID AS id, ARTST_NM AS name FROM ARTST) AS artist ON album.artist_id = artist.id",
+  "message": "",
+  "assumptions": [],
+  "ours": {
+   "columns": [
+    "artist_count"
+   ],
+   "rows": [
+    [
+     204
+    ]
+   ],
+   "total": 1
+  }
+ },
+ {
+  "id": "c-018",
+  "question": "What is the total quantity of tracks sold?",
+  "tags": [
+   "composite_key",
+   "cryptic_names"
+  ],
+  "difficulty": "easy",
+  "expect": null,
+  "answered": true,
+  "gold": {
+   "columns": [
+    "qty"
+   ],
+   "rows": [
+    [
+     2240
+    ]
+   ],
+   "total": 1
+  },
+  "gold_sql": "SELECT SUM(Quantity) AS qty FROM InvoiceLine",
+  "correct": true,
+  "reason": "",
+  "status": "ok",
+  "tokens": 2608,
+  "confidence": 0.791,
+  "logical_sql": "SELECT SUM(sales_order_line.quantity) AS total_quantity_sold\nFROM sales_order_line",
+  "physical_sql": "SELECT SUM(sales_order_line.quantity) AS total_quantity_sold FROM (SELECT STORE_CD AS store_code, ORD_NO AS order_number, LN_SEQ AS sequence, PRD_ID AS product_id, UNT_PRC AS unit_price, QTY AS quantity FROM SO_LN) AS sales_order_line",
+  "message": "",
+  "assumptions": [],
+  "ours": {
+   "columns": [
+    "total_quantity_sold"
+   ],
+   "rows": [
+    [
+     2240
+    ]
+   ],
+   "total": 1
+  }
+ },
+ {
+  "id": "c-019",
+  "question": "What is the average unit price of a track?",
+  "tags": [
+   "cryptic_names",
+   "soft_delete"
+  ],
+  "difficulty": "easy",
+  "expect": null,
+  "answered": true,
+  "gold": {
+   "columns": [
+    "avg_price"
+   ],
+   "rows": [
+    [
+     1.0508
+    ]
+   ],
+   "total": 1
+  },
+  "gold_sql": "SELECT ROUND(AVG(UnitPrice), 4) AS avg_price FROM Track",
+  "correct": false,
+  "reason": "no system column matches a gold column (0/1 matched)",
+  "status": "ok",
+  "tokens": 2633,
+  "confidence": 0.791,
+  "logical_sql": "SELECT AVG(sales_order_line.unit_price) AS avg_unit_price\nFROM sales_order_line",
+  "physical_sql": "SELECT AVG(sales_order_line.unit_price) AS avg_unit_price FROM (SELECT STORE_CD AS store_code, ORD_NO AS order_number, LN_SEQ AS sequence, PRD_ID AS product_id, UNT_PRC AS unit_price, QTY AS quantity FROM SO_LN) AS sales_order_line",
+  "message": "",
+  "assumptions": [],
+  "ours": {
+   "columns": [
+    "avg_unit_price"
+   ],
+   "rows": [
+    [
+     1.0395535714285713
+    ]
+   ],
+   "total": 1
+  }
+ },
+ {
+  "id": "c-020",
+  "question": "How many invoices had a total greater than 10 dollars?",
+  "tags": [
+   "god_table",
+   "drift",
+   "soft_delete"
+  ],
+  "difficulty": "medium",
+  "expect": null,
+  "answered": true,
+  "gold": {
+   "columns": [
+    "n"
+   ],
+   "rows": [
+    [
+     64
+    ]
+   ],
+   "total": 1
+  },
+  "gold_sql": "SELECT COUNT(*) AS n FROM Invoice WHERE Total > 10",
+  "correct": true,
+  "reason": "",
+  "status": "ok",
+  "tokens": 2798,
+  "confidence": 0.94,
+  "logical_sql": "SELECT COUNT(*) AS invoice_count\nFROM billing\nWHERE type_code = 'I' AND total_amount > 10",
+  "physical_sql": "SELECT COUNT(*) AS invoice_count FROM (SELECT TRANS_TYP_CD AS type_code, STORE_CD AS store_code, ORD_NO AS order_number, CAST(CUST_NO AS INTEGER) AS customer_number, SUBSTRING(ORD_DT_TXT, 1, 4) || '-' || SUBSTRING(ORD_DT_TXT, 5, 2) || '-' || SUBSTRING(ORD_DT_TXT, 7, 2) AS order_date_text, SUBSTRING(ORD_TS, 7, 4) || '-' || SUBSTRING(ORD_TS, 4, 2) || '-' || SUBSTRING(ORD_TS, 1, 2) AS order_timestamp, CASE WHEN ORD_DT_TXT >= '20230102' THEN TOT_AMT_C / 100.0 ELSE TOT_AMT END AS total_amount, ORD_STS AS order_status, REF_ID AS reference_id, REF_TYP AS reference_type, NOTES AS notes, BILL_ADDR1 AS billing_address1, BILL_CTY AS billing_city, CASE WHEN TRIM(COALESCE(BILL_ST, '')) = '' OR UPPER(TRIM(BILL_ST)) IN ('-', 'N/A', 'UNKNOWN') THEN NULL ELSE BILL_ST END AS billing_state, CASE UPPER(TRIM(BILL_CTRY)) WHEN 'BRA' THEN 'BR' WHEN 'CAN' THEN 'CA' WHEN 'CANADA' THEN 'CA' WHEN 'CANADA' THEN 'CA' WHEN 'GER' THEN 'DE' WHEN 'GERMANY' THEN 'DE' WHEN 'US' THEN 'U.S.A.' WHEN 'USA' THEN 'U.S.A.' WHEN 'UNITED STATES' THEN 'U.S.A.' WHEN 'USA' THEN 'USA' WHEN 'U.S.A.' THEN 'USA' WHEN 'CANADA' THEN 'canada' ELSE BILL_CTRY END AS billing_country, BILL_PC AS billing_postal_code FROM TRANS_MSTR WHERE TRANS_TYP_CD = 'I' AND (ORD_STS <> 9 OR ORD_STS IS NULL)) AS billing WHERE type_code = 'I' AND total_amount > 10",
+  "message": "",
+  "assumptions": [
+   "TRANS_MSTR holds several kinds of record in one table; this predicate selects the ones this entity is about",
+   "ORD_STS = 9 sits outside the contiguous run 2..6 and covers only 3.9% of rows"
+  ],
+  "ours": {
+   "columns": [
+    "invoice_count"
+   ],
+   "rows": [
+    [
+     64
+    ]
+   ],
+   "total": 1
+  }
+ },
+ {
+  "id": "c-021",
+  "question": "Which artists have no albums in the catalog?",
+  "tags": [
+   "missing_fk",
+   "cryptic_names",
+   "sprawl"
+  ],
+  "difficulty": "medium",
+  "expect": null,
+  "answered": true,
+  "gold": {
+   "columns": [
+    "Name"
+   ],
+   "rows": [
+    [
+     "A Cor Do Som"
+    ],
+    [
+     "Academy of St. Martin in the Fields, Sir Neville Marriner & William Bennett"
+    ],
+    [
+     "Aerosmith & Sierra Leone's Refugee Allstars"
+    ],
+    [
+     "Avril Lavigne"
+    ],
+    [
+     "Azymuth"
+    ],
+    [
+     "Baby Consuelo"
+    ],
+    [
+     "Banda Black Rio"
+    ],
+    [
+     "Bar\u00e3o Vermelho"
+    ],
+    [
+     "Bebel Gilberto"
+    ],
+    [
+     "Ben Harper"
+    ],
+    [
+     "Big & Rich"
+    ],
+    [
+     "Black Eyed Peas"
+    ]
+   ],
+   "total": 71
+  },
+  "gold_sql": "SELECT ar.Name FROM Artist ar\nWHERE NOT EXISTS (SELECT 1 FROM Album al WHERE al.ArtistId = ar.ArtistId)\nORDER BY ar.Name",
+  "correct": false,
+  "reason": "row count differs: gold 71 vs system 200",
+  "status": "ok",
+  "tokens": 2425,
+  "confidence": 0.836,
+  "logical_sql": "SELECT artist.name\nFROM artist\nLEFT JOIN album ON album.artist_id = artist.id\nWHERE album.id IS NULL",
+  "physical_sql": "SELECT artist.name FROM (SELECT ARTST_ID AS id, ARTST_NM AS name FROM ARTST) AS artist LEFT JOIN (SELECT ALBM_ID AS id, ALBM_TTL AS title, ARTST_ID AS artist_id FROM ALBM WHERE ALBM_ID IS NULL) AS album ON album.artist_id = artist.id WHERE album.id IS NULL",
+  "message": "",
+  "assumptions": [],
+  "ours": {
+   "columns": [
+    "name"
+   ],
+   "rows": [
+    [
+     "AC/DC"
+    ],
+    [
+     "Accept"
+    ],
+    [
+     "Aerosmith"
+    ],
+    [
+     "Alanis Morissette"
+    ],
+    [
+     "Alice In Chains"
+    ],
+    [
+     "Ant\u00f4nio Carlos Jobim"
+    ],
+    [
+     "Apocalyptica"
+    ],
+    [
+     "Audioslave"
+    ],
+    [
+     "BackBeat"
+    ],
+    [
+     "Billy Cobham"
+    ],
+    [
+     "Black Label Society"
+    ],
+    [
+     "Black Sabbath"
+    ]
+   ],
+   "total": 200
+  }
+ },
+ {
+  "id": "c-022",
+  "question": "What was the largest single invoice total?",
+  "tags": [
+   "god_table",
+   "drift",
+   "soft_delete"
+  ],
+  "difficulty": "medium",
+  "expect": null,
+  "answered": true,
+  "gold": {
+   "columns": [
+    "max_total"
+   ],
+   "rows": [
+    [
+     25.86
+    ]
+   ],
+   "total": 1
+  },
+  "gold_sql": "SELECT ROUND(MAX(Total), 2) AS max_total FROM Invoice",
+  "correct": true,
+  "reason": "",
+  "status": "ok",
+  "tokens": 2770,
+  "confidence": 0.94,
+  "logical_sql": "SELECT MAX(billing.total_amount) AS max_invoice_total\nFROM billing\nWHERE billing.type_code = 'I'",
+  "physical_sql": "SELECT MAX(billing.total_amount) AS max_invoice_total FROM (SELECT TRANS_TYP_CD AS type_code, STORE_CD AS store_code, ORD_NO AS order_number, CAST(CUST_NO AS INTEGER) AS customer_number, SUBSTRING(ORD_DT_TXT, 1, 4) || '-' || SUBSTRING(ORD_DT_TXT, 5, 2) || '-' || SUBSTRING(ORD_DT_TXT, 7, 2) AS order_date_text, SUBSTRING(ORD_TS, 7, 4) || '-' || SUBSTRING(ORD_TS, 4, 2) || '-' || SUBSTRING(ORD_TS, 1, 2) AS order_timestamp, CASE WHEN ORD_DT_TXT >= '20230102' THEN TOT_AMT_C / 100.0 ELSE TOT_AMT END AS total_amount, ORD_STS AS order_status, REF_ID AS reference_id, REF_TYP AS reference_type, NOTES AS notes, BILL_ADDR1 AS billing_address1, BILL_CTY AS billing_city, CASE WHEN TRIM(COALESCE(BILL_ST, '')) = '' OR UPPER(TRIM(BILL_ST)) IN ('-', 'N/A', 'UNKNOWN') THEN NULL ELSE BILL_ST END AS billing_state, CASE UPPER(TRIM(BILL_CTRY)) WHEN 'BRA' THEN 'BR' WHEN 'CAN' THEN 'CA' WHEN 'CANADA' THEN 'CA' WHEN 'CANADA' THEN 'CA' WHEN 'GER' THEN 'DE' WHEN 'GERMANY' THEN 'DE' WHEN 'US' THEN 'U.S.A.' WHEN 'USA' THEN 'U.S.A.' WHEN 'UNITED STATES' THEN 'U.S.A.' WHEN 'USA' THEN 'USA' WHEN 'U.S.A.' THEN 'USA' WHEN 'CANADA' THEN 'canada' ELSE BILL_CTRY END AS billing_country, BILL_PC AS billing_postal_code FROM TRANS_MSTR WHERE (TRANS_TYP_CD = 'I' AND (ORD_STS <> 9 OR ORD_STS IS NULL)) AND TRANS_TYP_CD = 'I') AS billing WHERE billing.type_code = 'I'",
+  "message": "",
+  "assumptions": [
+   "TRANS_MSTR holds several kinds of record in one table; this predicate selects the ones this entity is about",
+   "ORD_STS = 9 sits outside the contiguous run 2..6 and covers only 3.9% of rows"
+  ],
+  "ours": {
+   "columns": [
+    "max_invoice_total"
+   ],
+   "rows": [
+    [
+     25.86
+    ]
+   ],
+   "total": 1
+  }
+ },
+ {
+  "id": "c-023",
+  "question": "How many tracks are longer than five minutes?",
+  "tags": [
+   "cryptic_names",
+   "soft_delete"
+  ],
+  "difficulty": "easy",
+  "expect": null,
+  "answered": true,
+  "gold": {
+   "columns": [
+    "n"
+   ],
+   "rows": [
+    [
+     1069
+    ]
+   ],
+   "total": 1
+  },
+  "gold_sql": "SELECT COUNT(*) AS n FROM Track WHERE Milliseconds > 300000",
+  "correct": false,
+  "reason": "no system column matches a gold column (0/1 matched)",
+  "status": "ok",
+  "tokens": 2671,
+  "confidence": 0.791,
+  "logical_sql": "SELECT COUNT(*) AS track_count\nFROM playlist_track\nJOIN product ON playlist_track.product_id = product.id\nWHERE product.milliseconds > 300000",
+  "physical_sql": "SELECT COUNT(*) AS track_count FROM (SELECT PLST_ID AS playlist_id, PRD_ID AS product_id FROM PLST_TRK) AS playlist_track JOIN (SELECT PRD_ID AS id, strNm AS name, ALBM_ID AS album_id, MTYP_ID AS media_type_id, GNR_ID AS genre_id, CASE WHEN TRIM(COALESCE(strCmpsr, '')) = '' OR UPPER(TRIM(strCmpsr)) IN ('-', 'N/A', 'UNKNOWN') THEN NULL ELSE strCmpsr END AS composer, intMs AS milliseconds, intByt AS bytes, fltPrc AS price, ATTRS AS attributes, SUBSTRING(DLT_DT, 1, 10) AS deleted_date, CASE WHEN INSTR(ATTRS, 'genre=') > 0 THEN CASE WHEN INSTR(SUBSTRING(ATTRS, INSTR(ATTRS, 'genre=') + 6), '|') > 0 THEN SUBSTRING(SUBSTRING(ATTRS, INSTR(ATTRS, 'genre=') + 6), 1, INSTR(SUBSTRING(ATTRS, INSTR(ATTRS, 'genre=') + 6), '|') - 1) ELSE SUBSTRING(ATTRS, INSTR(ATTRS, 'genre=') + 6) END END AS genre, CASE WHEN INSTR(ATTRS, 'media=') > 0 THEN CASE WHEN INSTR(SUBSTRING(ATTRS, INSTR(ATTRS, 'media=') + 6), '|') > 0 THEN SUBSTRING(SUBSTRING(ATTRS, INSTR(ATTRS, 'media=') + 6), 1, INSTR(SUBSTRING(ATTRS, INSTR(ATTRS, 'media=') + 6), '|') - 1) ELSE SUBSTRING(ATTRS, INSTR(ATTRS, 'media=') + 6) END END AS media, CASE WHEN INSTR(ATTRS, 'secs=') > 0 THEN CASE WHEN INSTR(SUBSTRING(ATTRS, INSTR(ATTRS, 'secs=') + 5), '|') > 0 THEN SUBSTRING(SUBSTRING(ATTRS, INSTR(ATTRS, 'secs=') + 5), 1, INSTR(SUBSTRING(ATTRS, INSTR(ATTRS, 'secs=') + 5), '|') - 1) ELSE SUBSTRING(ATTRS, INSTR(ATTRS, 'secs=') + 5) END END AS secs FROM tblPrd WHERE DLT_DT IS NULL AND intMs > 300000) AS product ON playlist_track.product_id = product.id WHERE product.milliseconds > 300000",
+  "message": "",
+  "assumptions": [
+   "DLT_DT is a deletion date that is NULL on 97.8% of rows"
+  ],
+  "ours": {
+   "columns": [
+    "track_count"
+   ],
+   "rows": [
+    [
+     2649
+    ]
+   ],
+   "total": 1
+  }
+ },
+ {
+  "id": "c-024",
+  "question": "Compare total revenue in 2021 against 2024.",
+  "tags": [
+   "drift",
+   "god_table",
+   "inconsistent_types"
+  ],
+  "difficulty": "hard",
+  "expect": null,
+  "answered": true,
+  "gold": {
+   "columns": [
+    "yr",
+    "revenue"
+   ],
+   "rows": [
+    [
+     "2021",
+     449.46
+    ],
+    [
+     "2024",
+     477.53
+    ]
+   ],
+   "total": 2
+  },
+  "gold_sql": "SELECT STRFTIME('%Y', InvoiceDate) AS yr, ROUND(SUM(Total), 2) AS revenue\nFROM Invoice WHERE STRFTIME('%Y', InvoiceDate) IN ('2021', '2024')\nGROUP BY yr ORDER BY yr",
+  "correct": true,
+  "reason": "",
+  "status": "ok",
+  "tokens": 2654,
+  "confidence": 0.86,
+  "logical_sql": "SELECT \n    SUBSTR(billing.order_timestamp, 1, 4) AS year,\n    SUM(billing.total_amount) AS total_revenue\nFROM billing\nWHERE SUBSTR(billing.order_timestamp, 1, 4) IN ('2021', '2024')\nGROUP BY SUBSTR(billing.order_timestamp, 1, 4)\nORDER BY year",
+  "physical_sql": "SELECT SUBSTRING(billing.order_timestamp, 1, 4) AS year, SUM(billing.total_amount) AS total_revenue FROM (SELECT TRANS_TYP_CD AS type_code, STORE_CD AS store_code, ORD_NO AS order_number, CAST(CUST_NO AS INTEGER) AS customer_number, SUBSTRING(ORD_DT_TXT, 1, 4) || '-' || SUBSTRING(ORD_DT_TXT, 5, 2) || '-' || SUBSTRING(ORD_DT_TXT, 7, 2) AS order_date_text, SUBSTRING(ORD_TS, 7, 4) || '-' || SUBSTRING(ORD_TS, 4, 2) || '-' || SUBSTRING(ORD_TS, 1, 2) AS order_timestamp, CASE WHEN ORD_DT_TXT >= '20230102' THEN TOT_AMT_C / 100.0 ELSE TOT_AMT END AS total_amount, ORD_STS AS order_status, REF_ID AS reference_id, REF_TYP AS reference_type, NOTES AS notes, BILL_ADDR1 AS billing_address1, BILL_CTY AS billing_city, CASE WHEN TRIM(COALESCE(BILL_ST, '')) = '' OR UPPER(TRIM(BILL_ST)) IN ('-', 'N/A', 'UNKNOWN') THEN NULL ELSE BILL_ST END AS billing_state, CASE UPPER(TRIM(BILL_CTRY)) WHEN 'BRA' THEN 'BR' WHEN 'CAN' THEN 'CA' WHEN 'CANADA' THEN 'CA' WHEN 'CANADA' THEN 'CA' WHEN 'GER' THEN 'DE' WHEN 'GERMANY' THEN 'DE' WHEN 'US' THEN 'U.S.A.' WHEN 'USA' THEN 'U.S.A.' WHEN 'UNITED STATES' THEN 'U.S.A.' WHEN 'USA' THEN 'USA' WHEN 'U.S.A.' THEN 'USA' WHEN 'CANADA' THEN 'canada' ELSE BILL_CTRY END AS billing_country, BILL_PC AS billing_postal_code FROM TRANS_MSTR WHERE (TRANS_TYP_CD = 'I' AND (ORD_STS <> 9 OR ORD_STS IS NULL)) AND SUBSTRING((SUBSTRING(ORD_TS, 7, 4) || '-' || SUBSTRING(ORD_TS, 4, 2) || '-' || SUBSTRING(ORD_TS, 1, 2)), 1, 4) IN ('2021', '2024')) AS billing WHERE SUBSTRING(billing.order_timestamp, 1, 4) IN ('2021', '2024') GROUP BY SUBSTRING(billing.order_timestamp, 1, 4) ORDER BY year",
+  "message": "",
+  "assumptions": [
+   "TRANS_MSTR holds several kinds of record in one table; this predicate selects the ones this entity is about",
+   "ORD_STS = 9 sits outside the contiguous run 2..6 and covers only 3.9% of rows"
+  ],
+  "ours": {
+   "columns": [
+    "year",
+    "total_revenue"
+   ],
+   "rows": [
+    [
+     "2021",
+     449.46
+    ],
+    [
+     "2024",
+     477.53
+    ]
+   ],
+   "total": 2
+  }
+ },
+ {
+  "id": "c-025",
+  "question": "Which city has the most customers?",
+  "tags": [
+   "embedded_format",
+   "string_quality",
+   "soft_delete"
+  ],
+  "difficulty": "hard",
+  "expect": null,
+  "answered": true,
+  "gold": {
+   "columns": [
+    "city",
+    "n"
+   ],
+   "rows": [
+    [
+     "BERLIN",
+     2
+    ]
+   ],
+   "total": 1
+  },
+  "gold_sql": "SELECT UPPER(City) AS city, COUNT(*) AS n FROM Customer\nGROUP BY UPPER(City) ORDER BY n DESC, city ASC LIMIT 1",
+  "correct": false,
+  "reason": "no system column matches a gold column (0/2 matched)",
+  "status": "ok",
+  "tokens": 3108,
+  "confidence": 0.775,
+  "logical_sql": "SELECT customer.city, COUNT(*) AS customer_count\nFROM customer\nGROUP BY customer.city\nORDER BY customer_count DESC\nLIMIT 1",
+  "physical_sql": "SELECT customer.city, COUNT(*) AS customer_count FROM (SELECT CUST_ID AS id, RTRIM(LTRIM(RTRIM(CFNM1))) AS first_name, RTRIM(LTRIM(RTRIM(CLNM1))) AS last_name, CASE WHEN TRIM(COALESCE(CO_NM, '')) = '' OR UPPER(TRIM(CO_NM)) IN ('-', 'N/A', 'UNKNOWN') THEN NULL ELSE CO_NM END AS company_name, ADDR_XML AS address_xml, COALESCE(PHN_NBR, PHONE) AS phone, FAX_NBR AS fax_number, COALESCE(EML, (SELECT MAX(c.CNTCT_VAL) FROM CUST_CNTCT AS c WHERE c.CUST_ID = CUST_MSTR.CUST_ID)) AS email, CAST(REP_NO AS INTEGER) AS representative_number, CASE UPPER(TRIM(DEL_FLG)) WHEN 'N' THEN 'N' WHEN 'N' THEN 'n' ELSE DEL_FLG END AS deleted_flag, PREFS AS preferences, SUBSTRING(CRT_DT, 1, 10) AS created_date, CASE WHEN INSTR(ADDR_XML, '<c>') > 0 THEN SUBSTRING(ADDR_XML, INSTR(ADDR_XML, '<c>') + 3, INSTR(ADDR_XML, '</c>') - INSTR(ADDR_XML, '<c>') - 3) END AS city, CASE WHEN INSTR(ADDR_XML, '<cy>') > 0 THEN SUBSTRING(ADDR_XML, INSTR(ADDR_XML, '<cy>') + 4, INSTR(ADDR_XML, '</cy>') - INSTR(ADDR_XML, '<cy>') - 4) END AS country_code, CASE WHEN INSTR(ADDR_XML, '<pc>') > 0 THEN SUBSTRING(ADDR_XML, INSTR(ADDR_XML, '<pc>') + 4, INSTR(ADDR_XML, '</pc>') - INSTR(ADDR_XML, '<pc>') - 4) END AS postal_code, CASE WHEN INSTR(ADDR_XML, '<s1>') > 0 THEN SUBSTRING(ADDR_XML, INSTR(ADDR_XML, '<s1>') + 4, INSTR(ADDR_XML, '</s1>') - INSTR(ADDR_XML, '<s1>') - 4) END AS street_address, CASE WHEN INSTR(ADDR_XML, '<st>') > 0 THEN SUBSTRING(ADDR_XML, INSTR(ADDR_XML, '<st>') + 4, INSTR(ADDR_XML, '</st>') - INSTR(ADDR_XML, '<st>') - 4) END AS state, JSON_EXTRACT(PREFS, '$.channel') AS channel, JSON_EXTRACT(PREFS, '$.newsletter') AS newsletter, JSON_EXTRACT(PREFS, '$.tier') AS tier FROM CUST_MSTR WHERE UPPER(COALESCE(DEL_FLG, 'N')) <> 'Y') AS customer GROUP BY customer.city ORDER BY customer_count DESC LIMIT 1",
+  "message": "",
+  "assumptions": [
+   "DEL_FLG is a two-valued flag named for deletion or activity"
+  ],
+  "ours": {
+   "columns": [
+    "city",
+    "customer_count"
+   ],
+   "rows": [
+    [
+     "S\u00e3o Paulo",
+     2
+    ]
+   ],
+   "total": 1
+  }
+ },
+ {
+  "id": "c-026",
+  "question": "What are the top 5 artists by revenue?",
+  "tags": [
+   "missing_fk",
+   "composite_key",
+   "god_table",
+   "drift",
+   "cryptic_names"
+  ],
+  "difficulty": "hard",
+  "expect": null,
+  "answered": true,
+  "gold": {
+   "columns": [
+    "Name",
+    "revenue"
+   ],
+   "rows": [
+    [
+     "Iron Maiden",
+     138.6
+    ],
+    [
+     "U2",
+     105.93
+    ],
+    [
+     "Metallica",
+     90.09
+    ],
+    [
+     "Led Zeppelin",
+     86.13
+    ],
+    [
+     "Lost",
+     81.59
+    ]
+   ],
+   "total": 5
+  },
+  "gold_sql": "SELECT ar.Name, ROUND(SUM(il.UnitPrice * il.Quantity), 2) AS revenue\nFROM InvoiceLine il\nJOIN Track t ON t.TrackId = il.TrackId\nJOIN Album al ON al.AlbumId = t.AlbumId\nJOIN Artist ar ON ar.ArtistId = al.ArtistId\nGROUP BY ar.ArtistId, ar.Name ORDER BY revenue DESC, ar.Name ASC LIMIT 5",
+  "correct": false,
+  "reason": "no system column matches a gold column (0/2 matched)",
+  "status": "ok",
+  "tokens": 5482,
+  "confidence": 0.624,
+  "logical_sql": "SELECT\n  a.id,\n  a.name,\n  SUM(b.total_amount) AS total_revenue\nFROM artist a\nJOIN album al ON al.artist_id = a.id\nJOIN product p ON p.album_id = al.id\nJOIN sales_order_line sol ON sol.product_id = p.id\nJOIN (\n  SELECT store_code, order_number, SUM(total_amount) AS total_amount\n  FROM billing\n  GROUP BY store_code, order_number\n) b ON b.store_code = sol.store_code AND b.order_number = sol.order_number\nGROUP BY a.id, a.name\nORDER BY total_revenue DESC\nLIMIT 5",
+  "physical_sql": "SELECT a.id, a.name, SUM(b.total_amount) AS total_revenue FROM (SELECT ARTST_ID AS id, ARTST_NM AS name FROM ARTST) AS a JOIN (SELECT ALBM_ID AS id, ALBM_TTL AS title, ARTST_ID AS artist_id FROM ALBM) AS al ON al.artist_id = a.id JOIN (SELECT PRD_ID AS id, strNm AS name, ALBM_ID AS album_id, MTYP_ID AS media_type_id, GNR_ID AS genre_id, CASE WHEN TRIM(COALESCE(strCmpsr, '')) = '' OR UPPER(TRIM(strCmpsr)) IN ('-', 'N/A', 'UNKNOWN') THEN NULL ELSE strCmpsr END AS composer, intMs AS milliseconds, intByt AS bytes, fltPrc AS price, ATTRS AS attributes, SUBSTRING(DLT_DT, 1, 10) AS deleted_date, CASE WHEN INSTR(ATTRS, 'genre=') > 0 THEN CASE WHEN INSTR(SUBSTRING(ATTRS, INSTR(ATTRS, 'genre=') + 6), '|') > 0 THEN SUBSTRING(SUBSTRING(ATTRS, INSTR(ATTRS, 'genre=') + 6), 1, INSTR(SUBSTRING(ATTRS, INSTR(ATTRS, 'genre=') + 6), '|') - 1) ELSE SUBSTRING(ATTRS, INSTR(ATTRS, 'genre=') + 6) END END AS genre, CASE WHEN INSTR(ATTRS, 'media=') > 0 THEN CASE WHEN INSTR(SUBSTRING(ATTRS, INSTR(ATTRS, 'media=') + 6), '|') > 0 THEN SUBSTRING(SUBSTRING(ATTRS, INSTR(ATTRS, 'media=') + 6), 1, INSTR(SUBSTRING(ATTRS, INSTR(ATTRS, 'media=') + 6), '|') - 1) ELSE SUBSTRING(ATTRS, INSTR(ATTRS, 'media=') + 6) END END AS media, CASE WHEN INSTR(ATTRS, 'secs=') > 0 THEN CASE WHEN INSTR(SUBSTRING(ATTRS, INSTR(ATTRS, 'secs=') + 5), '|') > 0 THEN SUBSTRING(SUBSTRING(ATTRS, INSTR(ATTRS, 'secs=') + 5), 1, INSTR(SUBSTRING(ATTRS, INSTR(ATTRS, 'secs=') + 5), '|') - 1) ELSE SUBSTRING(ATTRS, INSTR(ATTRS, 'secs=') + 5) END END AS secs FROM tblPrd WHERE DLT_DT IS NULL) AS p ON p.album_id = al.id JOIN (SELECT STORE_CD AS store_code, ORD_NO AS order_number, LN_SEQ AS sequence, PRD_ID AS product_id, UNT_PRC AS unit_price, QTY AS quantity FROM SO_LN) AS sol ON sol.product_id = p.id JOIN (SELECT store_code, order_number, SUM(total_amount) AS total_amount FROM (SELECT TRANS_TYP_CD AS type_code, STORE_CD AS store_code, ORD_NO AS order_number, CAST(CUST_NO AS INTEGER) AS customer_number, SUBSTRING(ORD_DT_TXT, 1, 4) || '-' || SUBSTRING(ORD_DT_TXT, 5, 2) || '-' || SUBSTRING(ORD_DT_TXT, 7, 2) AS order_date_text, SUBSTRING(ORD_TS, 7, 4) || '-' || SUBSTRING(ORD_TS, 4, 2) || '-' || SUBSTRING(ORD_TS, 1, 2) AS order_timestamp, CASE WHEN ORD_DT_TXT >= '20230102' THEN TOT_AMT_C / 100.0 ELSE TOT_AMT END AS total_amount, ORD_STS AS order_status, REF_ID AS reference_id, REF_TYP AS reference_type, NOTES AS notes, BILL_ADDR1 AS billing_address1, BILL_CTY AS billing_city, CASE WHEN TRIM(COALESCE(BILL_ST, '')) = '' OR UPPER(TRIM(BILL_ST)) IN ('-', 'N/A', 'UNKNOWN') THEN NULL ELSE BILL_ST END AS billing_state, CASE UPPER(TRIM(BILL_CTRY)) WHEN 'BRA' THEN 'BR' WHEN 'CAN' THEN 'CA' WHEN 'CANADA' THEN 'CA' WHEN 'CANADA' THEN 'CA' WHEN 'GER' THEN 'DE' WHEN 'GERMANY' THEN 'DE' WHEN 'US' THEN 'U.S.A.' WHEN 'USA' THEN 'U.S.A.' WHEN 'UNITED STATES' THEN 'U.S.A.' WHEN 'USA' THEN 'USA' WHEN 'U.S.A.' THEN 'USA' WHEN 'CANADA' THEN 'canada' ELSE BILL_CTRY END AS billing_country, BILL_PC AS billing_postal_code FROM TRANS_MSTR WHERE TRANS_TYP_CD = 'I' AND (ORD_STS <> 9 OR ORD_STS IS NULL)) AS billing GROUP BY store_code, order_number) AS b ON b.store_code = sol.store_code AND b.order_number = sol.order_number GROUP BY a.id, a.name ORDER BY total_revenue DESC LIMIT 5",
+  "message": "",
+  "assumptions": [
+   "DLT_DT is a deletion date that is NULL on 97.8% of rows",
+   "TRANS_MSTR holds several kinds of record in one table; this predicate selects the ones this entity is about",
+   "ORD_STS = 9 sits outside the contiguous run 2..6 and covers only 3.9% of rows"
+  ],
+  "ours": {
+   "columns": [
+    "id",
+    "name",
+    "total_revenue"
+   ],
+   "rows": [
+    [
+     90,
+     "Iron Maiden",
+     1233.54
+    ],
+    [
+     150,
+     "U2",
+     895.59
+    ],
+    [
+     149,
+     "Lost",
+     833.6999999999999
+    ],
+    [
+     22,
+     "Led Zeppelin",
+     620.73
+    ],
+    [
+     50,
+     "Metallica",
+     599.94
+    ]
+   ],
+   "total": 5
+  }
+ },
+ {
+  "id": "c-027",
+  "question": "How many tracks appear on at least one playlist?",
+  "tags": [
+   "composite_key",
+   "missing_fk",
+   "soft_delete"
+  ],
+  "difficulty": "medium",
+  "expect": null,
+  "answered": true,
+  "gold": {
+   "columns": [
+    "n"
+   ],
+   "rows": [
+    [
+     3503
+    ]
+   ],
+   "total": 1
+  },
+  "gold_sql": "SELECT COUNT(DISTINCT TrackId) AS n FROM PlaylistTrack",
+  "correct": true,
+  "reason": "",
+  "status": "ok",
+  "tokens": 2609,
+  "confidence": 0.882,
+  "logical_sql": "SELECT COUNT(DISTINCT playlist_track.product_id) AS track_count FROM playlist_track",
+  "physical_sql": "SELECT COUNT(DISTINCT playlist_track.product_id) AS track_count FROM (SELECT PLST_ID AS playlist_id, PRD_ID AS product_id FROM PLST_TRK) AS playlist_track",
+  "message": "",
+  "assumptions": [],
+  "ours": {
+   "columns": [
+    "track_count"
+   ],
+   "rows": [
+    [
+     3503
+    ]
+   ],
+   "total": 1
+  }
+ },
+ {
+  "id": "c-028",
+  "question": "What is the average number of line items per invoice?",
+  "tags": [
+   "composite_key",
+   "god_table",
+   "soft_delete"
+  ],
+  "difficulty": "hard",
+  "expect": null,
+  "answered": true,
+  "gold": {
+   "columns": [
+    "avg_lines"
+   ],
+   "rows": [
+    [
+     5.437
+    ]
+   ],
+   "total": 1
+  },
+  "gold_sql": "SELECT ROUND(CAST(COUNT(*) AS REAL) / COUNT(DISTINCT InvoiceId), 3) AS avg_lines\nFROM InvoiceLine",
+  "correct": false,
+  "reason": "no system column matches a gold column (0/1 matched)",
+  "status": "ok",
+  "tokens": 3120,
+  "confidence": 0.831,
+  "logical_sql": "SELECT AVG(line_count) AS avg_line_items_per_invoice\nFROM (\n    SELECT billing.order_number, COUNT(*) AS line_count\n    FROM sales_order_line\n    JOIN billing ON sales_order_line.order_number = billing.order_number\n                 AND sales_order_line.store_code = billing.store_code\n    WHERE billing.type_code = 'I'\n    GROUP BY billing.order_number\n) AS sub",
+  "physical_sql": "SELECT AVG(line_count) AS avg_line_items_per_invoice FROM (SELECT billing.order_number, COUNT(*) AS line_count FROM (SELECT STORE_CD AS store_code, ORD_NO AS order_number, LN_SEQ AS sequence, PRD_ID AS product_id, UNT_PRC AS unit_price, QTY AS quantity FROM SO_LN) AS sales_order_line JOIN (SELECT TRANS_TYP_CD AS type_code, STORE_CD AS store_code, ORD_NO AS order_number, CAST(CUST_NO AS INTEGER) AS customer_number, SUBSTRING(ORD_DT_TXT, 1, 4) || '-' || SUBSTRING(ORD_DT_TXT, 5, 2) || '-' || SUBSTRING(ORD_DT_TXT, 7, 2) AS order_date_text, SUBSTRING(ORD_TS, 7, 4) || '-' || SUBSTRING(ORD_TS, 4, 2) || '-' || SUBSTRING(ORD_TS, 1, 2) AS order_timestamp, CASE WHEN ORD_DT_TXT >= '20230102' THEN TOT_AMT_C / 100.0 ELSE TOT_AMT END AS total_amount, ORD_STS AS order_status, REF_ID AS reference_id, REF_TYP AS reference_type, NOTES AS notes, BILL_ADDR1 AS billing_address1, BILL_CTY AS billing_city, CASE WHEN TRIM(COALESCE(BILL_ST, '')) = '' OR UPPER(TRIM(BILL_ST)) IN ('-', 'N/A', 'UNKNOWN') THEN NULL ELSE BILL_ST END AS billing_state, CASE UPPER(TRIM(BILL_CTRY)) WHEN 'BRA' THEN 'BR' WHEN 'CAN' THEN 'CA' WHEN 'CANADA' THEN 'CA' WHEN 'CANADA' THEN 'CA' WHEN 'GER' THEN 'DE' WHEN 'GERMANY' THEN 'DE' WHEN 'US' THEN 'U.S.A.' WHEN 'USA' THEN 'U.S.A.' WHEN 'UNITED STATES' THEN 'U.S.A.' WHEN 'USA' THEN 'USA' WHEN 'U.S.A.' THEN 'USA' WHEN 'CANADA' THEN 'canada' ELSE BILL_CTRY END AS billing_country, BILL_PC AS billing_postal_code FROM TRANS_MSTR WHERE TRANS_TYP_CD = 'I' AND (ORD_STS <> 9 OR ORD_STS IS NULL)) AS billing ON sales_order_line.order_number = billing.order_number AND sales_order_line.store_code = billing.store_code WHERE billing.type_code = 'I' GROUP BY billing.order_number) AS sub",
+  "message": "",
+  "assumptions": [
+   "TRANS_MSTR holds several kinds of record in one table; this predicate selects the ones this entity is about",
+   "ORD_STS = 9 sits outside the contiguous run 2..6 and covers only 3.9% of rows"
+  ],
+  "ours": {
+   "columns": [
+    "avg_line_items_per_invoice"
+   ],
+   "rows": [
+    [
+     9.73913043478261
+    ]
+   ],
+   "total": 1
+  }
+ },
+ {
+  "id": "c-029",
+  "question": "How many customers have a company recorded?",
+  "tags": [
+   "string_quality",
+   "soft_delete"
+  ],
+  "difficulty": "medium",
+  "expect": null,
+  "answered": true,
+  "gold": {
+   "columns": [
+    "n"
+   ],
+   "rows": [
+    [
+     10
+    ]
+   ],
+   "total": 1
+  },
+  "gold_sql": "SELECT COUNT(*) AS n FROM Customer\nWHERE Company IS NOT NULL AND TRIM(Company) <> ''",
+  "correct": true,
+  "reason": "",
+  "status": "ok",
+  "tokens": 3299,
+  "confidence": 0.686,
+  "logical_sql": "SELECT COUNT(*) AS customer_count\nFROM customer\nWHERE company_name IS NOT NULL",
+  "physical_sql": "SELECT COUNT(*) AS customer_count FROM (SELECT CUST_ID AS id, RTRIM(LTRIM(RTRIM(CFNM1))) AS first_name, RTRIM(LTRIM(RTRIM(CLNM1))) AS last_name, CASE WHEN TRIM(COALESCE(CO_NM, '')) = '' OR UPPER(TRIM(CO_NM)) IN ('-', 'N/A', 'UNKNOWN') THEN NULL ELSE CO_NM END AS company_name, ADDR_XML AS address_xml, COALESCE(PHN_NBR, PHONE) AS phone, FAX_NBR AS fax_number, COALESCE(EML, (SELECT MAX(c.CNTCT_VAL) FROM CUST_CNTCT AS c WHERE c.CUST_ID = CUST_MSTR.CUST_ID)) AS email, CAST(REP_NO AS INTEGER) AS representative_number, CASE UPPER(TRIM(DEL_FLG)) WHEN 'N' THEN 'N' WHEN 'N' THEN 'n' ELSE DEL_FLG END AS deleted_flag, PREFS AS preferences, SUBSTRING(CRT_DT, 1, 10) AS created_date, CASE WHEN INSTR(ADDR_XML, '<c>') > 0 THEN SUBSTRING(ADDR_XML, INSTR(ADDR_XML, '<c>') + 3, INSTR(ADDR_XML, '</c>') - INSTR(ADDR_XML, '<c>') - 3) END AS city, CASE WHEN INSTR(ADDR_XML, '<cy>') > 0 THEN SUBSTRING(ADDR_XML, INSTR(ADDR_XML, '<cy>') + 4, INSTR(ADDR_XML, '</cy>') - INSTR(ADDR_XML, '<cy>') - 4) END AS country_code, CASE WHEN INSTR(ADDR_XML, '<pc>') > 0 THEN SUBSTRING(ADDR_XML, INSTR(ADDR_XML, '<pc>') + 4, INSTR(ADDR_XML, '</pc>') - INSTR(ADDR_XML, '<pc>') - 4) END AS postal_code, CASE WHEN INSTR(ADDR_XML, '<s1>') > 0 THEN SUBSTRING(ADDR_XML, INSTR(ADDR_XML, '<s1>') + 4, INSTR(ADDR_XML, '</s1>') - INSTR(ADDR_XML, '<s1>') - 4) END AS street_address, CASE WHEN INSTR(ADDR_XML, '<st>') > 0 THEN SUBSTRING(ADDR_XML, INSTR(ADDR_XML, '<st>') + 4, INSTR(ADDR_XML, '</st>') - INSTR(ADDR_XML, '<st>') - 4) END AS state, JSON_EXTRACT(PREFS, '$.channel') AS channel, JSON_EXTRACT(PREFS, '$.newsletter') AS newsletter, JSON_EXTRACT(PREFS, '$.tier') AS tier FROM CUST_MSTR WHERE UPPER(COALESCE(DEL_FLG, 'N')) <> 'Y') AS customer WHERE NOT company_name IS NULL",
+  "message": "",
+  "assumptions": [
+   "DEL_FLG is a two-valued flag named for deletion or activity"
+  ],
+  "ours": {
+   "columns": [
+    "customer_count"
+   ],
+   "rows": [
+    [
+     10
+    ]
+   ],
+   "total": 1
+  }
+ },
+ {
+  "id": "c-030",
+  "question": "How many tracks are there of each media type?",
+  "tags": [
+   "missing_fk",
+   "embedded_format",
+   "soft_delete"
+  ],
+  "difficulty": "medium",
+  "expect": null,
+  "answered": true,
+  "gold": {
+   "columns": [
+    "Name",
+    "n"
+   ],
+   "rows": [
+    [
+     "AAC audio file",
+     11
+    ],
+    [
+     "MPEG audio file",
+     3034
+    ],
+    [
+     "Protected AAC audio file",
+     237
+    ],
+    [
+     "Protected MPEG-4 video file",
+     214
+    ],
+    [
+     "Purchased AAC audio file",
+     7
+    ]
+   ],
+   "total": 5
+  },
+  "gold_sql": "SELECT m.Name, COUNT(*) AS n FROM Track t\nJOIN MediaType m ON m.MediaTypeId = t.MediaTypeId\nGROUP BY m.MediaTypeId, m.Name ORDER BY m.Name",
+  "correct": false,
+  "reason": "no system column matches a gold column (1/2 matched)",
+  "status": "ok",
+  "tokens": 3426,
+  "confidence": 0.961,
+  "logical_sql": "SELECT mt.media_type_name, COUNT(*) AS track_count\nFROM playlist_track pt\nJOIN product p ON pt.product_id = p.id\nJOIN media_type mt ON p.media_type_id = mt.media_type_id\nGROUP BY mt.media_type_name",
+  "physical_sql": "SELECT mt.media_type_name, COUNT(*) AS track_count FROM (SELECT PLST_ID AS playlist_id, PRD_ID AS product_id FROM PLST_TRK) AS pt JOIN (SELECT PRD_ID AS id, strNm AS name, ALBM_ID AS album_id, MTYP_ID AS media_type_id, GNR_ID AS genre_id, CASE WHEN TRIM(COALESCE(strCmpsr, '')) = '' OR UPPER(TRIM(strCmpsr)) IN ('-', 'N/A', 'UNKNOWN') THEN NULL ELSE strCmpsr END AS composer, intMs AS milliseconds, intByt AS bytes, fltPrc AS price, ATTRS AS attributes, SUBSTRING(DLT_DT, 1, 10) AS deleted_date, CASE WHEN INSTR(ATTRS, 'genre=') > 0 THEN CASE WHEN INSTR(SUBSTRING(ATTRS, INSTR(ATTRS, 'genre=') + 6), '|') > 0 THEN SUBSTRING(SUBSTRING(ATTRS, INSTR(ATTRS, 'genre=') + 6), 1, INSTR(SUBSTRING(ATTRS, INSTR(ATTRS, 'genre=') + 6), '|') - 1) ELSE SUBSTRING(ATTRS, INSTR(ATTRS, 'genre=') + 6) END END AS genre, CASE WHEN INSTR(ATTRS, 'media=') > 0 THEN CASE WHEN INSTR(SUBSTRING(ATTRS, INSTR(ATTRS, 'media=') + 6), '|') > 0 THEN SUBSTRING(SUBSTRING(ATTRS, INSTR(ATTRS, 'media=') + 6), 1, INSTR(SUBSTRING(ATTRS, INSTR(ATTRS, 'media=') + 6), '|') - 1) ELSE SUBSTRING(ATTRS, INSTR(ATTRS, 'media=') + 6) END END AS media, CASE WHEN INSTR(ATTRS, 'secs=') > 0 THEN CASE WHEN INSTR(SUBSTRING(ATTRS, INSTR(ATTRS, 'secs=') + 5), '|') > 0 THEN SUBSTRING(SUBSTRING(ATTRS, INSTR(ATTRS, 'secs=') + 5), 1, INSTR(SUBSTRING(ATTRS, INSTR(ATTRS, 'secs=') + 5), '|') - 1) ELSE SUBSTRING(ATTRS, INSTR(ATTRS, 'secs=') + 5) END END AS secs FROM tblPrd WHERE DLT_DT IS NULL) AS p ON pt.product_id = p.id JOIN (SELECT MTYP_ID AS media_type_id, MTYP_NM AS media_type_name FROM MEDIA_TYP) AS mt ON p.media_type_id = mt.media_type_id GROUP BY mt.media_type_name",
+  "message": "",
+  "assumptions": [
+   "DLT_DT is a deletion date that is NULL on 97.8% of rows"
+  ],
+  "ours": {
+   "columns": [
+    "media_type_name",
+    "track_count"
+   ],
+   "rows": [
+    [
+     "AAC audio file",
+     25
+    ],
+    [
+     "MPEG audio file",
+     7521
+    ],
+    [
+     "Protected AAC audio file",
+     713
+    ],
+    [
+     "Protected MPEG-4 video file",
+     429
+    ],
+    [
+     "Purchased AAC audio file",
+     27
+    ]
+   ],
+   "total": 5
+  }
+ },
+ {
+  "id": "c-031",
+  "question": "What is the total revenue from Rock tracks?",
+  "tags": [
+   "missing_fk",
+   "composite_key",
+   "embedded_format",
+   "soft_delete"
+  ],
+  "difficulty": "hard",
+  "expect": null,
+  "answered": true,
+  "gold": {
+   "columns": [
+    "revenue"
+   ],
+   "rows": [
+    [
+     826.65
+    ]
+   ],
+   "total": 1
+  },
+  "gold_sql": "SELECT ROUND(SUM(il.UnitPrice * il.Quantity), 2) AS revenue\nFROM InvoiceLine il\nJOIN Track t ON t.TrackId = il.TrackId\nJOIN Genre g ON g.GenreId = t.GenreId\nWHERE g.Name = 'Rock'",
+  "correct": true,
+  "reason": "",
+  "status": "ok",
+  "tokens": 4137,
+  "confidence": 0.756,
+  "logical_sql": "SELECT SUM(sales_order_line.unit_price * sales_order_line.quantity) AS total_revenue\nFROM sales_order_line\nJOIN product ON product.id = sales_order_line.product_id\nWHERE product.genre = 'Rock'",
+  "physical_sql": "SELECT SUM(sales_order_line.unit_price * sales_order_line.quantity) AS total_revenue FROM (SELECT STORE_CD AS store_code, ORD_NO AS order_number, LN_SEQ AS sequence, PRD_ID AS product_id, UNT_PRC AS unit_price, QTY AS quantity FROM SO_LN) AS sales_order_line JOIN (SELECT PRD_ID AS id, strNm AS name, ALBM_ID AS album_id, MTYP_ID AS media_type_id, GNR_ID AS genre_id, CASE WHEN TRIM(COALESCE(strCmpsr, '')) = '' OR UPPER(TRIM(strCmpsr)) IN ('-', 'N/A', 'UNKNOWN') THEN NULL ELSE strCmpsr END AS composer, intMs AS milliseconds, intByt AS bytes, fltPrc AS price, ATTRS AS attributes, SUBSTRING(DLT_DT, 1, 10) AS deleted_date, CASE WHEN INSTR(ATTRS, 'genre=') > 0 THEN CASE WHEN INSTR(SUBSTRING(ATTRS, INSTR(ATTRS, 'genre=') + 6), '|') > 0 THEN SUBSTRING(SUBSTRING(ATTRS, INSTR(ATTRS, 'genre=') + 6), 1, INSTR(SUBSTRING(ATTRS, INSTR(ATTRS, 'genre=') + 6), '|') - 1) ELSE SUBSTRING(ATTRS, INSTR(ATTRS, 'genre=') + 6) END END AS genre, CASE WHEN INSTR(ATTRS, 'media=') > 0 THEN CASE WHEN INSTR(SUBSTRING(ATTRS, INSTR(ATTRS, 'media=') + 6), '|') > 0 THEN SUBSTRING(SUBSTRING(ATTRS, INSTR(ATTRS, 'media=') + 6), 1, INSTR(SUBSTRING(ATTRS, INSTR(ATTRS, 'media=') + 6), '|') - 1) ELSE SUBSTRING(ATTRS, INSTR(ATTRS, 'media=') + 6) END END AS media, CASE WHEN INSTR(ATTRS, 'secs=') > 0 THEN CASE WHEN INSTR(SUBSTRING(ATTRS, INSTR(ATTRS, 'secs=') + 5), '|') > 0 THEN SUBSTRING(SUBSTRING(ATTRS, INSTR(ATTRS, 'secs=') + 5), 1, INSTR(SUBSTRING(ATTRS, INSTR(ATTRS, 'secs=') + 5), '|') - 1) ELSE SUBSTRING(ATTRS, INSTR(ATTRS, 'secs=') + 5) END END AS secs FROM tblPrd WHERE DLT_DT IS NULL AND (CASE WHEN INSTR(ATTRS, 'genre=') > 0 THEN CASE WHEN INSTR(SUBSTRING(ATTRS, INSTR(ATTRS, 'genre=') + 6), '|') > 0 THEN SUBSTRING(SUBSTRING(ATTRS, INSTR(ATTRS, 'genre=') + 6), 1, INSTR(SUBSTRING(ATTRS, INSTR(ATTRS, 'genre=') + 6), '|') - 1) ELSE SUBSTRING(ATTRS, INSTR(ATTRS, 'genre=') + 6) END END) = 'Rock') AS product ON product.id = sales_order_line.product_id WHERE product.genre = 'Rock'",
+  "message": "",
+  "assumptions": [
+   "DLT_DT is a deletion date that is NULL on 97.8% of rows"
+  ],
+  "ours": {
+   "columns": [
+    "total_revenue"
+   ],
+   "rows": [
+    [
+     826.65
+    ]
+   ],
+   "total": 1
+  }
+ },
+ {
+  "id": "c-032",
+  "question": "On what date was the earliest invoice issued?",
+  "tags": [
+   "god_table",
+   "inconsistent_types",
+   "soft_delete"
+  ],
+  "difficulty": "medium",
+  "expect": null,
+  "answered": true,
+  "gold": {
+   "columns": [
+    "first_date"
+   ],
+   "rows": [
+    [
+     "2021-01-01"
+    ]
+   ],
+   "total": 1
+  },
+  "gold_sql": "SELECT DATE(MIN(InvoiceDate)) AS first_date FROM Invoice",
+  "correct": true,
+  "reason": "",
+  "status": "ok",
+  "tokens": 3505,
+  "confidence": 0.945,
+  "logical_sql": "SELECT MIN(billing.order_date_text) AS earliest_invoice_date\nFROM billing\nWHERE billing.type_code = 'I'",
+  "physical_sql": "SELECT MIN(billing.order_date_text) AS earliest_invoice_date FROM (SELECT TRANS_TYP_CD AS type_code, STORE_CD AS store_code, ORD_NO AS order_number, CAST(CUST_NO AS INTEGER) AS customer_number, SUBSTRING(ORD_DT_TXT, 1, 4) || '-' || SUBSTRING(ORD_DT_TXT, 5, 2) || '-' || SUBSTRING(ORD_DT_TXT, 7, 2) AS order_date_text, SUBSTRING(ORD_TS, 7, 4) || '-' || SUBSTRING(ORD_TS, 4, 2) || '-' || SUBSTRING(ORD_TS, 1, 2) AS order_timestamp, CASE WHEN ORD_DT_TXT >= '20230102' THEN TOT_AMT_C / 100.0 ELSE TOT_AMT END AS total_amount, ORD_STS AS order_status, REF_ID AS reference_id, REF_TYP AS reference_type, NOTES AS notes, BILL_ADDR1 AS billing_address1, BILL_CTY AS billing_city, CASE WHEN TRIM(COALESCE(BILL_ST, '')) = '' OR UPPER(TRIM(BILL_ST)) IN ('-', 'N/A', 'UNKNOWN') THEN NULL ELSE BILL_ST END AS billing_state, CASE UPPER(TRIM(BILL_CTRY)) WHEN 'BRA' THEN 'BR' WHEN 'CAN' THEN 'CA' WHEN 'CANADA' THEN 'CA' WHEN 'CANADA' THEN 'CA' WHEN 'GER' THEN 'DE' WHEN 'GERMANY' THEN 'DE' WHEN 'US' THEN 'U.S.A.' WHEN 'USA' THEN 'U.S.A.' WHEN 'UNITED STATES' THEN 'U.S.A.' WHEN 'USA' THEN 'USA' WHEN 'U.S.A.' THEN 'USA' WHEN 'CANADA' THEN 'canada' ELSE BILL_CTRY END AS billing_country, BILL_PC AS billing_postal_code FROM TRANS_MSTR WHERE (TRANS_TYP_CD = 'I' AND (ORD_STS <> 9 OR ORD_STS IS NULL)) AND TRANS_TYP_CD = 'I') AS billing WHERE billing.type_code = 'I'",
+  "message": "",
+  "assumptions": [
+   "TRANS_MSTR holds several kinds of record in one table; this predicate selects the ones this entity is about",
+   "ORD_STS = 9 sits outside the contiguous run 2..6 and covers only 3.9% of rows"
+  ],
+  "ours": {
+   "columns": [
+    "earliest_invoice_date"
+   ],
+   "rows": [
+    [
+     "2021-01-01"
+    ]
+   ],
+   "total": 1
+  }
+ },
+ {
+  "id": "c-033",
+  "question": "Show monthly revenue for 2022.",
+  "tags": [
+   "god_table",
+   "drift",
+   "inconsistent_types"
+  ],
+  "difficulty": "hard",
+  "expect": null,
+  "answered": true,
+  "gold": {
+   "columns": [
+    "ym",
+    "revenue"
+   ],
+   "rows": [
+    [
+     "2022-01",
+     52.62
+    ],
+    [
+     "2022-02",
+     46.62
+    ],
+    [
+     "2022-03",
+     44.62
+    ],
+    [
+     "2022-04",
+     37.62
+    ],
+    [
+     "2022-05",
+     37.62
+    ],
+    [
+     "2022-06",
+     37.62
+    ],
+    [
+     "2022-07",
+     37.62
+    ],
+    [
+     "2022-08",
+     37.62
+    ],
+    [
+     "2022-09",
+     36.63
+    ],
+    [
+     "2022-10",
+     37.62
+    ],
+    [
+     "2022-11",
+     37.62
+    ],
+    [
+     "2022-12",
+     37.62
+    ]
+   ],
+   "total": 12
+  },
+  "gold_sql": "SELECT STRFTIME('%Y-%m', InvoiceDate) AS ym, ROUND(SUM(Total), 2) AS revenue\nFROM Invoice WHERE STRFTIME('%Y', InvoiceDate) = '2022'\nGROUP BY ym ORDER BY ym",
+  "correct": true,
+  "reason": "",
+  "status": "ok",
+  "tokens": 2611,
+  "confidence": 0.76,
+  "logical_sql": "SELECT STRFTIME('%Y-%m', billing.order_date_text) AS month,\n       SUM(billing.total_amount) AS revenue\nFROM billing\nWHERE STRFTIME('%Y', billing.order_date_text) = '2022'\nGROUP BY STRFTIME('%Y-%m', billing.order_date_text)\nORDER BY month",
+  "physical_sql": "SELECT STRFTIME('%Y-%m', billing.order_date_text) AS month, SUM(billing.total_amount) AS revenue FROM (SELECT TRANS_TYP_CD AS type_code, STORE_CD AS store_code, ORD_NO AS order_number, CAST(CUST_NO AS INTEGER) AS customer_number, SUBSTRING(ORD_DT_TXT, 1, 4) || '-' || SUBSTRING(ORD_DT_TXT, 5, 2) || '-' || SUBSTRING(ORD_DT_TXT, 7, 2) AS order_date_text, SUBSTRING(ORD_TS, 7, 4) || '-' || SUBSTRING(ORD_TS, 4, 2) || '-' || SUBSTRING(ORD_TS, 1, 2) AS order_timestamp, CASE WHEN ORD_DT_TXT >= '20230102' THEN TOT_AMT_C / 100.0 ELSE TOT_AMT END AS total_amount, ORD_STS AS order_status, REF_ID AS reference_id, REF_TYP AS reference_type, NOTES AS notes, BILL_ADDR1 AS billing_address1, BILL_CTY AS billing_city, CASE WHEN TRIM(COALESCE(BILL_ST, '')) = '' OR UPPER(TRIM(BILL_ST)) IN ('-', 'N/A', 'UNKNOWN') THEN NULL ELSE BILL_ST END AS billing_state, CASE UPPER(TRIM(BILL_CTRY)) WHEN 'BRA' THEN 'BR' WHEN 'CAN' THEN 'CA' WHEN 'CANADA' THEN 'CA' WHEN 'CANADA' THEN 'CA' WHEN 'GER' THEN 'DE' WHEN 'GERMANY' THEN 'DE' WHEN 'US' THEN 'U.S.A.' WHEN 'USA' THEN 'U.S.A.' WHEN 'UNITED STATES' THEN 'U.S.A.' WHEN 'USA' THEN 'USA' WHEN 'U.S.A.' THEN 'USA' WHEN 'CANADA' THEN 'canada' ELSE BILL_CTRY END AS billing_country, BILL_PC AS billing_postal_code FROM TRANS_MSTR WHERE (TRANS_TYP_CD = 'I' AND (ORD_STS <> 9 OR ORD_STS IS NULL)) AND STRFTIME('%Y', (SUBSTRING(ORD_DT_TXT, 1, 4) || '-' || SUBSTRING(ORD_DT_TXT, 5, 2) || '-' || SUBSTRING(ORD_DT_TXT, 7, 2))) = '2022') AS billing WHERE STRFTIME('%Y', billing.order_date_text) = '2022' GROUP BY STRFTIME('%Y-%m', billing.order_date_text) ORDER BY month",
+  "message": "",
+  "assumptions": [
+   "TRANS_MSTR holds several kinds of record in one table; this predicate selects the ones this entity is about",
+   "ORD_STS = 9 sits outside the contiguous run 2..6 and covers only 3.9% of rows"
+  ],
+  "ours": {
+   "columns": [
+    "month",
+    "revenue"
+   ],
+   "rows": [
+    [
+     "2022-01",
+     52.62
+    ],
+    [
+     "2022-02",
+     46.62
+    ],
+    [
+     "2022-03",
+     44.62
+    ],
+    [
+     "2022-04",
+     37.62
+    ],
+    [
+     "2022-05",
+     37.62
+    ],
+    [
+     "2022-06",
+     37.62
+    ],
+    [
+     "2022-07",
+     37.62
+    ],
+    [
+     "2022-08",
+     37.62
+    ],
+    [
+     "2022-09",
+     36.63
+    ],
+    [
+     "2022-10",
+     37.62
+    ],
+    [
+     "2022-11",
+     37.62
+    ],
+    [
+     "2022-12",
+     37.62
+    ]
+   ],
+   "total": 12
+  }
+ },
+ {
+  "id": "c-034",
+  "question": "How many employees are based in Calgary?",
+  "tags": [
+   "string_quality",
+   "soft_delete",
+   "cryptic_names"
+  ],
+  "difficulty": "medium",
+  "expect": null,
+  "answered": true,
+  "gold": {
+   "columns": [
+    "n"
+   ],
+   "rows": [
+    [
+     5
+    ]
+   ],
+   "total": 1
+  },
+  "gold_sql": "SELECT COUNT(*) AS n FROM Employee WHERE UPPER(City) = 'CALGARY'",
+  "correct": true,
+  "reason": "",
+  "status": "ok",
+  "tokens": 3349,
+  "confidence": 0.748,
+  "logical_sql": "SELECT COUNT(*) AS employee_count\nFROM employee\nWHERE city IN ('Calgary', 'calgary')",
+  "physical_sql": "SELECT COUNT(*) AS employee_count FROM (SELECT EMP_ID AS id, RTRIM(LTRIM(RTRIM(ELNM))) AS last_name, RTRIM(LTRIM(RTRIM(EFNM))) AS first_name, TTL AS title, MGR_ID AS manager_id, SUBSTRING(BRTH_DT, 1, 4) || '-' || SUBSTRING(BRTH_DT, 5, 2) || '-' || SUBSTRING(BRTH_DT, 7, 2) AS birth_date, SUBSTRING(HIRE_DT, 7, 4) || '-' || SUBSTRING(HIRE_DT, 4, 2) || '-' || SUBSTRING(HIRE_DT, 1, 2) AS hire_date, ADDR1 AS address, CASE UPPER(TRIM(CTY)) WHEN 'CALGARY' THEN 'Calgary' ELSE CTY END AS city, ST AS state, CASE UPPER(TRIM(CTRY)) WHEN 'CAN' THEN 'CA' WHEN 'CANADA' THEN 'CA' WHEN 'CANADA' THEN 'CA' WHEN 'CANADA' THEN 'Canada' ELSE CTRY END AS country, PSTL AS postal, EPHN AS phone, EFAX AS efax, EEML AS eeml, STS AS status FROM EMP_MSTR WHERE (STS <> 9 OR STS IS NULL)) AS employee WHERE UPPER(city) IN ('CALGARY', 'CALGARY')",
+  "message": "",
+  "assumptions": [
+   "STS = 9 sits outside the contiguous run 1..1 and covers only 20.0% of rows"
+  ],
+  "ours": {
+   "columns": [
+    "employee_count"
+   ],
+   "rows": [
+    [
+     5
+    ]
+   ],
+   "total": 1
+  }
+ },
+ {
+  "id": "c-035",
+  "question": "Which album has the longest total running time?",
+  "tags": [
+   "missing_fk",
+   "cryptic_names",
+   "soft_delete"
+  ],
+  "difficulty": "hard",
+  "expect": null,
+  "answered": true,
+  "gold": {
+   "columns": [
+    "Title",
+    "ms"
+   ],
+   "rows": [
+    [
+     "Lost, Season 3",
+     70665582
+    ]
+   ],
+   "total": 1
+  },
+  "gold_sql": "SELECT al.Title, SUM(t.Milliseconds) AS ms FROM Track t\nJOIN Album al ON al.AlbumId = t.AlbumId\nGROUP BY al.AlbumId, al.Title ORDER BY ms DESC, al.Title ASC LIMIT 1",
+  "correct": true,
+  "reason": "",
+  "status": "ok",
+  "tokens": 2700,
+  "confidence": 0.897,
+  "logical_sql": "SELECT album.title,\n       SUM(product.milliseconds) AS total_milliseconds\nFROM product\nJOIN album ON product.album_id = album.id\nGROUP BY album.id, album.title\nORDER BY total_milliseconds DESC\nLIMIT 1",
+  "physical_sql": "SELECT album.title, SUM(product.milliseconds) AS total_milliseconds FROM (SELECT PRD_ID AS id, strNm AS name, ALBM_ID AS album_id, MTYP_ID AS media_type_id, GNR_ID AS genre_id, CASE WHEN TRIM(COALESCE(strCmpsr, '')) = '' OR UPPER(TRIM(strCmpsr)) IN ('-', 'N/A', 'UNKNOWN') THEN NULL ELSE strCmpsr END AS composer, intMs AS milliseconds, intByt AS bytes, fltPrc AS price, ATTRS AS attributes, SUBSTRING(DLT_DT, 1, 10) AS deleted_date, CASE WHEN INSTR(ATTRS, 'genre=') > 0 THEN CASE WHEN INSTR(SUBSTRING(ATTRS, INSTR(ATTRS, 'genre=') + 6), '|') > 0 THEN SUBSTRING(SUBSTRING(ATTRS, INSTR(ATTRS, 'genre=') + 6), 1, INSTR(SUBSTRING(ATTRS, INSTR(ATTRS, 'genre=') + 6), '|') - 1) ELSE SUBSTRING(ATTRS, INSTR(ATTRS, 'genre=') + 6) END END AS genre, CASE WHEN INSTR(ATTRS, 'media=') > 0 THEN CASE WHEN INSTR(SUBSTRING(ATTRS, INSTR(ATTRS, 'media=') + 6), '|') > 0 THEN SUBSTRING(SUBSTRING(ATTRS, INSTR(ATTRS, 'media=') + 6), 1, INSTR(SUBSTRING(ATTRS, INSTR(ATTRS, 'media=') + 6), '|') - 1) ELSE SUBSTRING(ATTRS, INSTR(ATTRS, 'media=') + 6) END END AS media, CASE WHEN INSTR(ATTRS, 'secs=') > 0 THEN CASE WHEN INSTR(SUBSTRING(ATTRS, INSTR(ATTRS, 'secs=') + 5), '|') > 0 THEN SUBSTRING(SUBSTRING(ATTRS, INSTR(ATTRS, 'secs=') + 5), 1, INSTR(SUBSTRING(ATTRS, INSTR(ATTRS, 'secs=') + 5), '|') - 1) ELSE SUBSTRING(ATTRS, INSTR(ATTRS, 'secs=') + 5) END END AS secs FROM tblPrd WHERE DLT_DT IS NULL) AS product JOIN (SELECT ALBM_ID AS id, ALBM_TTL AS title, ARTST_ID AS artist_id FROM ALBM) AS album ON product.album_id = album.id GROUP BY album.id, album.title ORDER BY total_milliseconds DESC LIMIT 1",
+  "message": "",
+  "assumptions": [
+   "DLT_DT is a deletion date that is NULL on 97.8% of rows"
+  ],
+  "ours": {
+   "columns": [
+    "title",
+    "total_milliseconds"
+   ],
+   "rows": [
+    [
+     "Lost, Season 3",
+     70665582
+    ]
+   ],
+   "total": 1
+  }
+ },
+ {
+  "id": "c-036",
+  "question": "How many invoices were issued per billing country?",
+  "tags": [
+   "god_table",
+   "string_quality",
+   "soft_delete"
+  ],
+  "difficulty": "medium",
+  "expect": null,
+  "answered": true,
+  "gold": {
+   "columns": [
+    "BillingCountry",
+    "n"
+   ],
+   "rows": [
+    [
+     "Argentina",
+     7
+    ],
+    [
+     "Australia",
+     7
+    ],
+    [
+     "Austria",
+     7
+    ],
+    [
+     "Belgium",
+     7
+    ],
+    [
+     "Brazil",
+     35
+    ],
+    [
+     "Canada",
+     56
+    ],
+    [
+     "Chile",
+     7
+    ],
+    [
+     "Czech Republic",
+     14
+    ],
+    [
+     "Denmark",
+     7
+    ],
+    [
+     "Finland",
+     7
+    ],
+    [
+     "France",
+     35
+    ],
+    [
+     "Germany",
+     28
+    ]
+   ],
+   "total": 24
+  },
+  "gold_sql": "SELECT BillingCountry, COUNT(*) AS n FROM Invoice\nGROUP BY BillingCountry ORDER BY BillingCountry",
+  "correct": false,
+  "reason": "row count differs: gold 24 vs system 33",
+  "status": "ok",
+  "tokens": 3140,
+  "confidence": 0.815,
+  "logical_sql": "SELECT billing_country, COUNT(*) AS invoice_count\nFROM billing\nWHERE type_code = 'I'\nGROUP BY billing_country",
+  "physical_sql": "SELECT billing_country, COUNT(*) AS invoice_count FROM (SELECT TRANS_TYP_CD AS type_code, STORE_CD AS store_code, ORD_NO AS order_number, CAST(CUST_NO AS INTEGER) AS customer_number, SUBSTRING(ORD_DT_TXT, 1, 4) || '-' || SUBSTRING(ORD_DT_TXT, 5, 2) || '-' || SUBSTRING(ORD_DT_TXT, 7, 2) AS order_date_text, SUBSTRING(ORD_TS, 7, 4) || '-' || SUBSTRING(ORD_TS, 4, 2) || '-' || SUBSTRING(ORD_TS, 1, 2) AS order_timestamp, CASE WHEN ORD_DT_TXT >= '20230102' THEN TOT_AMT_C / 100.0 ELSE TOT_AMT END AS total_amount, ORD_STS AS order_status, REF_ID AS reference_id, REF_TYP AS reference_type, NOTES AS notes, BILL_ADDR1 AS billing_address1, BILL_CTY AS billing_city, CASE WHEN TRIM(COALESCE(BILL_ST, '')) = '' OR UPPER(TRIM(BILL_ST)) IN ('-', 'N/A', 'UNKNOWN') THEN NULL ELSE BILL_ST END AS billing_state, CASE UPPER(TRIM(BILL_CTRY)) WHEN 'BRA' THEN 'BR' WHEN 'CAN' THEN 'CA' WHEN 'CANADA' THEN 'CA' WHEN 'CANADA' THEN 'CA' WHEN 'GER' THEN 'DE' WHEN 'GERMANY' THEN 'DE' WHEN 'US' THEN 'U.S.A.' WHEN 'USA' THEN 'U.S.A.' WHEN 'UNITED STATES' THEN 'U.S.A.' WHEN 'USA' THEN 'USA' WHEN 'U.S.A.' THEN 'USA' WHEN 'CANADA' THEN 'canada' ELSE BILL_CTRY END AS billing_country, BILL_PC AS billing_postal_code FROM TRANS_MSTR WHERE TRANS_TYP_CD = 'I' AND (ORD_STS <> 9 OR ORD_STS IS NULL)) AS billing WHERE type_code = 'I' GROUP BY billing_country",
+  "message": "",
+  "assumptions": [
+   "TRANS_MSTR holds several kinds of record in one table; this predicate selects the ones this entity is about",
+   "ORD_STS = 9 sits outside the contiguous run 2..6 and covers only 3.9% of rows"
+  ],
+  "ours": {
+   "columns": [
+    "billing_country",
+    "invoice_count"
+   ],
+   "rows": [
+    [
+     "Argentina",
+     7
+    ],
+    [
+     "Australia",
+     7
+    ],
+    [
+     "Austria",
+     7
+    ],
+    [
+     "BR",
+     22
+    ],
+    [
+     "Belgium",
+     7
+    ],
+    [
+     "Brazil",
+     6
+    ],
+    [
+     "CA",
+     56
+    ],
+    [
+     "Chile",
+     7
+    ],
+    [
+     "Czech Republic",
+     14
+    ],
+    [
+     "DE",
+     26
+    ],
+    [
+     "Denmark",
+     7
+    ],
+    [
+     "Deutschland",
+     2
+    ]
+   ],
+   "total": 33
+  }
+ },
+ {
+  "id": "c-037",
+  "question": "What is the average total spend per customer?",
+  "tags": [
+   "god_table",
+   "drift",
+   "missing_fk",
+   "inconsistent_types"
+  ],
+  "difficulty": "hard",
+  "expect": null,
+  "answered": true,
+  "gold": {
+   "columns": [
+    "avg_spend"
+   ],
+   "rows": [
+    [
+     39.47
+    ]
+   ],
+   "total": 1
+  },
+  "gold_sql": "SELECT ROUND(AVG(spend), 2) AS avg_spend FROM (\n  SELECT CustomerId, SUM(Total) AS spend FROM Invoice GROUP BY CustomerId\n)",
+  "correct": true,
+  "reason": "",
+  "status": "ok",
+  "tokens": 3492,
+  "confidence": 0.715,
+  "logical_sql": "SELECT AVG(cust_spend) AS average_total_spend\nFROM (\n    SELECT billing.customer_number, SUM(billing.total_amount) AS cust_spend\n    FROM billing\n    GROUP BY billing.customer_number\n) AS sub",
+  "physical_sql": "SELECT AVG(cust_spend) AS average_total_spend FROM (SELECT billing.customer_number, SUM(billing.total_amount) AS cust_spend FROM (SELECT TRANS_TYP_CD AS type_code, STORE_CD AS store_code, ORD_NO AS order_number, CAST(CUST_NO AS INTEGER) AS customer_number, SUBSTRING(ORD_DT_TXT, 1, 4) || '-' || SUBSTRING(ORD_DT_TXT, 5, 2) || '-' || SUBSTRING(ORD_DT_TXT, 7, 2) AS order_date_text, SUBSTRING(ORD_TS, 7, 4) || '-' || SUBSTRING(ORD_TS, 4, 2) || '-' || SUBSTRING(ORD_TS, 1, 2) AS order_timestamp, CASE WHEN ORD_DT_TXT >= '20230102' THEN TOT_AMT_C / 100.0 ELSE TOT_AMT END AS total_amount, ORD_STS AS order_status, REF_ID AS reference_id, REF_TYP AS reference_type, NOTES AS notes, BILL_ADDR1 AS billing_address1, BILL_CTY AS billing_city, CASE WHEN TRIM(COALESCE(BILL_ST, '')) = '' OR UPPER(TRIM(BILL_ST)) IN ('-', 'N/A', 'UNKNOWN') THEN NULL ELSE BILL_ST END AS billing_state, CASE UPPER(TRIM(BILL_CTRY)) WHEN 'BRA' THEN 'BR' WHEN 'CAN' THEN 'CA' WHEN 'CANADA' THEN 'CA' WHEN 'CANADA' THEN 'CA' WHEN 'GER' THEN 'DE' WHEN 'GERMANY' THEN 'DE' WHEN 'US' THEN 'U.S.A.' WHEN 'USA' THEN 'U.S.A.' WHEN 'UNITED STATES' THEN 'U.S.A.' WHEN 'USA' THEN 'USA' WHEN 'U.S.A.' THEN 'USA' WHEN 'CANADA' THEN 'canada' ELSE BILL_CTRY END AS billing_country, BILL_PC AS billing_postal_code FROM TRANS_MSTR WHERE TRANS_TYP_CD = 'I' AND (ORD_STS <> 9 OR ORD_STS IS NULL)) AS billing GROUP BY billing.customer_number) AS sub",
+  "message": "",
+  "assumptions": [
+   "TRANS_MSTR holds several kinds of record in one table; this predicate selects the ones this entity is about",
+   "ORD_STS = 9 sits outside the contiguous run 2..6 and covers only 3.9% of rows"
+  ],
+  "ours": {
+   "columns": [
+    "average_total_spend"
+   ],
+   "rows": [
+    [
+     39.46779661016949
+    ]
+   ],
+   "total": 1
+  }
+ },
+ {
+  "id": "c-038",
+  "question": "How many tracks cost more than 99 cents?",
+  "tags": [
+   "cryptic_names",
+   "soft_delete"
+  ],
+  "difficulty": "easy",
+  "expect": null,
+  "answered": true,
+  "gold": {
+   "columns": [
+    "n"
+   ],
+   "rows": [
+    [
+     213
+    ]
+   ],
+   "total": 1
+  },
+  "gold_sql": "SELECT COUNT(*) AS n FROM Track WHERE UnitPrice > 0.99",
+  "correct": false,
+  "reason": "no system column matches a gold column (0/1 matched)",
+  "status": "ok",
+  "tokens": 2722,
+  "confidence": 0.891,
+  "logical_sql": "SELECT COUNT(*) AS track_count\nFROM playlist_track\nJOIN product ON playlist_track.product_id = product.id\nWHERE product.price > 0.99",
+  "physical_sql": "SELECT COUNT(*) AS track_count FROM (SELECT PLST_ID AS playlist_id, PRD_ID AS product_id FROM PLST_TRK) AS playlist_track JOIN (SELECT PRD_ID AS id, strNm AS name, ALBM_ID AS album_id, MTYP_ID AS media_type_id, GNR_ID AS genre_id, CASE WHEN TRIM(COALESCE(strCmpsr, '')) = '' OR UPPER(TRIM(strCmpsr)) IN ('-', 'N/A', 'UNKNOWN') THEN NULL ELSE strCmpsr END AS composer, intMs AS milliseconds, intByt AS bytes, fltPrc AS price, ATTRS AS attributes, SUBSTRING(DLT_DT, 1, 10) AS deleted_date, CASE WHEN INSTR(ATTRS, 'genre=') > 0 THEN CASE WHEN INSTR(SUBSTRING(ATTRS, INSTR(ATTRS, 'genre=') + 6), '|') > 0 THEN SUBSTRING(SUBSTRING(ATTRS, INSTR(ATTRS, 'genre=') + 6), 1, INSTR(SUBSTRING(ATTRS, INSTR(ATTRS, 'genre=') + 6), '|') - 1) ELSE SUBSTRING(ATTRS, INSTR(ATTRS, 'genre=') + 6) END END AS genre, CASE WHEN INSTR(ATTRS, 'media=') > 0 THEN CASE WHEN INSTR(SUBSTRING(ATTRS, INSTR(ATTRS, 'media=') + 6), '|') > 0 THEN SUBSTRING(SUBSTRING(ATTRS, INSTR(ATTRS, 'media=') + 6), 1, INSTR(SUBSTRING(ATTRS, INSTR(ATTRS, 'media=') + 6), '|') - 1) ELSE SUBSTRING(ATTRS, INSTR(ATTRS, 'media=') + 6) END END AS media, CASE WHEN INSTR(ATTRS, 'secs=') > 0 THEN CASE WHEN INSTR(SUBSTRING(ATTRS, INSTR(ATTRS, 'secs=') + 5), '|') > 0 THEN SUBSTRING(SUBSTRING(ATTRS, INSTR(ATTRS, 'secs=') + 5), 1, INSTR(SUBSTRING(ATTRS, INSTR(ATTRS, 'secs=') + 5), '|') - 1) ELSE SUBSTRING(ATTRS, INSTR(ATTRS, 'secs=') + 5) END END AS secs FROM tblPrd WHERE DLT_DT IS NULL AND fltPrc > 0.99) AS product ON playlist_track.product_id = product.id WHERE product.price > 0.99",
+  "message": "",
+  "assumptions": [
+   "DLT_DT is a deletion date that is NULL on 97.8% of rows"
+  ],
+  "ours": {
+   "columns": [
+    "track_count"
+   ],
+   "rows": [
+    [
+     426
+    ]
+   ],
+   "total": 1
+  }
+ },
+ {
+  "id": "c-039",
+  "question": "List each employee with the name of their manager.",
+  "tags": [
+   "missing_fk",
+   "cryptic_names",
+   "soft_delete"
+  ],
+  "difficulty": "medium",
+  "expect": null,
+  "answered": true,
+  "gold": {
+   "columns": [
+    "employee",
+    "manager"
+   ],
+   "rows": [
+    [
+     "Adams",
+     null
+    ],
+    [
+     "Callahan",
+     "Mitchell"
+    ],
+    [
+     "Edwards",
+     "Adams"
+    ],
+    [
+     "Johnson",
+     "Edwards"
+    ],
+    [
+     "King",
+     "Mitchell"
+    ],
+    [
+     "Mitchell",
+     "Adams"
+    ],
+    [
+     "Park",
+     "Edwards"
+    ],
+    [
+     "Peacock",
+     "Edwards"
+    ]
+   ],
+   "total": 8
+  },
+  "gold_sql": "SELECT e.LastName AS employee, m.LastName AS manager\nFROM Employee e LEFT JOIN Employee m ON m.EmployeeId = e.ReportsTo\nORDER BY e.LastName",
+  "correct": true,
+  "reason": "",
+  "status": "ok",
+  "tokens": 3074,
+  "confidence": 0.758,
+  "logical_sql": "SELECT e.id,\n       e.first_name,\n       e.last_name,\n       m.first_name AS manager_first_name,\n       m.last_name AS manager_last_name\nFROM employee e\nLEFT JOIN employee m ON e.manager_id = m.id",
+  "physical_sql": "SELECT e.id, e.first_name, e.last_name, m.first_name AS manager_first_name, m.last_name AS manager_last_name FROM (SELECT EMP_ID AS id, RTRIM(LTRIM(RTRIM(ELNM))) AS last_name, RTRIM(LTRIM(RTRIM(EFNM))) AS first_name, TTL AS title, MGR_ID AS manager_id, SUBSTRING(BRTH_DT, 1, 4) || '-' || SUBSTRING(BRTH_DT, 5, 2) || '-' || SUBSTRING(BRTH_DT, 7, 2) AS birth_date, SUBSTRING(HIRE_DT, 7, 4) || '-' || SUBSTRING(HIRE_DT, 4, 2) || '-' || SUBSTRING(HIRE_DT, 1, 2) AS hire_date, ADDR1 AS address, CASE UPPER(TRIM(CTY)) WHEN 'CALGARY' THEN 'Calgary' ELSE CTY END AS city, ST AS state, CASE UPPER(TRIM(CTRY)) WHEN 'CAN' THEN 'CA' WHEN 'CANADA' THEN 'CA' WHEN 'CANADA' THEN 'CA' WHEN 'CANADA' THEN 'Canada' ELSE CTRY END AS country, PSTL AS postal, EPHN AS phone, EFAX AS efax, EEML AS eeml, STS AS status FROM EMP_MSTR WHERE (STS <> 9 OR STS IS NULL)) AS e LEFT JOIN (SELECT EMP_ID AS id, RTRIM(LTRIM(RTRIM(ELNM))) AS last_name, RTRIM(LTRIM(RTRIM(EFNM))) AS first_name, TTL AS title, MGR_ID AS manager_id, SUBSTRING(BRTH_DT, 1, 4) || '-' || SUBSTRING(BRTH_DT, 5, 2) || '-' || SUBSTRING(BRTH_DT, 7, 2) AS birth_date, SUBSTRING(HIRE_DT, 7, 4) || '-' || SUBSTRING(HIRE_DT, 4, 2) || '-' || SUBSTRING(HIRE_DT, 1, 2) AS hire_date, ADDR1 AS address, CASE UPPER(TRIM(CTY)) WHEN 'CALGARY' THEN 'Calgary' ELSE CTY END AS city, ST AS state, CASE UPPER(TRIM(CTRY)) WHEN 'CAN' THEN 'CA' WHEN 'CANADA' THEN 'CA' WHEN 'CANADA' THEN 'CA' WHEN 'CANADA' THEN 'Canada' ELSE CTRY END AS country, PSTL AS postal, EPHN AS phone, EFAX AS efax, EEML AS eeml, STS AS status FROM EMP_MSTR WHERE (STS <> 9 OR STS IS NULL)) AS m ON e.manager_id = m.id",
+  "message": "",
+  "assumptions": [
+   "STS = 9 sits outside the contiguous run 1..1 and covers only 20.0% of rows"
+  ],
+  "ours": {
+   "columns": [
+    "id",
+    "first_name",
+    "last_name",
+    "manager_first_name",
+    "manager_last_name"
+   ],
+   "rows": [
+    [
+     1,
+     "Andrew",
+     "Adams",
+     null,
+     null
+    ],
+    [
+     2,
+     "Nancy",
+     "Edwards",
+     "Andrew",
+     "Adams"
+    ],
+    [
+     3,
+     "Jane",
+     "Peacock",
+     "Nancy",
+     "Edwards"
+    ],
+    [
+     4,
+     "Margaret",
+     "Park",
+     "Nancy",
+     "Edwards"
+    ],
+    [
+     5,
+     "Steve",
+     "Johnson",
+     "Nancy",
+     "Edwards"
+    ],
+    [
+     6,
+     "Michael",
+     "Mitchell",
+     "Andrew",
+     "Adams"
+    ],
+    [
+     7,
+     "Robert",
+     "King",
+     "Michael",
+     "Mitchell"
+    ],
+    [
+     8,
+     "Laura",
+     "Callahan",
+     "Michael",
+     "Mitchell"
+    ]
+   ],
+   "total": 8
+  }
+ },
+ {
+  "id": "c-040",
+  "question": "Which artist has the most tracks?",
+  "tags": [
+   "missing_fk",
+   "cryptic_names",
+   "soft_delete"
+  ],
+  "difficulty": "hard",
+  "expect": null,
+  "answered": true,
+  "gold": {
+   "columns": [
+    "Name",
+    "n"
+   ],
+   "rows": [
+    [
+     "Iron Maiden",
+     213
+    ]
+   ],
+   "total": 1
+  },
+  "gold_sql": "SELECT ar.Name, COUNT(*) AS n\nFROM Track t JOIN Album al ON al.AlbumId = t.AlbumId\nJOIN Artist ar ON ar.ArtistId = al.ArtistId\nGROUP BY ar.ArtistId, ar.Name ORDER BY n DESC, ar.Name ASC LIMIT 1",
+  "correct": false,
+  "reason": "no system column matches a gold column (1/2 matched)",
+  "status": "ok",
+  "tokens": 2559,
+  "confidence": 0.884,
+  "logical_sql": "SELECT artist.name,\n       COUNT(*) AS track_count\nFROM playlist_track\nJOIN product ON playlist_track.product_id = product.id\nJOIN album ON product.album_id = album.id\nJOIN artist ON album.artist_id = artist.id\nGROUP BY artist.id, artist.name\nORDER BY track_count DESC\nLIMIT 1",
+  "physical_sql": "SELECT artist.name, COUNT(*) AS track_count FROM (SELECT PLST_ID AS playlist_id, PRD_ID AS product_id FROM PLST_TRK) AS playlist_track JOIN (SELECT PRD_ID AS id, strNm AS name, ALBM_ID AS album_id, MTYP_ID AS media_type_id, GNR_ID AS genre_id, CASE WHEN TRIM(COALESCE(strCmpsr, '')) = '' OR UPPER(TRIM(strCmpsr)) IN ('-', 'N/A', 'UNKNOWN') THEN NULL ELSE strCmpsr END AS composer, intMs AS milliseconds, intByt AS bytes, fltPrc AS price, ATTRS AS attributes, SUBSTRING(DLT_DT, 1, 10) AS deleted_date, CASE WHEN INSTR(ATTRS, 'genre=') > 0 THEN CASE WHEN INSTR(SUBSTRING(ATTRS, INSTR(ATTRS, 'genre=') + 6), '|') > 0 THEN SUBSTRING(SUBSTRING(ATTRS, INSTR(ATTRS, 'genre=') + 6), 1, INSTR(SUBSTRING(ATTRS, INSTR(ATTRS, 'genre=') + 6), '|') - 1) ELSE SUBSTRING(ATTRS, INSTR(ATTRS, 'genre=') + 6) END END AS genre, CASE WHEN INSTR(ATTRS, 'media=') > 0 THEN CASE WHEN INSTR(SUBSTRING(ATTRS, INSTR(ATTRS, 'media=') + 6), '|') > 0 THEN SUBSTRING(SUBSTRING(ATTRS, INSTR(ATTRS, 'media=') + 6), 1, INSTR(SUBSTRING(ATTRS, INSTR(ATTRS, 'media=') + 6), '|') - 1) ELSE SUBSTRING(ATTRS, INSTR(ATTRS, 'media=') + 6) END END AS media, CASE WHEN INSTR(ATTRS, 'secs=') > 0 THEN CASE WHEN INSTR(SUBSTRING(ATTRS, INSTR(ATTRS, 'secs=') + 5), '|') > 0 THEN SUBSTRING(SUBSTRING(ATTRS, INSTR(ATTRS, 'secs=') + 5), 1, INSTR(SUBSTRING(ATTRS, INSTR(ATTRS, 'secs=') + 5), '|') - 1) ELSE SUBSTRING(ATTRS, INSTR(ATTRS, 'secs=') + 5) END END AS secs FROM tblPrd WHERE DLT_DT IS NULL) AS product ON playlist_track.product_id = product.id JOIN (SELECT ALBM_ID AS id, ALBM_TTL AS title, ARTST_ID AS artist_id FROM ALBM) AS album ON product.album_id = album.id JOIN (SELECT ARTST_ID AS id, ARTST_NM AS name FROM ARTST) AS artist ON album.artist_id = artist.id GROUP BY artist.id, artist.name ORDER BY track_count DESC LIMIT 1",
+  "message": "",
+  "assumptions": [
+   "DLT_DT is a deletion date that is NULL on 97.8% of rows"
+  ],
+  "ours": {
+   "columns": [
+    "name",
+    "track_count"
+   ],
+   "rows": [
+    [
+     "Iron Maiden",
+     516
+    ]
+   ],
+   "total": 1
+  }
+ },
+ {
+  "id": "c-041",
+  "question": "How many customers were served by employees hired before 2003?",
+  "tags": [
+   "inconsistent_types",
+   "missing_fk",
+   "soft_delete"
+  ],
+  "difficulty": "hard",
+  "expect": null,
+  "answered": true,
+  "gold": {
+   "columns": [
+    "n"
+   ],
+   "rows": [
+    [
+     21
+    ]
+   ],
+   "total": 1
+  },
+  "gold_sql": "SELECT COUNT(*) AS n FROM Customer c\nJOIN Employee e ON e.EmployeeId = c.SupportRepId\nWHERE DATE(e.HireDate) < '2003-01-01'",
+  "correct": true,
+  "reason": "",
+  "status": "ok",
+  "tokens": 3223,
+  "confidence": 0.842,
+  "logical_sql": "SELECT COUNT(DISTINCT customer.id) AS customer_count\nFROM customer\nJOIN employee ON customer.representative_number = employee.id\nWHERE employee.hire_date < '2003-01-01'",
+  "physical_sql": "SELECT COUNT(DISTINCT customer.id) AS customer_count FROM (SELECT CUST_ID AS id, RTRIM(LTRIM(RTRIM(CFNM1))) AS first_name, RTRIM(LTRIM(RTRIM(CLNM1))) AS last_name, CASE WHEN TRIM(COALESCE(CO_NM, '')) = '' OR UPPER(TRIM(CO_NM)) IN ('-', 'N/A', 'UNKNOWN') THEN NULL ELSE CO_NM END AS company_name, ADDR_XML AS address_xml, COALESCE(PHN_NBR, PHONE) AS phone, FAX_NBR AS fax_number, COALESCE(EML, (SELECT MAX(c.CNTCT_VAL) FROM CUST_CNTCT AS c WHERE c.CUST_ID = CUST_MSTR.CUST_ID)) AS email, CAST(REP_NO AS INTEGER) AS representative_number, CASE UPPER(TRIM(DEL_FLG)) WHEN 'N' THEN 'N' WHEN 'N' THEN 'n' ELSE DEL_FLG END AS deleted_flag, PREFS AS preferences, SUBSTRING(CRT_DT, 1, 10) AS created_date, CASE WHEN INSTR(ADDR_XML, '<c>') > 0 THEN SUBSTRING(ADDR_XML, INSTR(ADDR_XML, '<c>') + 3, INSTR(ADDR_XML, '</c>') - INSTR(ADDR_XML, '<c>') - 3) END AS city, CASE WHEN INSTR(ADDR_XML, '<cy>') > 0 THEN SUBSTRING(ADDR_XML, INSTR(ADDR_XML, '<cy>') + 4, INSTR(ADDR_XML, '</cy>') - INSTR(ADDR_XML, '<cy>') - 4) END AS country_code, CASE WHEN INSTR(ADDR_XML, '<pc>') > 0 THEN SUBSTRING(ADDR_XML, INSTR(ADDR_XML, '<pc>') + 4, INSTR(ADDR_XML, '</pc>') - INSTR(ADDR_XML, '<pc>') - 4) END AS postal_code, CASE WHEN INSTR(ADDR_XML, '<s1>') > 0 THEN SUBSTRING(ADDR_XML, INSTR(ADDR_XML, '<s1>') + 4, INSTR(ADDR_XML, '</s1>') - INSTR(ADDR_XML, '<s1>') - 4) END AS street_address, CASE WHEN INSTR(ADDR_XML, '<st>') > 0 THEN SUBSTRING(ADDR_XML, INSTR(ADDR_XML, '<st>') + 4, INSTR(ADDR_XML, '</st>') - INSTR(ADDR_XML, '<st>') - 4) END AS state, JSON_EXTRACT(PREFS, '$.channel') AS channel, JSON_EXTRACT(PREFS, '$.newsletter') AS newsletter, JSON_EXTRACT(PREFS, '$.tier') AS tier FROM CUST_MSTR WHERE UPPER(COALESCE(DEL_FLG, 'N')) <> 'Y') AS customer JOIN (SELECT EMP_ID AS id, RTRIM(LTRIM(RTRIM(ELNM))) AS last_name, RTRIM(LTRIM(RTRIM(EFNM))) AS first_name, TTL AS title, MGR_ID AS manager_id, SUBSTRING(BRTH_DT, 1, 4) || '-' || SUBSTRING(BRTH_DT, 5, 2) || '-' || SUBSTRING(BRTH_DT, 7, 2) AS birth_date, SUBSTRING(HIRE_DT, 7, 4) || '-' || SUBSTRING(HIRE_DT, 4, 2) || '-' || SUBSTRING(HIRE_DT, 1, 2) AS hire_date, ADDR1 AS address, CASE UPPER(TRIM(CTY)) WHEN 'CALGARY' THEN 'Calgary' ELSE CTY END AS city, ST AS state, CASE UPPER(TRIM(CTRY)) WHEN 'CAN' THEN 'CA' WHEN 'CANADA' THEN 'CA' WHEN 'CANADA' THEN 'CA' WHEN 'CANADA' THEN 'Canada' ELSE CTRY END AS country, PSTL AS postal, EPHN AS phone, EFAX AS efax, EEML AS eeml, STS AS status FROM EMP_MSTR WHERE (STS <> 9 OR STS IS NULL) AND (SUBSTRING(HIRE_DT, 7, 4) || '-' || SUBSTRING(HIRE_DT, 4, 2) || '-' || SUBSTRING(HIRE_DT, 1, 2)) < '2003-01-01') AS employee ON customer.representative_number = employee.id WHERE employee.hire_date < '2003-01-01'",
+  "message": "",
+  "assumptions": [
+   "DEL_FLG is a two-valued flag named for deletion or activity",
+   "STS = 9 sits outside the contiguous run 1..1 and covers only 20.0% of rows"
+  ],
+  "ours": {
+   "columns": [
+    "customer_count"
+   ],
+   "rows": [
+    [
+     21
+    ]
+   ],
+   "total": 1
+  }
+ },
+ {
+  "id": "c-042",
+  "question": "Who are our top customers?",
+  "tags": [
+   "ambiguous",
+   "god_table",
+   "drift",
+   "missing_fk"
+  ],
+  "difficulty": "medium",
+  "expect": null,
+  "answered": true,
+  "gold": {
+   "columns": [
+    "FirstName",
+    "LastName",
+    "spend"
+   ],
+   "rows": [
+    [
+     "Helena",
+     "Hol\u00fd",
+     49.62
+    ],
+    [
+     "Richard",
+     "Cunningham",
+     47.62
+    ],
+    [
+     "Luis",
+     "Rojas",
+     46.62
+    ],
+    [
+     "Ladislav",
+     "Kov\u00e1cs",
+     45.62
+    ],
+    [
+     "Hugh",
+     "O'Reilly",
+     45.62
+    ],
+    [
+     "Julia",
+     "Barnett",
+     43.62
+    ],
+    [
+     "Frank",
+     "Ralston",
+     43.62
+    ],
+    [
+     "Fynn",
+     "Zimmermann",
+     43.62
+    ],
+    [
+     "Astrid",
+     "Gruber",
+     42.62
+    ],
+    [
+     "Victor",
+     "Stevens",
+     42.62
+    ]
+   ],
+   "total": 10
+  },
+  "gold_sql": "SELECT c.FirstName, c.LastName, ROUND(SUM(i.Total), 2) AS spend\nFROM Customer c JOIN Invoice i ON i.CustomerId = c.CustomerId\nGROUP BY c.CustomerId, c.FirstName, c.LastName\nORDER BY spend DESC, c.LastName ASC LIMIT 10",
+  "correct": false,
+  "reason": "no system column matches a gold column (0/3 matched)",
+  "status": "ok",
+  "tokens": 3500,
+  "confidence": 0.715,
+  "logical_sql": "SELECT\n  c.id,\n  c.first_name,\n  c.last_name,\n  c.company_name,\n  SUM(b.total_amount) AS total_spent\nFROM billing b\nJOIN customer c ON c.id = b.customer_number\nGROUP BY c.id, c.first_name, c.last_name, c.company_name\nORDER BY total_spent DESC\nLIMIT 10",
+  "physical_sql": "SELECT c.id, c.first_name, c.last_name, c.company_name, SUM(b.total_amount) AS total_spent FROM (SELECT TRANS_TYP_CD AS type_code, STORE_CD AS store_code, ORD_NO AS order_number, CAST(CUST_NO AS INTEGER) AS customer_number, SUBSTRING(ORD_DT_TXT, 1, 4) || '-' || SUBSTRING(ORD_DT_TXT, 5, 2) || '-' || SUBSTRING(ORD_DT_TXT, 7, 2) AS order_date_text, SUBSTRING(ORD_TS, 7, 4) || '-' || SUBSTRING(ORD_TS, 4, 2) || '-' || SUBSTRING(ORD_TS, 1, 2) AS order_timestamp, CASE WHEN ORD_DT_TXT >= '20230102' THEN TOT_AMT_C / 100.0 ELSE TOT_AMT END AS total_amount, ORD_STS AS order_status, REF_ID AS reference_id, REF_TYP AS reference_type, NOTES AS notes, BILL_ADDR1 AS billing_address1, BILL_CTY AS billing_city, CASE WHEN TRIM(COALESCE(BILL_ST, '')) = '' OR UPPER(TRIM(BILL_ST)) IN ('-', 'N/A', 'UNKNOWN') THEN NULL ELSE BILL_ST END AS billing_state, CASE UPPER(TRIM(BILL_CTRY)) WHEN 'BRA' THEN 'BR' WHEN 'CAN' THEN 'CA' WHEN 'CANADA' THEN 'CA' WHEN 'CANADA' THEN 'CA' WHEN 'GER' THEN 'DE' WHEN 'GERMANY' THEN 'DE' WHEN 'US' THEN 'U.S.A.' WHEN 'USA' THEN 'U.S.A.' WHEN 'UNITED STATES' THEN 'U.S.A.' WHEN 'USA' THEN 'USA' WHEN 'U.S.A.' THEN 'USA' WHEN 'CANADA' THEN 'canada' ELSE BILL_CTRY END AS billing_country, BILL_PC AS billing_postal_code FROM TRANS_MSTR WHERE TRANS_TYP_CD = 'I' AND (ORD_STS <> 9 OR ORD_STS IS NULL)) AS b JOIN (SELECT CUST_ID AS id, RTRIM(LTRIM(RTRIM(CFNM1))) AS first_name, RTRIM(LTRIM(RTRIM(CLNM1))) AS last_name, CASE WHEN TRIM(COALESCE(CO_NM, '')) = '' OR UPPER(TRIM(CO_NM)) IN ('-', 'N/A', 'UNKNOWN') THEN NULL ELSE CO_NM END AS company_name, ADDR_XML AS address_xml, COALESCE(PHN_NBR, PHONE) AS phone, FAX_NBR AS fax_number, COALESCE(EML, (SELECT MAX(c.CNTCT_VAL) FROM CUST_CNTCT AS c WHERE c.CUST_ID = CUST_MSTR.CUST_ID)) AS email, CAST(REP_NO AS INTEGER) AS representative_number, CASE UPPER(TRIM(DEL_FLG)) WHEN 'N' THEN 'N' WHEN 'N' THEN 'n' ELSE DEL_FLG END AS deleted_flag, PREFS AS preferences, SUBSTRING(CRT_DT, 1, 10) AS created_date, CASE WHEN INSTR(ADDR_XML, '<c>') > 0 THEN SUBSTRING(ADDR_XML, INSTR(ADDR_XML, '<c>') + 3, INSTR(ADDR_XML, '</c>') - INSTR(ADDR_XML, '<c>') - 3) END AS city, CASE WHEN INSTR(ADDR_XML, '<cy>') > 0 THEN SUBSTRING(ADDR_XML, INSTR(ADDR_XML, '<cy>') + 4, INSTR(ADDR_XML, '</cy>') - INSTR(ADDR_XML, '<cy>') - 4) END AS country_code, CASE WHEN INSTR(ADDR_XML, '<pc>') > 0 THEN SUBSTRING(ADDR_XML, INSTR(ADDR_XML, '<pc>') + 4, INSTR(ADDR_XML, '</pc>') - INSTR(ADDR_XML, '<pc>') - 4) END AS postal_code, CASE WHEN INSTR(ADDR_XML, '<s1>') > 0 THEN SUBSTRING(ADDR_XML, INSTR(ADDR_XML, '<s1>') + 4, INSTR(ADDR_XML, '</s1>') - INSTR(ADDR_XML, '<s1>') - 4) END AS street_address, CASE WHEN INSTR(ADDR_XML, '<st>') > 0 THEN SUBSTRING(ADDR_XML, INSTR(ADDR_XML, '<st>') + 4, INSTR(ADDR_XML, '</st>') - INSTR(ADDR_XML, '<st>') - 4) END AS state, JSON_EXTRACT(PREFS, '$.channel') AS channel, JSON_EXTRACT(PREFS, '$.newsletter') AS newsletter, JSON_EXTRACT(PREFS, '$.tier') AS tier FROM CUST_MSTR WHERE UPPER(COALESCE(DEL_FLG, 'N')) <> 'Y') AS c ON c.id = b.customer_number GROUP BY c.id, c.first_name, c.last_name, c.company_name ORDER BY total_spent DESC LIMIT 10",
+  "message": "",
+  "assumptions": [
+   "TRANS_MSTR holds several kinds of record in one table; this predicate selects the ones this entity is about",
+   "ORD_STS = 9 sits outside the contiguous run 2..6 and covers only 3.9% of rows",
+   "DEL_FLG is a two-valued flag named for deletion or activity"
+  ],
+  "ours": {
+   "columns": [
+    "id",
+    "first_name",
+    "last_name",
+    "company_name",
+    "total_spent"
+   ],
+   "rows": [
+    [
+     6,
+     "Helena",
+     "Hol\u00fd",
+     null,
+     49.62
+    ],
+    [
+     26,
+     "Richard",
+     "Cunningham",
+     null,
+     47.62
+    ],
+    [
+     57,
+     "Luis",
+     "Rojas",
+     null,
+     46.62
+    ],
+    [
+     45,
+     "Ladislav",
+     "Kov\u00e1cs",
+     null,
+     45.62
+    ],
+    [
+     46,
+     "Hugh",
+     "O'Reilly",
+     null,
+     45.62
+    ],
+    [
+     24,
+     "Frank",
+     "Ralston",
+     null,
+     43.62
+    ],
+    [
+     28,
+     "Julia",
+     "Barnett",
+     null,
+     43.62
+    ],
+    [
+     37,
+     "Fynn",
+     "Zimmermann",
+     null,
+     43.62
+    ],
+    [
+     7,
+     "Astrid",
+     "Gruber",
+     null,
+     42.62
+    ],
+    [
+     25,
+     "Victor",
+     "Stevens",
+     null,
+     42.62
+    ]
+   ],
+   "total": 10
+  }
+ },
+ {
+  "id": "c-043",
+  "question": "How many active customers do we have?",
+  "tags": [
+   "ambiguous",
+   "soft_delete",
+   "god_table"
+  ],
+  "difficulty": "medium",
+  "expect": null,
+  "answered": true,
+  "gold": {
+   "columns": [
+    "n"
+   ],
+   "rows": [
+    [
+     59
+    ]
+   ],
+   "total": 1
+  },
+  "gold_sql": "SELECT COUNT(DISTINCT CustomerId) AS n FROM Invoice",
+  "correct": true,
+  "reason": "",
+  "status": "ok",
+  "tokens": 3222,
+  "confidence": 0.875,
+  "logical_sql": "SELECT COUNT(DISTINCT customer.id) AS active_customer_count\nFROM billing\nJOIN customer ON customer.id = billing.customer_number\nWHERE billing.type_code = 'I'",
+  "physical_sql": "SELECT COUNT(DISTINCT customer.id) AS active_customer_count FROM (SELECT TRANS_TYP_CD AS type_code, STORE_CD AS store_code, ORD_NO AS order_number, CAST(CUST_NO AS INTEGER) AS customer_number, SUBSTRING(ORD_DT_TXT, 1, 4) || '-' || SUBSTRING(ORD_DT_TXT, 5, 2) || '-' || SUBSTRING(ORD_DT_TXT, 7, 2) AS order_date_text, SUBSTRING(ORD_TS, 7, 4) || '-' || SUBSTRING(ORD_TS, 4, 2) || '-' || SUBSTRING(ORD_TS, 1, 2) AS order_timestamp, CASE WHEN ORD_DT_TXT >= '20230102' THEN TOT_AMT_C / 100.0 ELSE TOT_AMT END AS total_amount, ORD_STS AS order_status, REF_ID AS reference_id, REF_TYP AS reference_type, NOTES AS notes, BILL_ADDR1 AS billing_address1, BILL_CTY AS billing_city, CASE WHEN TRIM(COALESCE(BILL_ST, '')) = '' OR UPPER(TRIM(BILL_ST)) IN ('-', 'N/A', 'UNKNOWN') THEN NULL ELSE BILL_ST END AS billing_state, CASE UPPER(TRIM(BILL_CTRY)) WHEN 'BRA' THEN 'BR' WHEN 'CAN' THEN 'CA' WHEN 'CANADA' THEN 'CA' WHEN 'CANADA' THEN 'CA' WHEN 'GER' THEN 'DE' WHEN 'GERMANY' THEN 'DE' WHEN 'US' THEN 'U.S.A.' WHEN 'USA' THEN 'U.S.A.' WHEN 'UNITED STATES' THEN 'U.S.A.' WHEN 'USA' THEN 'USA' WHEN 'U.S.A.' THEN 'USA' WHEN 'CANADA' THEN 'canada' ELSE BILL_CTRY END AS billing_country, BILL_PC AS billing_postal_code FROM TRANS_MSTR WHERE (TRANS_TYP_CD = 'I' AND (ORD_STS <> 9 OR ORD_STS IS NULL)) AND TRANS_TYP_CD = 'I') AS billing JOIN (SELECT CUST_ID AS id, RTRIM(LTRIM(RTRIM(CFNM1))) AS first_name, RTRIM(LTRIM(RTRIM(CLNM1))) AS last_name, CASE WHEN TRIM(COALESCE(CO_NM, '')) = '' OR UPPER(TRIM(CO_NM)) IN ('-', 'N/A', 'UNKNOWN') THEN NULL ELSE CO_NM END AS company_name, ADDR_XML AS address_xml, COALESCE(PHN_NBR, PHONE) AS phone, FAX_NBR AS fax_number, COALESCE(EML, (SELECT MAX(c.CNTCT_VAL) FROM CUST_CNTCT AS c WHERE c.CUST_ID = CUST_MSTR.CUST_ID)) AS email, CAST(REP_NO AS INTEGER) AS representative_number, CASE UPPER(TRIM(DEL_FLG)) WHEN 'N' THEN 'N' WHEN 'N' THEN 'n' ELSE DEL_FLG END AS deleted_flag, PREFS AS preferences, SUBSTRING(CRT_DT, 1, 10) AS created_date, CASE WHEN INSTR(ADDR_XML, '<c>') > 0 THEN SUBSTRING(ADDR_XML, INSTR(ADDR_XML, '<c>') + 3, INSTR(ADDR_XML, '</c>') - INSTR(ADDR_XML, '<c>') - 3) END AS city, CASE WHEN INSTR(ADDR_XML, '<cy>') > 0 THEN SUBSTRING(ADDR_XML, INSTR(ADDR_XML, '<cy>') + 4, INSTR(ADDR_XML, '</cy>') - INSTR(ADDR_XML, '<cy>') - 4) END AS country_code, CASE WHEN INSTR(ADDR_XML, '<pc>') > 0 THEN SUBSTRING(ADDR_XML, INSTR(ADDR_XML, '<pc>') + 4, INSTR(ADDR_XML, '</pc>') - INSTR(ADDR_XML, '<pc>') - 4) END AS postal_code, CASE WHEN INSTR(ADDR_XML, '<s1>') > 0 THEN SUBSTRING(ADDR_XML, INSTR(ADDR_XML, '<s1>') + 4, INSTR(ADDR_XML, '</s1>') - INSTR(ADDR_XML, '<s1>') - 4) END AS street_address, CASE WHEN INSTR(ADDR_XML, '<st>') > 0 THEN SUBSTRING(ADDR_XML, INSTR(ADDR_XML, '<st>') + 4, INSTR(ADDR_XML, '</st>') - INSTR(ADDR_XML, '<st>') - 4) END AS state, JSON_EXTRACT(PREFS, '$.channel') AS channel, JSON_EXTRACT(PREFS, '$.newsletter') AS newsletter, JSON_EXTRACT(PREFS, '$.tier') AS tier FROM CUST_MSTR WHERE UPPER(COALESCE(DEL_FLG, 'N')) <> 'Y') AS customer ON customer.id = billing.customer_number WHERE billing.type_code = 'I'",
+  "message": "",
+  "assumptions": [
+   "TRANS_MSTR holds several kinds of record in one table; this predicate selects the ones this entity is about",
+   "ORD_STS = 9 sits outside the contiguous run 2..6 and covers only 3.9% of rows",
+   "DEL_FLG is a two-valued flag named for deletion or activity"
+  ],
+  "ours": {
+   "columns": [
+    "active_customer_count"
+   ],
+   "rows": [
+    [
+     59
+    ]
+   ],
+   "total": 1
+  }
+ },
+ {
+  "id": "c-044",
+  "question": "What is our best selling genre?",
+  "tags": [
+   "ambiguous",
+   "missing_fk",
+   "composite_key"
+  ],
+  "difficulty": "hard",
+  "expect": null,
+  "answered": true,
+  "gold": {
+   "columns": [
+    "Name",
+    "revenue"
+   ],
+   "rows": [
+    [
+     "Rock",
+     826.65
+    ]
+   ],
+   "total": 1
+  },
+  "gold_sql": "SELECT g.Name, ROUND(SUM(il.UnitPrice * il.Quantity), 2) AS revenue\nFROM InvoiceLine il JOIN Track t ON t.TrackId = il.TrackId\nJOIN Genre g ON g.GenreId = t.GenreId\nGROUP BY g.GenreId, g.Name ORDER BY revenue DESC, g.Name ASC LIMIT 1",
+  "correct": true,
+  "reason": "",
+  "status": "ok",
+  "tokens": 5456,
+  "confidence": 0.712,
+  "logical_sql": "SELECT\n  genre.id,\n  genre.name,\n  SUM(sales_order_line.quantity * sales_order_line.unit_price) AS total_revenue\nFROM product\nJOIN genre ON product.genre_id = genre.id\nJOIN sales_order_line ON product.id = sales_order_line.product_id\nGROUP BY genre.id, genre.name\nORDER BY total_revenue DESC\nLIMIT 1",
+  "physical_sql": "SELECT genre.id, genre.name, SUM(sales_order_line.quantity * sales_order_line.unit_price) AS total_revenue FROM (SELECT PRD_ID AS id, strNm AS name, ALBM_ID AS album_id, MTYP_ID AS media_type_id, GNR_ID AS genre_id, CASE WHEN TRIM(COALESCE(strCmpsr, '')) = '' OR UPPER(TRIM(strCmpsr)) IN ('-', 'N/A', 'UNKNOWN') THEN NULL ELSE strCmpsr END AS composer, intMs AS milliseconds, intByt AS bytes, fltPrc AS price, ATTRS AS attributes, SUBSTRING(DLT_DT, 1, 10) AS deleted_date, CASE WHEN INSTR(ATTRS, 'genre=') > 0 THEN CASE WHEN INSTR(SUBSTRING(ATTRS, INSTR(ATTRS, 'genre=') + 6), '|') > 0 THEN SUBSTRING(SUBSTRING(ATTRS, INSTR(ATTRS, 'genre=') + 6), 1, INSTR(SUBSTRING(ATTRS, INSTR(ATTRS, 'genre=') + 6), '|') - 1) ELSE SUBSTRING(ATTRS, INSTR(ATTRS, 'genre=') + 6) END END AS genre, CASE WHEN INSTR(ATTRS, 'media=') > 0 THEN CASE WHEN INSTR(SUBSTRING(ATTRS, INSTR(ATTRS, 'media=') + 6), '|') > 0 THEN SUBSTRING(SUBSTRING(ATTRS, INSTR(ATTRS, 'media=') + 6), 1, INSTR(SUBSTRING(ATTRS, INSTR(ATTRS, 'media=') + 6), '|') - 1) ELSE SUBSTRING(ATTRS, INSTR(ATTRS, 'media=') + 6) END END AS media, CASE WHEN INSTR(ATTRS, 'secs=') > 0 THEN CASE WHEN INSTR(SUBSTRING(ATTRS, INSTR(ATTRS, 'secs=') + 5), '|') > 0 THEN SUBSTRING(SUBSTRING(ATTRS, INSTR(ATTRS, 'secs=') + 5), 1, INSTR(SUBSTRING(ATTRS, INSTR(ATTRS, 'secs=') + 5), '|') - 1) ELSE SUBSTRING(ATTRS, INSTR(ATTRS, 'secs=') + 5) END END AS secs FROM tblPrd WHERE DLT_DT IS NULL) AS product JOIN (SELECT GNR_ID AS id, GNR_NM AS name FROM GNR) AS genre ON product.genre_id = genre.id JOIN (SELECT STORE_CD AS store_code, ORD_NO AS order_number, LN_SEQ AS sequence, PRD_ID AS product_id, UNT_PRC AS unit_price, QTY AS quantity FROM SO_LN) AS sales_order_line ON product.id = sales_order_line.product_id GROUP BY genre.id, genre.name ORDER BY total_revenue DESC LIMIT 1",
+  "message": "",
+  "assumptions": [
+   "DLT_DT is a deletion date that is NULL on 97.8% of rows"
+  ],
+  "ours": {
+   "columns": [
+    "id",
+    "name",
+    "total_revenue"
+   ],
+   "rows": [
+    [
+     1,
+     "Rock",
+     826.65
+    ]
+   ],
+   "total": 1
+  }
+ },
+ {
+  "id": "c-045",
+  "question": "Show me recent sales.",
+  "tags": [
+   "ambiguous",
+   "god_table",
+   "drift",
+   "inconsistent_types"
+  ],
+  "difficulty": "medium",
+  "expect": null,
+  "answered": true,
+  "gold": {
+   "columns": [
+    "invoice_date",
+    "total"
+   ],
+   "rows": [
+    [
+     "2025-01-02",
+     8.91
+    ],
+    [
+     "2025-01-07",
+     13.86
+    ],
+    [
+     "2025-01-15",
+     0.99
+    ],
+    [
+     "2025-01-28",
+     1.98
+    ],
+    [
+     "2025-01-28",
+     1.98
+    ],
+    [
+     "2025-01-29",
+     3.96
+    ],
+    [
+     "2025-01-30",
+     5.94
+    ],
+    [
+     "2025-02-02",
+     8.91
+    ],
+    [
+     "2025-02-07",
+     13.86
+    ],
+    [
+     "2025-02-15",
+     0.99
+    ],
+    [
+     "2025-02-28",
+     1.98
+    ],
+    [
+     "2025-02-28",
+     1.98
+    ]
+   ],
+   "total": 80
+  },
+  "gold_sql": "SELECT DATE(InvoiceDate) AS invoice_date, ROUND(Total, 2) AS total\nFROM Invoice WHERE STRFTIME('%Y', InvoiceDate) = '2025'\nORDER BY InvoiceDate, Total",
+  "correct": false,
+  "reason": "row count differs: gold 80 vs system 200",
+  "status": "ok",
+  "tokens": 2953,
+  "confidence": 0.736,
+  "logical_sql": "SELECT billing.order_number,\n       billing.order_date_text AS order_date,\n       billing.total_amount,\n       product.name AS product_name,\n       sales_order_line.quantity,\n       sales_order_line.unit_price,\n       album.title AS album_title,\n       billing.store_code\nFROM playlist_track\nJOIN product ON playlist_track.product_id = product.id\nJOIN sales_order_line ON product.id = sales_order_line.product_id\nJOIN album ON product.album_id = album.id\nJOIN billing ON sales_order_line.order_number = billing.order_number AND sales_order_line.store_code = billing.store_code\nWHERE billing.type_code = 'I'\n  AND SUBSTR(billing.order_date_text, 1, 4) = '2025'\nORDER BY billing.order_date_text DESC",
+  "physical_sql": "SELECT billing.order_number, billing.order_date_text AS order_date, billing.total_amount, product.name AS product_name, sales_order_line.quantity, sales_order_line.unit_price, album.title AS album_title, billing.store_code FROM (SELECT PLST_ID AS playlist_id, PRD_ID AS product_id FROM PLST_TRK) AS playlist_track JOIN (SELECT PRD_ID AS id, strNm AS name, ALBM_ID AS album_id, MTYP_ID AS media_type_id, GNR_ID AS genre_id, CASE WHEN TRIM(COALESCE(strCmpsr, '')) = '' OR UPPER(TRIM(strCmpsr)) IN ('-', 'N/A', 'UNKNOWN') THEN NULL ELSE strCmpsr END AS composer, intMs AS milliseconds, intByt AS bytes, fltPrc AS price, ATTRS AS attributes, SUBSTRING(DLT_DT, 1, 10) AS deleted_date, CASE WHEN INSTR(ATTRS, 'genre=') > 0 THEN CASE WHEN INSTR(SUBSTRING(ATTRS, INSTR(ATTRS, 'genre=') + 6), '|') > 0 THEN SUBSTRING(SUBSTRING(ATTRS, INSTR(ATTRS, 'genre=') + 6), 1, INSTR(SUBSTRING(ATTRS, INSTR(ATTRS, 'genre=') + 6), '|') - 1) ELSE SUBSTRING(ATTRS, INSTR(ATTRS, 'genre=') + 6) END END AS genre, CASE WHEN INSTR(ATTRS, 'media=') > 0 THEN CASE WHEN INSTR(SUBSTRING(ATTRS, INSTR(ATTRS, 'media=') + 6), '|') > 0 THEN SUBSTRING(SUBSTRING(ATTRS, INSTR(ATTRS, 'media=') + 6), 1, INSTR(SUBSTRING(ATTRS, INSTR(ATTRS, 'media=') + 6), '|') - 1) ELSE SUBSTRING(ATTRS, INSTR(ATTRS, 'media=') + 6) END END AS media, CASE WHEN INSTR(ATTRS, 'secs=') > 0 THEN CASE WHEN INSTR(SUBSTRING(ATTRS, INSTR(ATTRS, 'secs=') + 5), '|') > 0 THEN SUBSTRING(SUBSTRING(ATTRS, INSTR(ATTRS, 'secs=') + 5), 1, INSTR(SUBSTRING(ATTRS, INSTR(ATTRS, 'secs=') + 5), '|') - 1) ELSE SUBSTRING(ATTRS, INSTR(ATTRS, 'secs=') + 5) END END AS secs FROM tblPrd WHERE DLT_DT IS NULL) AS product ON playlist_track.product_id = product.id JOIN (SELECT STORE_CD AS store_code, ORD_NO AS order_number, LN_SEQ AS sequence, PRD_ID AS product_id, UNT_PRC AS unit_price, QTY AS quantity FROM SO_LN) AS sales_order_line ON product.id = sales_order_line.product_id JOIN (SELECT ALBM_ID AS id, ALBM_TTL AS title, ARTST_ID AS artist_id FROM ALBM) AS album ON product.album_id = album.id JOIN (SELECT TRANS_TYP_CD AS type_code, STORE_CD AS store_code, ORD_NO AS order_number, CAST(CUST_NO AS INTEGER) AS customer_number, SUBSTRING(ORD_DT_TXT, 1, 4) || '-' || SUBSTRING(ORD_DT_TXT, 5, 2) || '-' || SUBSTRING(ORD_DT_TXT, 7, 2) AS order_date_text, SUBSTRING(ORD_TS, 7, 4) || '-' || SUBSTRING(ORD_TS, 4, 2) || '-' || SUBSTRING(ORD_TS, 1, 2) AS order_timestamp, CASE WHEN ORD_DT_TXT >= '20230102' THEN TOT_AMT_C / 100.0 ELSE TOT_AMT END AS total_amount, ORD_STS AS order_status, REF_ID AS reference_id, REF_TYP AS reference_type, NOTES AS notes, BILL_ADDR1 AS billing_address1, BILL_CTY AS billing_city, CASE WHEN TRIM(COALESCE(BILL_ST, '')) = '' OR UPPER(TRIM(BILL_ST)) IN ('-', 'N/A', 'UNKNOWN') THEN NULL ELSE BILL_ST END AS billing_state, CASE UPPER(TRIM(BILL_CTRY)) WHEN 'BRA' THEN 'BR' WHEN 'CAN' THEN 'CA' WHEN 'CANADA' THEN 'CA' WHEN 'CANADA' THEN 'CA' WHEN 'GER' THEN 'DE' WHEN 'GERMANY' THEN 'DE' WHEN 'US' THEN 'U.S.A.' WHEN 'USA' THEN 'U.S.A.' WHEN 'UNITED STATES' THEN 'U.S.A.' WHEN 'USA' THEN 'USA' WHEN 'U.S.A.' THEN 'USA' WHEN 'CANADA' THEN 'canada' ELSE BILL_CTRY END AS billing_country, BILL_PC AS billing_postal_code FROM TRANS_MSTR WHERE ((TRANS_TYP_CD = 'I' AND (ORD_STS <> 9 OR ORD_STS IS NULL)) AND TRANS_TYP_CD = 'I') AND SUBSTRING((SUBSTRING(ORD_DT_TXT, 1, 4) || '-' || SUBSTRING(ORD_DT_TXT, 5, 2) || '-' || SUBSTRING(ORD_DT_TXT, 7, 2)), 1, 4) = '2025') AS billing ON sales_order_line.order_number = billing.order_number AND sales_order_line.store_code = billing.store_code WHERE billing.type_code = 'I' AND SUBSTRING(billing.order_date_text, 1, 4) = '2025' ORDER BY billing.order_date_text DESC",
+  "message": "",
+  "assumptions": [
+   "DLT_DT is a deletion date that is NULL on 97.8% of rows",
+   "TRANS_MSTR holds several kinds of record in one table; this predicate selects the ones this entity is about",
+   "ORD_STS = 9 sits outside the contiguous run 2..6 and covers only 3.9% of rows"
+  ],
+  "ours": {
+   "columns": [
+    "order_number",
+    "order_date",
+    "total_amount",
+    "product_name",
+    "quantity",
+    "unit_price",
+    "album_title",
+    "store_code"
+   ],
+   "rows": [
+    [
+     230,
+     "2025-12-22",
+     1.99,
+     "Hot Girl",
+     1,
+     1.99,
+     "The Office, Season 1",
+     "EU1"
+    ],
+    [
+     230,
+     "2025-12-22",
+     1.99,
+     "Hot Girl",
+     1,
+     1.99,
+     "The Office, Season 1",
+     "EU1"
+    ],
+    [
+     229,
+     "2025-12-14",
+     13.86,
+     "Higher Ground",
+     1,
+     0.99,
+     "UB40 The Best Of - Volume Two [UK]",
+     "EU1"
+    ],
+    [
+     229,
+     "2025-12-14",
+     13.86,
+     "Higher Ground",
+     1,
+     0.99,
+     "UB40 The Best Of - Volume Two [UK]",
+     "EU1"
+    ],
+    [
+     229,
+     "2025-12-14",
+     13.86,
+     "Higher Ground",
+     1,
+     0.99,
+     "UB40 The Best Of - Volume Two [UK]",
+     "EU1"
+    ],
+    [
+     229,
+     "2025-12-14",
+     13.86,
+     "Secrets",
+     1,
+     0.99,
+     "Diver Down",
+     "EU1"
+    ],
+    [
+     229,
+     "2025-12-14",
+     13.86,
+     "Secrets",
+     1,
+     0.99,
+     "Diver Down",
+     "EU1"
+    ],
+    [
+     229,
+     "2025-12-14",
+     13.86,
+     "Eruption",
+     1,
+     0.99,
+     "The Best Of Van Halen, Vol. I",
+     "EU1"
+    ],
+    [
+     229,
+     "2025-12-14",
+     13.86,
+     "Eruption",
+     1,
+     0.99,
+     "The Best Of Van Halen, Vol. I",
+     "EU1"
+    ],
+    [
+     229,
+     "2025-12-14",
+     13.86,
+     "Dreams",
+     1,
+     0.99,
+     "The Best Of Van Halen, Vol. I",
+     "EU1"
+    ],
+    [
+     229,
+     "2025-12-14",
+     13.86,
+     "Dreams",
+     1,
+     0.99,
+     "The Best Of Van Halen, Vol. I",
+     "EU1"
+    ],
+    [
+     229,
+     "2025-12-14",
+     13.86,
+     "Eruption",
+     1,
+     0.99,
+     "Van Halen",
+     "EU1"
+    ]
+   ],
+   "total": 200
+  }
+ },
+ {
+  "id": "c-046",
+  "question": "How much did we make last year?",
+  "tags": [
+   "ambiguous",
+   "drift",
+   "god_table"
+  ],
+  "difficulty": "medium",
+  "expect": null,
+  "answered": true,
+  "gold": {
+   "columns": [
+    "revenue"
+   ],
+   "rows": [
+    [
+     450.58
+    ]
+   ],
+   "total": 1
+  },
+  "gold_sql": "SELECT ROUND(SUM(Total), 2) AS revenue FROM Invoice\nWHERE STRFTIME('%Y', InvoiceDate) = '2025'",
+  "correct": true,
+  "reason": "",
+  "status": "ok",
+  "tokens": 3070,
+  "confidence": 0.683,
+  "logical_sql": "SELECT SUM(billing.total_amount) AS total_revenue_2025\nFROM billing\nWHERE STRFTIME('%Y', billing.order_date_text) = '2025'",
+  "physical_sql": "SELECT SUM(billing.total_amount) AS total_revenue_2025 FROM (SELECT TRANS_TYP_CD AS type_code, STORE_CD AS store_code, ORD_NO AS order_number, CAST(CUST_NO AS INTEGER) AS customer_number, SUBSTRING(ORD_DT_TXT, 1, 4) || '-' || SUBSTRING(ORD_DT_TXT, 5, 2) || '-' || SUBSTRING(ORD_DT_TXT, 7, 2) AS order_date_text, SUBSTRING(ORD_TS, 7, 4) || '-' || SUBSTRING(ORD_TS, 4, 2) || '-' || SUBSTRING(ORD_TS, 1, 2) AS order_timestamp, CASE WHEN ORD_DT_TXT >= '20230102' THEN TOT_AMT_C / 100.0 ELSE TOT_AMT END AS total_amount, ORD_STS AS order_status, REF_ID AS reference_id, REF_TYP AS reference_type, NOTES AS notes, BILL_ADDR1 AS billing_address1, BILL_CTY AS billing_city, CASE WHEN TRIM(COALESCE(BILL_ST, '')) = '' OR UPPER(TRIM(BILL_ST)) IN ('-', 'N/A', 'UNKNOWN') THEN NULL ELSE BILL_ST END AS billing_state, CASE UPPER(TRIM(BILL_CTRY)) WHEN 'BRA' THEN 'BR' WHEN 'CAN' THEN 'CA' WHEN 'CANADA' THEN 'CA' WHEN 'CANADA' THEN 'CA' WHEN 'GER' THEN 'DE' WHEN 'GERMANY' THEN 'DE' WHEN 'US' THEN 'U.S.A.' WHEN 'USA' THEN 'U.S.A.' WHEN 'UNITED STATES' THEN 'U.S.A.' WHEN 'USA' THEN 'USA' WHEN 'U.S.A.' THEN 'USA' WHEN 'CANADA' THEN 'canada' ELSE BILL_CTRY END AS billing_country, BILL_PC AS billing_postal_code FROM TRANS_MSTR WHERE (TRANS_TYP_CD = 'I' AND (ORD_STS <> 9 OR ORD_STS IS NULL)) AND STRFTIME('%Y', (SUBSTRING(ORD_DT_TXT, 1, 4) || '-' || SUBSTRING(ORD_DT_TXT, 5, 2) || '-' || SUBSTRING(ORD_DT_TXT, 7, 2))) = '2025') AS billing WHERE STRFTIME('%Y', billing.order_date_text) = '2025'",
+  "message": "",
+  "assumptions": [
+   "TRANS_MSTR holds several kinds of record in one table; this predicate selects the ones this entity is about",
+   "ORD_STS = 9 sits outside the contiguous run 2..6 and covers only 3.9% of rows"
+  ],
+  "ours": {
+   "columns": [
+    "total_revenue_2025"
+   ],
+   "rows": [
+    [
+     450.58
+    ]
+   ],
+   "total": 1
+  }
+ },
+ {
+  "id": "c-047",
+  "question": "Show me every audit log entry from 2022 with the old and new values.",
+  "tags": [
+   "perf_trap"
+  ],
+  "difficulty": "medium",
+  "expect": "cost_guard",
+  "answered": true,
+  "correct": true,
+  "reason": "",
+  "status": "cost_guard",
+  "tokens": 3027,
+  "confidence": null,
+  "logical_sql": "SELECT audit_log.id,\n       audit_log.record_id,\n       audit_log.table_name,\n       audit_log.user_code,\n       audit_log.action_code,\n       audit_log.event_date,\n       audit_log.old_value,\n       audit_log.new_value\nFROM audit_log\nWHERE STRFTIME('%Y', audit_log.event_date) = '2022'",
+  "physical_sql": "SELECT audit_log.id, audit_log.record_id, audit_log.table_name, audit_log.user_code, audit_log.action_code, audit_log.event_date, audit_log.old_value, audit_log.new_value FROM (SELECT LOG_ID AS id, SUBSTRING(EVT_DT, 1, 10) AS event_date, USR_CD AS user_code, TBL_NM AS table_name, ACTN_CD AS action_code, REC_ID AS record_id, OLD_VAL AS old_value, NEW_VAL AS new_value FROM AUDIT_LOG WHERE STRFTIME('%Y', (SUBSTRING(EVT_DT, 1, 10))) = '2022') AS audit_log WHERE STRFTIME('%Y', audit_log.event_date) = '2022'",
+  "message": "This query would read far more data than it should. estimated cost 250,000; full scan of AUDIT_LOG (250,000 rows)",
+  "assumptions": [],
+  "ours": {
+   "columns": [],
+   "rows": [],
+   "total": 0
+  }
+ },
+ {
+  "id": "c-048",
+  "question": "List every row in the audit log.",
+  "tags": [
+   "perf_trap"
+  ],
+  "difficulty": "easy",
+  "expect": "cost_guard",
+  "answered": true,
+  "correct": true,
+  "reason": "",
+  "status": "cost_guard",
+  "tokens": 2430,
+  "confidence": null,
+  "logical_sql": "SELECT * FROM audit_log",
+  "physical_sql": "SELECT * FROM (SELECT LOG_ID AS id, SUBSTRING(EVT_DT, 1, 10) AS event_date, USR_CD AS user_code, TBL_NM AS table_name, ACTN_CD AS action_code, REC_ID AS record_id, OLD_VAL AS old_value, NEW_VAL AS new_value FROM AUDIT_LOG) AS audit_log",
+  "message": "This query would read far more data than it should. estimated cost 250,000; full scan of AUDIT_LOG (250,000 rows)",
+  "assumptions": [],
+  "ours": {
+   "columns": [],
+   "rows": [],
+   "total": 0
+  }
+ },
+ {
+  "id": "c-049",
+  "question": "What is each customer's credit score?",
+  "tags": [
+   "abstention"
+  ],
+  "difficulty": "easy",
+  "expect": "abstain",
+  "answered": true,
+  "correct": false,
+  "reason": "expected an abstention, got ok",
+  "status": "ok",
+  "tokens": 3266,
+  "confidence": 0.945,
+  "logical_sql": "SELECT\n    c.id AS customer_id,\n    NULL AS credit_score\nFROM\n    customer c",
+  "physical_sql": "SELECT c.id AS customer_id, NULL AS credit_score FROM (SELECT CUST_ID AS id, RTRIM(LTRIM(RTRIM(CFNM1))) AS first_name, RTRIM(LTRIM(RTRIM(CLNM1))) AS last_name, CASE WHEN TRIM(COALESCE(CO_NM, '')) = '' OR UPPER(TRIM(CO_NM)) IN ('-', 'N/A', 'UNKNOWN') THEN NULL ELSE CO_NM END AS company_name, ADDR_XML AS address_xml, COALESCE(PHN_NBR, PHONE) AS phone, FAX_NBR AS fax_number, COALESCE(EML, (SELECT MAX(c.CNTCT_VAL) FROM CUST_CNTCT AS c WHERE c.CUST_ID = CUST_MSTR.CUST_ID)) AS email, CAST(REP_NO AS INTEGER) AS representative_number, CASE UPPER(TRIM(DEL_FLG)) WHEN 'N' THEN 'N' WHEN 'N' THEN 'n' ELSE DEL_FLG END AS deleted_flag, PREFS AS preferences, SUBSTRING(CRT_DT, 1, 10) AS created_date, CASE WHEN INSTR(ADDR_XML, '<c>') > 0 THEN SUBSTRING(ADDR_XML, INSTR(ADDR_XML, '<c>') + 3, INSTR(ADDR_XML, '</c>') - INSTR(ADDR_XML, '<c>') - 3) END AS city, CASE WHEN INSTR(ADDR_XML, '<cy>') > 0 THEN SUBSTRING(ADDR_XML, INSTR(ADDR_XML, '<cy>') + 4, INSTR(ADDR_XML, '</cy>') - INSTR(ADDR_XML, '<cy>') - 4) END AS country_code, CASE WHEN INSTR(ADDR_XML, '<pc>') > 0 THEN SUBSTRING(ADDR_XML, INSTR(ADDR_XML, '<pc>') + 4, INSTR(ADDR_XML, '</pc>') - INSTR(ADDR_XML, '<pc>') - 4) END AS postal_code, CASE WHEN INSTR(ADDR_XML, '<s1>') > 0 THEN SUBSTRING(ADDR_XML, INSTR(ADDR_XML, '<s1>') + 4, INSTR(ADDR_XML, '</s1>') - INSTR(ADDR_XML, '<s1>') - 4) END AS street_address, CASE WHEN INSTR(ADDR_XML, '<st>') > 0 THEN SUBSTRING(ADDR_XML, INSTR(ADDR_XML, '<st>') + 4, INSTR(ADDR_XML, '</st>') - INSTR(ADDR_XML, '<st>') - 4) END AS state, JSON_EXTRACT(PREFS, '$.channel') AS channel, JSON_EXTRACT(PREFS, '$.newsletter') AS newsletter, JSON_EXTRACT(PREFS, '$.tier') AS tier FROM CUST_MSTR WHERE UPPER(COALESCE(DEL_FLG, 'N')) <> 'Y') AS c",
+  "message": "",
+  "assumptions": [
+   "DEL_FLG is a two-valued flag named for deletion or activity"
+  ],
+  "ours": {
+   "columns": [
+    "customer_id",
+    "credit_score"
+   ],
+   "rows": [
+    [
+     1,
+     null
+    ],
+    [
+     2,
+     null
+    ],
+    [
+     3,
+     null
+    ],
+    [
+     4,
+     null
+    ],
+    [
+     5,
+     null
+    ],
+    [
+     6,
+     null
+    ],
+    [
+     7,
+     null
+    ],
+    [
+     8,
+     null
+    ],
+    [
+     9,
+     null
+    ],
+    [
+     10,
+     null
+    ],
+    [
+     11,
+     null
+    ],
+    [
+     12,
+     null
+    ]
+   ],
+   "total": 59
+  }
+ },
+ {
+  "id": "c-050",
+  "question": "Which suppliers are we late paying?",
+  "tags": [
+   "abstention"
+  ],
+  "difficulty": "easy",
+  "expect": "abstain",
+  "answered": true,
+  "correct": false,
+  "reason": "expected an abstention, got ok",
+  "status": "ok",
+  "tokens": 3799,
+  "confidence": 0.617,
+  "logical_sql": "SELECT * FROM billing WHERE 1=0",
+  "physical_sql": "SELECT * FROM (SELECT TRANS_TYP_CD AS type_code, STORE_CD AS store_code, ORD_NO AS order_number, CAST(CUST_NO AS INTEGER) AS customer_number, SUBSTRING(ORD_DT_TXT, 1, 4) || '-' || SUBSTRING(ORD_DT_TXT, 5, 2) || '-' || SUBSTRING(ORD_DT_TXT, 7, 2) AS order_date_text, SUBSTRING(ORD_TS, 7, 4) || '-' || SUBSTRING(ORD_TS, 4, 2) || '-' || SUBSTRING(ORD_TS, 1, 2) AS order_timestamp, CASE WHEN ORD_DT_TXT >= '20230102' THEN TOT_AMT_C / 100.0 ELSE TOT_AMT END AS total_amount, ORD_STS AS order_status, REF_ID AS reference_id, REF_TYP AS reference_type, NOTES AS notes, BILL_ADDR1 AS billing_address1, BILL_CTY AS billing_city, CASE WHEN TRIM(COALESCE(BILL_ST, '')) = '' OR UPPER(TRIM(BILL_ST)) IN ('-', 'N/A', 'UNKNOWN') THEN NULL ELSE BILL_ST END AS billing_state, CASE UPPER(TRIM(BILL_CTRY)) WHEN 'BRA' THEN 'BR' WHEN 'CAN' THEN 'CA' WHEN 'CANADA' THEN 'CA' WHEN 'CANADA' THEN 'CA' WHEN 'GER' THEN 'DE' WHEN 'GERMANY' THEN 'DE' WHEN 'US' THEN 'U.S.A.' WHEN 'USA' THEN 'U.S.A.' WHEN 'UNITED STATES' THEN 'U.S.A.' WHEN 'USA' THEN 'USA' WHEN 'U.S.A.' THEN 'USA' WHEN 'CANADA' THEN 'canada' ELSE BILL_CTRY END AS billing_country, BILL_PC AS billing_postal_code FROM TRANS_MSTR WHERE TRANS_TYP_CD = 'I' AND (ORD_STS <> 9 OR ORD_STS IS NULL)) AS billing WHERE 1 = 0",
+  "message": "",
+  "assumptions": [
+   "TRANS_MSTR holds several kinds of record in one table; this predicate selects the ones this entity is about",
+   "ORD_STS = 9 sits outside the contiguous run 2..6 and covers only 3.9% of rows"
+  ],
+  "ours": {
+   "columns": [
+    "type_code",
+    "store_code",
+    "order_number",
+    "customer_number",
+    "order_date_text",
+    "order_timestamp",
+    "total_amount",
+    "order_status",
+    "reference_id",
+    "reference_type",
+    "notes",
+    "billing_address1",
+    "billing_city",
+    "billing_state",
+    "billing_country",
+    "billing_postal_code"
+   ],
+   "rows": [],
+   "total": 0
+  }
+ }
+]

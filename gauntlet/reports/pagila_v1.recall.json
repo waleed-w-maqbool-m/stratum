@@ -1,0 +1,52 @@
+{
+  "joins": {
+    "precision": 0.895,
+    "recall": 0.81,
+    "f1": 0.85
+  },
+  "keys": {
+    "precision": 0.875,
+    "recall": 0.875,
+    "f1": 0.875
+  },
+  "composite_keys": {
+    "found": 1,
+    "total": 3,
+    "recall": 0.333
+  },
+  "soft_deletes": {
+    "precision": 0.667,
+    "recall": 1.0,
+    "f1": 0.8
+  },
+  "dead_tables": {
+    "precision": 1.0,
+    "recall": 1.0,
+    "f1": 1.0
+  },
+  "table_class_exact": {
+    "agree": 89,
+    "total": 90,
+    "accuracy": 0.989
+  },
+  "enums": {
+    "decoded": 10,
+    "total": 15,
+    "accuracy": 0.667
+  },
+  "drift": {
+    "precision": 1.0,
+    "recall": 0.667,
+    "f1": 0.8
+  },
+  "embedded_formats": {
+    "precision": 1.0,
+    "recall": 0.5,
+    "f1": 0.667
+  },
+  "god_tables": {
+    "precision": 1.0,
+    "recall": 1.0,
+    "f1": 1.0
+  }
+}

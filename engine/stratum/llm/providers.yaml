@@ -1,0 +1,134 @@
+# LLM providers, in fallback order.
+#
+# Model ids and free-tier limits change often — this file is config precisely so that
+# a change is an edit here rather than a code change. Check the provider's own docs
+# before trusting the numbers below; they are what the budgeter rations against, not
+# what the provider guarantees.
+#
+# Roles:
+#   small  - understand, ambiguity classification, reranking. Cheap and fast.
+#   large  - SQL generation and schema enrichment. The strongest model available.
+#
+# Every provider here speaks the OpenAI chat-completions API, which is why one client
+# can drive all of them (PLAN.md 4.6).
+
+providers:
+  - name: groq
+    base_url: https://api.groq.com/openai/v1
+    api_key_env: GROQ_API_KEY
+    models:
+      # Verified against this account's /models on 2026-09-28. Groq retires models
+      # often — the Llama 3.x ids this originally shipped with now 404 — so check
+      # `GET /openai/v1/models` before assuming any of these still exist.
+      small: openai/gpt-oss-20b
+      large: openai/gpt-oss-120b
+    params:
+      # The gpt-oss models think before answering, and the thinking is billed as
+      # completion tokens. At default effort a one-line SQL answer spent 40 of its 60
+      # completion tokens reasoning; at low effort it spends 5. That is the difference
+      # between fitting the per-question ceiling and not.
+      reasoning_effort: low
+    limits:
+      # Measured against a real 429, not guessed. The daily ceiling is the binding one:
+      # at the naive baseline's ~5,800 tokens a question it is gone in 34 questions.
+      tokens_per_minute: 8000
+      requests_per_minute: 30
+      tokens_per_day: 200000
+    notes: primary runtime; the daily ceiling is what long eval runs actually hit
+
+  # Quotas are per model, so the smaller sibling has its own untouched 200k/day. Same
+  # family, same prompts — the cheapest way to keep a long run moving once the large
+  # model's day is spent.
+  - name: groq-small
+    base_url: https://api.groq.com/openai/v1
+    api_key_env: GROQ_API_KEY
+    models:
+      small: openai/gpt-oss-20b
+      large: openai/gpt-oss-20b
+    params:
+      reasoning_effort: low
+    limits:
+      tokens_per_minute: 8000
+      requests_per_minute: 30
+      tokens_per_day: 200000
+    notes: fallback within Groq; a separate quota from the 120b
+
+  # A second model family on the same free tier, with its own 200K tokens a day.
+  # Pin a run to it with --providers groq-qwen; left unpinned it is only a fallback.
+  - name: groq-qwen
+    base_url: https://api.groq.com/openai/v1
+    api_key_env: GROQ_API_KEY
+    models:
+      small: qwen/qwen3.8-27b
+      large: qwen/qwen3.8-27b
+    params:
+      # Default effort invented a column (`c.customer_id` where the schema says `c.id`);
+      # low effort got it right for ~100 more tokens. No <think> text reaches content.
+      reasoning_effort: low
+    limits:
+      tokens_per_minute: 8000
+      requests_per_minute: 30
+      tokens_per_day: 200000
+    notes: second model family; used to replicate a result, not to average one
+
+  - name: gemini
+    base_url: https://generativelanguage.googleapis.com/v1beta/openai
+    api_key_env: GEMINI_API_KEY
+    models:
+      # Verified against this key's /models, with a real completion each, on
+      # 2026-09-30. The 2.0 and 2.5 ids this file used to name now return 404, and the
+      # Pro models have no free-tier quota at all (429 on the first call).
+      small: gemini-3.5-flash-lite
+      large: gemini-3.8-flash
+    params:
+      # Same lesson as gpt-oss, with a worse failure. At default effort one SQL answer
+      # spent ~580 hidden tokens thinking inside a 600-token budget and came back cut
+      # off mid-SELECT — a partial query, not an empty one, so nothing flagged it.
+      # At low effort the same call costs 167 tokens and returns the whole statement.
+      reasoning_effort: low
+    limits:
+      # Request-limited rather than token-limited, which is exactly what a long eval
+      # needs after Groq's 200K tokens/day. Conservative figures: the budgeter rations
+      # against these and a 429 corrects it if Google's real ceiling is lower.
+      tokens_per_minute: 250000
+      requests_per_minute: 10
+      requests_per_day: 250
+    notes: primary for long eval runs; its daily ceiling counts requests, not tokens
+
+  # Quotas are per model, as on Groq, so a sibling flash model is a second budget with
+  # the same prompts. Used as overflow, never mixed into a pinned comparison run.
+  - name: gemini-b
+    base_url: https://generativelanguage.googleapis.com/v1beta/openai
+    api_key_env: GEMINI_API_KEY
+    models:
+      small: gemini-flash-lite-latest
+      large: gemini-3.7-flash
+    params:
+      reasoning_effort: low
+    limits:
+      tokens_per_minute: 250000
+      requests_per_minute: 10
+      requests_per_day: 250
+    notes: overflow within Gemini; a separate quota from the 3.8 flash
+
+  - name: openrouter
+    base_url: https://openrouter.ai/api/v1
+    api_key_env: OPENROUTER_API_KEY
+    models:
+      small: meta-llama/llama-3.1-8b-instruct:free
+      large: deepseek/deepseek-chat-v3-0324:free
+    limits:
+      requests_per_minute: 20
+      requests_per_day: 50
+    notes: free models are rate limited hard; useful as a third fallback only
+
+  - name: ollama
+    base_url_env: OLLAMA_BASE_URL
+    base_url: http://localhost:11434/v1
+    api_key_env: ""                  # Ollama needs no key
+    requires_key: false
+    models:
+      small: qwen2.5:3b
+      large: qwen2.5-coder:7b
+    limits: {}
+    notes: local fallback; no limits, but only if the user is running it

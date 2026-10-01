@@ -1,0 +1,430 @@
+{
+  "suite": "chinook_v1",
+  "database": "chinook_legacy",
+  "questions_scored": 46,
+  "execution_accuracy": 0.239,
+  "per_tag": {
+    "ambiguous": {
+      "correct": 1,
+      "total": 5,
+      "ex": 0.2
+    },
+    "composite_key": {
+      "correct": 4,
+      "total": 7,
+      "ex": 0.571
+    },
+    "cryptic_names": {
+      "correct": 7,
+      "total": 21,
+      "ex": 0.333
+    },
+    "drift": {
+      "correct": 1,
+      "total": 14,
+      "ex": 0.071
+    },
+    "embedded_format": {
+      "correct": 1,
+      "total": 5,
+      "ex": 0.2
+    },
+    "god_table": {
+      "correct": 3,
+      "total": 19,
+      "ex": 0.158
+    },
+    "inconsistent_types": {
+      "correct": 0,
+      "total": 10,
+      "ex": 0.0
+    },
+    "missing_fk": {
+      "correct": 6,
+      "total": 19,
+      "ex": 0.316
+    },
+    "soft_delete": {
+      "correct": 7,
+      "total": 30,
+      "ex": 0.233
+    },
+    "sprawl": {
+      "correct": 1,
+      "total": 1,
+      "ex": 1.0
+    },
+    "string_quality": {
+      "correct": 0,
+      "total": 8,
+      "ex": 0.0
+    }
+  },
+  "per_difficulty": {
+    "easy": {
+      "correct": 5,
+      "total": 9,
+      "ex": 0.556
+    },
+    "medium": {
+      "correct": 3,
+      "total": 24,
+      "ex": 0.125
+    },
+    "hard": {
+      "correct": 3,
+      "total": 13,
+      "ex": 0.231
+    }
+  },
+  "clarification": {
+    "precision": 0.0,
+    "recall": 0.0,
+    "f1": 0.0
+  },
+  "behaviour": {
+    "cost_guard": {
+      "triggered": 0,
+      "total": 2,
+      "rate": 0.0
+    },
+    "abstain": {
+      "triggered": 0,
+      "total": 2,
+      "rate": 0.0
+    },
+    "false_abstentions": {
+      "count": 0,
+      "of": 46
+    }
+  },
+  "verified_hit_rate": 0.0,
+  "mean_tokens": 5817,
+  "max_tokens": 6012,
+  "mean_latency_ms": 52641,
+  "failures": [
+    {
+      "id": "c-002",
+      "reason": "no system column matches a gold column (0/1 matched)",
+      "tags": [
+        "cryptic_names",
+        "soft_delete"
+      ]
+    },
+    {
+      "id": "c-003",
+      "reason": "no system column matches a gold column (0/1 matched)",
+      "tags": [
+        "god_table",
+        "drift",
+        "soft_delete"
+      ]
+    },
+    {
+      "id": "c-004",
+      "reason": "no system column matches a gold column (0/1 matched)",
+      "tags": [
+        "god_table",
+        "inconsistent_types",
+        "soft_delete"
+      ]
+    },
+    {
+      "id": "c-005",
+      "reason": "no system column matches a gold column (0/2 matched)",
+      "tags": [
+        "god_table",
+        "drift",
+        "string_quality"
+      ]
+    },
+    {
+      "id": "c-006",
+      "reason": "no system column matches a gold column (0/3 matched)",
+      "tags": [
+        "god_table",
+        "drift",
+        "missing_fk",
+        "inconsistent_types",
+        "cryptic_names"
+      ]
+    },
+    {
+      "id": "c-007",
+      "reason": "no system column matches a gold column (0/1 matched)",
+      "tags": [
+        "cryptic_names",
+        "missing_fk",
+        "soft_delete",
+        "string_quality"
+      ]
+    },
+    {
+      "id": "c-008",
+      "reason": "no system column matches a gold column (0/1 matched)",
+      "tags": [
+        "god_table",
+        "drift",
+        "soft_delete"
+      ]
+    },
+    {
+      "id": "c-009",
+      "reason": "error: no such table: TRACKS",
+      "tags": [
+        "cryptic_names",
+        "soft_delete"
+      ]
+    },
+    {
+      "id": "c-011",
+      "reason": "no system column matches a gold column (1/2 matched)",
+      "tags": [
+        "cryptic_names",
+        "missing_fk",
+        "embedded_format",
+        "soft_delete"
+      ]
+    },
+    {
+      "id": "c-012",
+      "reason": "no system column matches a gold column (0/1 matched)",
+      "tags": [
+        "string_quality",
+        "soft_delete",
+        "cryptic_names"
+      ]
+    },
+    {
+      "id": "c-013",
+      "reason": "no system column matches a gold column (0/1 matched)",
+      "tags": [
+        "string_quality",
+        "embedded_format",
+        "soft_delete"
+      ]
+    },
+    {
+      "id": "c-014",
+      "reason": "no system column matches a gold column (1/2 matched)",
+      "tags": [
+        "god_table",
+        "drift",
+        "inconsistent_types"
+      ]
+    },
+    {
+      "id": "c-015",
+      "reason": "no system column matches a gold column (0/3 matched)",
+      "tags": [
+        "inconsistent_types",
+        "missing_fk",
+        "soft_delete",
+        "cryptic_names"
+      ]
+    },
+    {
+      "id": "c-016",
+      "reason": "error: could not parse SQL: Expecting ). Line 3, Col: 19.\n  SELECT\n    p.PLST_NM,\n    COUNT(t.PR \u001b[4mD_ID\u001b[0m) AS track_count\nFROM PLST p\nJOIN PLST",
+      "tags": [
+        "cryptic_names",
+        "missing_fk",
+        "composite_key"
+      ]
+    },
+    {
+      "id": "c-018",
+      "reason": "no system column matches a gold column (0/1 matched)",
+      "tags": [
+        "composite_key",
+        "cryptic_names"
+      ]
+    },
+    {
+      "id": "c-019",
+      "reason": "no system column matches a gold column (0/1 matched)",
+      "tags": [
+        "cryptic_names",
+        "soft_delete"
+      ]
+    },
+    {
+      "id": "c-020",
+      "reason": "no system column matches a gold column (0/1 matched)",
+      "tags": [
+        "god_table",
+        "drift",
+        "soft_delete"
+      ]
+    },
+    {
+      "id": "c-022",
+      "reason": "no system column matches a gold column (0/1 matched)",
+      "tags": [
+        "god_table",
+        "drift",
+        "soft_delete"
+      ]
+    },
+    {
+      "id": "c-024",
+      "reason": "row count differs: gold 2 vs system 1",
+      "tags": [
+        "drift",
+        "god_table",
+        "inconsistent_types"
+      ]
+    },
+    {
+      "id": "c-025",
+      "reason": "error: no such column: city",
+      "tags": [
+        "embedded_format",
+        "string_quality",
+        "soft_delete"
+      ]
+    },
+    {
+      "id": "c-029",
+      "reason": "no system column matches a gold column (0/1 matched)",
+      "tags": [
+        "string_quality",
+        "soft_delete"
+      ]
+    },
+    {
+      "id": "c-030",
+      "reason": "no system column matches a gold column (1/2 matched)",
+      "tags": [
+        "missing_fk",
+        "embedded_format",
+        "soft_delete"
+      ]
+    },
+    {
+      "id": "c-032",
+      "reason": "no system column matches a gold column (0/1 matched)",
+      "tags": [
+        "god_table",
+        "inconsistent_types",
+        "soft_delete"
+      ]
+    },
+    {
+      "id": "c-033",
+      "reason": "row count differs: gold 12 vs system 33",
+      "tags": [
+        "god_table",
+        "drift",
+        "inconsistent_types"
+      ]
+    },
+    {
+      "id": "c-034",
+      "reason": "no system column matches a gold column (0/1 matched)",
+      "tags": [
+        "string_quality",
+        "soft_delete",
+        "cryptic_names"
+      ]
+    },
+    {
+      "id": "c-035",
+      "reason": "no system column matches a gold column (1/2 matched)",
+      "tags": [
+        "missing_fk",
+        "cryptic_names",
+        "soft_delete"
+      ]
+    },
+    {
+      "id": "c-036",
+      "reason": "row count differs: gold 24 vs system 43",
+      "tags": [
+        "god_table",
+        "string_quality",
+        "soft_delete"
+      ]
+    },
+    {
+      "id": "c-037",
+      "reason": "no system column matches a gold column (0/1 matched)",
+      "tags": [
+        "god_table",
+        "drift",
+        "missing_fk",
+        "inconsistent_types"
+      ]
+    },
+    {
+      "id": "c-039",
+      "reason": "row count differs: gold 8 vs system 10",
+      "tags": [
+        "missing_fk",
+        "cryptic_names",
+        "soft_delete"
+      ]
+    },
+    {
+      "id": "c-040",
+      "reason": "no system column matches a gold column (1/2 matched)",
+      "tags": [
+        "missing_fk",
+        "cryptic_names",
+        "soft_delete"
+      ]
+    },
+    {
+      "id": "c-041",
+      "reason": "no system column matches a gold column (0/1 matched)",
+      "tags": [
+        "inconsistent_types",
+        "missing_fk",
+        "soft_delete"
+      ]
+    },
+    {
+      "id": "c-042",
+      "reason": "no system column matches a gold column (0/3 matched)",
+      "tags": [
+        "ambiguous",
+        "god_table",
+        "drift",
+        "missing_fk"
+      ]
+    },
+    {
+      "id": "c-044",
+      "reason": "error: no such column: sl.PR",
+      "tags": [
+        "ambiguous",
+        "missing_fk",
+        "composite_key"
+      ]
+    },
+    {
+      "id": "c-045",
+      "reason": "row count differs: gold 80 vs system 10",
+      "tags": [
+        "ambiguous",
+        "god_table",
+        "drift",
+        "inconsistent_types"
+      ]
+    },
+    {
+      "id": "c-046",
+      "reason": "no system column matches a gold column (0/1 matched)",
+      "tags": [
+        "ambiguous",
+        "drift",
+        "god_table"
+      ]
+    }
+  ],
+  "mode": "naive",
+  "offline": false,
+  "models": {},
+  "providers_pinned": [],
+  "ablations": []
+}

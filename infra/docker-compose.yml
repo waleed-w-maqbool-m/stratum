@@ -1,0 +1,59 @@
+# The two server databases the gauntlet needs.
+#
+# SQLite needs none of this — `make gauntlet` builds chinook_legacy with no containers
+# at all, which is why it is the suite that always runs. These two are for HALCYON
+# (SQL Server) and pagila_legacy (Postgres).
+#
+# The SQL Server image is x86-64 only; on Apple Silicon it runs under emulation, which
+# works but is slow enough that you will want to leave it running.
+
+name: stratum
+
+services:
+  mssql:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    container_name: stratum-mssql
+    platform: linux/amd64
+    environment:
+      ACCEPT_EULA: "Y"
+      MSSQL_SA_PASSWORD: ${MSSQL_SA_PASSWORD:-Stratum!Passw0rd}
+      MSSQL_PID: Developer
+    ports:
+      - "1433:1433"
+    volumes:
+      - mssql-data:/var/opt/mssql
+      - ./mssql:/scripts:ro
+      - ../gauntlet/sources:/sources:ro
+    healthcheck:
+      # sqlcmd moved in the 2022 image; try both locations.
+      test: >
+        /bin/bash -c "/opt/mssql-tools18/bin/sqlcmd -S localhost -U sa
+        -P \"$$MSSQL_SA_PASSWORD\" -C -Q 'SELECT 1' ||
+        /opt/mssql-tools/bin/sqlcmd -S localhost -U sa
+        -P \"$$MSSQL_SA_PASSWORD\" -Q 'SELECT 1'"
+      interval: 10s
+      timeout: 5s
+      retries: 20
+      start_period: 40s
+
+  postgres:
+    image: postgres:16-alpine
+    container_name: stratum-postgres
+    environment:
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-stratum}
+      POSTGRES_USER: stratum
+      POSTGRES_DB: pagila_clean
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+      - ../gauntlet/sources:/sources:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U stratum -d pagila_clean"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+volumes:
+  mssql-data:
+  postgres-data:

@@ -1,0 +1,220 @@
+{
+  "weights": {
+    "mapping_confidence": -0.5995,
+    "join_confidence": 0.2535,
+    "candidate_agreement": 0.7123,
+    "validation": 0.5539,
+    "repairs": -0.0716,
+    "linking_margin": -0.3574
+  },
+  "intercept": -0.2413,
+  "observations": 48,
+  "ece_before": 0.2283,
+  "ece_after": 0.0808,
+  "monotonic": true,
+  "reliability_before": [
+    {
+      "range": [
+        0.0,
+        0.1
+      ],
+      "count": 0,
+      "predicted": 0.0,
+      "observed": 0.0,
+      "gap": 0.0
+    },
+    {
+      "range": [
+        0.1,
+        0.2
+      ],
+      "count": 0,
+      "predicted": 0.0,
+      "observed": 0.0,
+      "gap": 0.0
+    },
+    {
+      "range": [
+        0.2,
+        0.3
+      ],
+      "count": 0,
+      "predicted": 0.0,
+      "observed": 0.0,
+      "gap": 0.0
+    },
+    {
+      "range": [
+        0.3,
+        0.4
+      ],
+      "count": 0,
+      "predicted": 0.0,
+      "observed": 0.0,
+      "gap": 0.0
+    },
+    {
+      "range": [
+        0.4,
+        0.5
+      ],
+      "count": 0,
+      "predicted": 0.0,
+      "observed": 0.0,
+      "gap": 0.0
+    },
+    {
+      "range": [
+        0.5,
+        0.6
+      ],
+      "count": 0,
+      "predicted": 0.0,
+      "observed": 0.0,
+      "gap": 0.0
+    },
+    {
+      "range": [
+        0.6,
+        0.7
+      ],
+      "count": 5,
+      "predicted": 0.658,
+      "observed": 0.6,
+      "gap": -0.058
+    },
+    {
+      "range": [
+        0.7,
+        0.8
+      ],
+      "count": 20,
+      "predicted": 0.761,
+      "observed": 0.55,
+      "gap": -0.211
+    },
+    {
+      "range": [
+        0.8,
+        0.9
+      ],
+      "count": 15,
+      "predicted": 0.859,
+      "observed": 0.533,
+      "gap": -0.326
+    },
+    {
+      "range": [
+        0.9,
+        1.0
+      ],
+      "count": 8,
+      "predicted": 0.944,
+      "observed": 0.75,
+      "gap": -0.194
+    }
+  ],
+  "reliability_after": [
+    {
+      "range": [
+        0.0,
+        0.1
+      ],
+      "count": 0,
+      "predicted": 0.0,
+      "observed": 0.0,
+      "gap": 0.0
+    },
+    {
+      "range": [
+        0.1,
+        0.2
+      ],
+      "count": 0,
+      "predicted": 0.0,
+      "observed": 0.0,
+      "gap": 0.0
+    },
+    {
+      "range": [
+        0.2,
+        0.3
+      ],
+      "count": 0,
+      "predicted": 0.0,
+      "observed": 0.0,
+      "gap": 0.0
+    },
+    {
+      "range": [
+        0.3,
+        0.4
+      ],
+      "count": 0,
+      "predicted": 0.0,
+      "observed": 0.0,
+      "gap": 0.0
+    },
+    {
+      "range": [
+        0.4,
+        0.5
+      ],
+      "count": 3,
+      "predicted": 0.479,
+      "observed": 0.0,
+      "gap": -0.479
+    },
+    {
+      "range": [
+        0.5,
+        0.6
+      ],
+      "count": 26,
+      "predicted": 0.558,
+      "observed": 0.538,
+      "gap": -0.019
+    },
+    {
+      "range": [
+        0.6,
+        0.7
+      ],
+      "count": 19,
+      "predicted": 0.635,
+      "observed": 0.737,
+      "gap": 0.102
+    },
+    {
+      "range": [
+        0.7,
+        0.8
+      ],
+      "count": 0,
+      "predicted": 0.0,
+      "observed": 0.0,
+      "gap": 0.0
+    },
+    {
+      "range": [
+        0.8,
+        0.9
+      ],
+      "count": 0,
+      "predicted": 0.0,
+      "observed": 0.0,
+      "gap": 0.0
+    },
+    {
+      "range": [
+        0.9,
+        1.0
+      ],
+      "count": 0,
+      "predicted": 0.0,
+      "observed": 0.0,
+      "gap": 0.0
+    }
+  ],
+  "note": "fitted on 48 answers; calibration error 0.228 -> 0.081"
+}
