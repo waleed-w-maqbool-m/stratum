@@ -91,7 +91,7 @@ flowchart LR
     end
 
     llm["LLM providers<br/>Groq, Gemini, OpenRouter, Ollama"]
-    db[("Legacy database<br/>SQLite, Postgres, SQL Server")]
+    db[("Legacy database<br/>SQLite, Postgres<br/>SQL Server: written, untested")]
 
     web & cli & mcp --> engine
     excavate --> model
@@ -275,7 +275,8 @@ make excavate       # excavate one into a semantic model (SUITE=pagila_v1 for Po
 make test           # 124 tests, lint, typecheck
 ```
 
-Then look at what it found:
+Paths are Windows-style (`.venv/Scripts/python.exe`); on macOS or Linux use
+`.venv/bin/python`. Then look at what it found:
 
 ```bash
 cd engine
@@ -335,6 +336,13 @@ docs/       PLAN.md (the build plan), PROGRESS.md (what is measured), MCP.md
 ## Status
 
 Measured end to end on SQLite and Postgres; confidence calibration fitted; every web
-page exercised in a browser. Not built: the SQL Server benchmark (it needs Docker, and
-Docker needs hardware virtualisation), the ablation report and a BIRD run.
+page exercised in a browser.
+
+Not done:
+- **HALCYON, the SQL Server benchmark.** The connector and the `tsql2008` dialect linter
+  are written and unit-tested but have never run against a live server. A draft
+  legacifier (AdventureWorks into HALCYON) is on the
+  [`halcyon-wip`](https://github.com/waleed-w-maqbool-m/stratum/tree/halcyon-wip) branch, unrun.
+- The ablation report and a BIRD mini-dev run, each a day of free-tier budget.
+
 [docs/PROGRESS.md](docs/PROGRESS.md) is explicit about what is verified and what is not.

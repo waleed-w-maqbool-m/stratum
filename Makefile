@@ -21,7 +21,7 @@ help:                       ## show this help
 		| awk 'BEGIN {FS = ":.*?## "}; {printf "  %-18s %s\n", $$1, $$2}'
 
 setup:                      ## install the engine and its dev tools
-	cd engine && uv sync --python 3.12 --extra postgres
+	cd engine && uv sync --python 3.12 --extra postgres --extra mssql --extra mcp
 	cd engine && uv pip install pgserver
 
 up:                         ## start SQL Server + Postgres (needs hardware virtualisation)

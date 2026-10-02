@@ -299,6 +299,6 @@ development mode only.
 
 | | |
 |---|---|
-| **HALCYON** (SQL Server) | blocked on hardware virtualisation being off in the BIOS. The `tsql2008` profile and its linter are implemented and unit-tested, but have never run against a live SQL Server |
+| **HALCYON** (SQL Server) | first blocked by hardware virtualisation, then out of time. The `tsql2008` profile and its linter are implemented and unit-tested, but have never run against a live SQL Server. An unrun draft of the legacifier is on the `halcyon-wip` branch |
 | ablation report, BIRD mini-dev, `legacy_strict` runs | the harness supports all three (`--ablate`); each needs its own day of free-tier budget |
 | held-out calibration | the fit above is in-sample |
