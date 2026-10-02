@@ -7,6 +7,7 @@ import { PageTitle } from "@/components/PageTitle";
 import { editable, headline, KINDS, kindLabel, short } from "@/components/workbench/describe";
 import { Finding } from "@/components/workbench/Finding";
 import { api, type ReviewItem } from "@/lib/api";
+import { DEMO } from "@/lib/demo";
 
 /**
  * The Workbench (PLAN.md 5.3).
@@ -270,8 +271,10 @@ export default function WorkbenchPage({ params }: { params: Promise<{ id: string
               <p className="mt-8 border-t rule pt-3 text-[13px] text-[var(--fg-muted)]">
                 Keys: <kbd className="font-mono">J</kbd> and <kbd className="font-mono">K</kbd> move,{" "}
                 <kbd className="font-mono">A</kbd> accepts, <kbd className="font-mono">R</kbd> rejects,{" "}
-                <kbd className="font-mono">E</kbd> edits names and codes. Every decision saves a new
-                version of the model, so a change in the benchmark can be traced back to it.
+                <kbd className="font-mono">E</kbd> edits names and codes.{" "}
+                {DEMO
+                  ? "In this public demo your decisions last for this visit only."
+                  : "Every decision saves a new version of the model, so a change in the benchmark can be traced back to it."}
               </p>
             </div>
           </div>

@@ -181,8 +181,13 @@ def ask(
 
     # The semantic cache sits on the same rung but means something weaker: this is
     # something the system said before, not something a person confirmed.
+    # The cache is keyed by the question alone, so it must stay out of the way once the
+    # person has said which reading they meant: an answer for "best by money" replayed
+    # for "best by number of orders" is wrong, and so is caching it as the answer to
+    # the bare question, which should still ask.
+    cacheable = context.cache is not None and not clarification
     cached = None
-    if context.cache is not None:
+    if cacheable:
         cached = context.cache.lookup(question, context.model.version)
     if cached is not None:
         done(hit="cache", question=cached.question)
@@ -367,7 +372,7 @@ def ask(
     done(assumptions=len(answer.assumptions))
 
     if (
-        context.cache is not None
+        cacheable
         and answer.status == "ok"
         and answer.confidence is not None
     ):

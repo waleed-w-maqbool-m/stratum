@@ -114,7 +114,7 @@ function Detail({ row, baseline }: { row: QuestionRow; baseline?: QuestionRow })
       )}
 
       {!row.expect && (
-        <div className="grid gap-5 lg:grid-cols-2">
+        <div className="grid grid-cols-1 gap-5 lg:grid-cols-2">
           <ResultTable title="Correct answer, from the clean database" preview={row.gold} />
           <ResultTable title="Stratum’s answer, from the messy one" preview={row.ours} />
         </div>

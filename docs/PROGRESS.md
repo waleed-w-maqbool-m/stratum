@@ -293,6 +293,33 @@ Engine fixes that came out of building it:
 Known: drei's HTML labels log a React "synchronously unmount a root" warning in
 development mode only.
 
+### Public demo build
+
+The app builds as a static site for Cloudflare Pages (`npm run build:demo`), replaying
+engine output recorded by `web/scripts/record_demo.py`. The recordings were checked
+answer by answer before publishing; every one shown is correct. Recording against a
+real engine turned up four more bugs, all fixed:
+
+- **Clarified answers leaked through the answer cache.** The cache is keyed by question
+  text, so once "best customers by money" was answered, "best customers by number of
+  orders" replayed the same rows for 0 tokens. A clarified question now bypasses the
+  cache in both directions. Covered by a test that fails without the fix.
+- **One unreachable database froze the whole engine.** Reopening a saved connection ran
+  on the event loop, so every request, `/health` included, waited for its timeout.
+- **"Run the full query anyway" dropped the chosen clarification**, so the engine asked
+  the same clarifying question again.
+- **The landing page scrolled sideways on phones**: a grid's implicit column grew to fit
+  the longest SQL line.
+
+Found and not fixed:
+- **Enrichment varies from run to run.** Re-excavating Pagila three times gave three
+  models; one lost the film-rating codes, another lost two status-code meanings. The
+  demo's Pagila answers come from the model the benchmark measured (v1). Chinook's come
+  from a fresh excavation: the benchmarked Chinook model returned an empty total revenue
+  and an unmerged "U.S.A." for two of the demo questions, which the fresh one got right.
+- **A cached answer skips the cost guard.** The replayed SQL runs without the estimate
+  check that the first run went through.
+
 ---
 
 ## Not built

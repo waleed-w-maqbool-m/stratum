@@ -317,6 +317,56 @@ fixes). See [docs/MCP.md](docs/MCP.md).
 
 ---
 
+## Public demo on Cloudflare Pages
+
+The whole web app also builds as a free static site, with no engine and no API key
+behind it. Every page works and every animation runs: the data is recorded from a real
+engine, and excavations and answers replay event by event at the pace they originally
+ran.
+
+```mermaid
+flowchart LR
+    engine["Engine<br/>on your machine"] --> rec["web/scripts/record_demo.py<br/>real runs, real timings"]
+    rec --> data[("web/public/demo<br/>JSON, committed")]
+    data --> build["npm run build:demo<br/>static export"]
+    build --> pages["Cloudflare Pages<br/>free"]
+```
+
+What a visitor can do: open both databases, ask the suggested questions (including the
+clarification and cost-warning branches), replay an excavation, accept and reject in
+Review, explore the Atlas and the full Benchmark. What needs a local engine: a brand-new
+question, or connecting your own database. The site says so where it matters.
+
+**Deploy from the Cloudflare dashboard** (rebuilds on every push): Workers & Pages →
+Create → Pages → Connect to Git → pick this repository, then set
+
+| Setting | Value |
+|---|---|
+| Root directory | `web` |
+| Build command | `npm run build:demo` |
+| Build output directory | `out` |
+
+**Or upload from your machine:**
+
+```bash
+cd web
+npx wrangler login          # once
+npm run deploy:demo         # build, then upload to the "stratum" Pages project
+```
+
+To re-record after changing the engine, run it with cached completions turned off so
+every trace is a real run, then record and rebuild:
+
+```bash
+cd engine && STRATUM_LLM_REPLAY=0 .venv/Scripts/python.exe -m stratum.cli serve
+engine/.venv/Scripts/python.exe web/scripts/record_demo.py      # re-excavates both
+engine/.venv/Scripts/python.exe web/scripts/record_demo.py --keep-model   # answers only
+```
+
+The recorder refuses to write anything containing a local path or an API key.
+
+---
+
 ## Layout
 
 ```

@@ -2,8 +2,11 @@
  * The engine's API, typed.
  *
  * Requests go through Next's rewrite to :8000, which keeps the browser same-origin so
- * EventSource works on the two streaming endpoints without a CORS preflight.
+ * EventSource works on the two streaming endpoints without a CORS preflight. In the
+ * public demo build they are served from recorded engine output instead (lib/demo.ts).
  */
+
+import { DEMO, demoJson, demoStream, demoWrite } from "./demo";
 
 export type TraceEvent = {
   stage: string;
@@ -99,6 +102,12 @@ export type ReviewItem = {
 const BASE = "/api";
 
 async function json<T>(path: string, init?: RequestInit): Promise<T> {
+  if (DEMO) {
+    const method = (init?.method ?? "GET").toUpperCase();
+    return method === "GET"
+      ? demoJson<T>(path)
+      : demoWrite<T>(path, init?.body ? JSON.parse(String(init.body)) : undefined);
+  }
   const response = await fetch(`${BASE}${path}`, {
     ...init,
     headers: { "Content-Type": "application/json", ...(init?.headers ?? {}) },
@@ -174,6 +183,7 @@ export async function stream(
   },
   signal?: AbortSignal,
 ): Promise<void> {
+  if (DEMO) return demoStream(path, body, handlers, signal);
   const response = await fetch(`${BASE}${path}`, {
     method: "POST",
     headers: { "Content-Type": "application/json", Accept: "text/event-stream" },

@@ -1,0 +1,1 @@
+[{"id":"pagila_legacy","dialect":"postgres","profile":"pg16","database":"pagila_legacy","excavated":true},{"id":"chinook_legacy","dialect":"sqlite","profile":"","database":"chinook_legacy","excavated":true}]

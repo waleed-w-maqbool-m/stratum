@@ -389,3 +389,22 @@ def test_reexcavation_keeps_review_decisions():
     assert kept == 1
     assert fresh[0]["status"] == "rejected"
     assert _carry_decisions(model, [finding()], [finding()]) == 0
+
+
+def test_a_clarified_question_never_uses_the_answer_cache(model, executor):
+    """The cache is keyed by question text. Once a person has picked a reading, an
+    answer cached for the bare question (or for another reading) must not be replayed."""
+    from stratum.ask.cache import SemanticCache
+    from stratum.ask.pipeline import AskContext, ask
+
+    cache = SemanticCache()
+    cache.put("how many customers do we have", "SELECT COUNT(*) AS n FROM customer",
+              model.version, entities=["customer"], confidence=0.95)
+    context = AskContext(model=model, executor=executor, llm=None, cache=cache)
+
+    def cache_hit(answer) -> bool:
+        return any((e.detail or {}).get("hit") == "cache" for e in answer.trace)
+
+    assert cache_hit(ask(context, "how many customers do we have"))
+    clarified = ask(context, "how many customers do we have", clarification="only active ones")
+    assert not cache_hit(clarified)

@@ -5,6 +5,7 @@ import { use, useCallback, useEffect, useRef, useState } from "react";
 
 import { PageTitle } from "@/components/PageTitle";
 import { api, stream, type TraceEvent } from "@/lib/api";
+import { DEMO } from "@/lib/demo";
 
 /**
  * The live excavation view (PLAN.md 5.3).
@@ -123,8 +124,9 @@ export default function ExcavatePage({ params }: { params: Promise<{ id: string 
             </button>
             {excavated && !running && !done && (
               <p className="max-w-[18rem] text-[13px] text-[var(--fg-muted)]">
-                Already excavated. Running again builds a new model version and keeps
-                the decisions you made in Review.
+                {DEMO
+                  ? "This replays a recorded excavation of this database, at the speed it ran."
+                  : "Already excavated. Running again builds a new model version and keeps the decisions you made in Review."}
               </p>
             )}
           </div>

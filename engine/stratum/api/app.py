@@ -345,7 +345,9 @@ def _carry_decisions(model, findings: list[dict], previous: list[dict]) -> int:
 @router.post("/databases/{database_id}/excavate")
 async def excavate_stream(database_id: str) -> EventSourceResponse:
     """Run excavation, streaming each stage as it completes."""
-    entry = registry.get(database_id)
+    # Reopening a saved connection is blocking I/O; on the event loop, one unreachable
+    # database would stall every other request until its connect timed out.
+    entry = await asyncio.to_thread(registry.get, database_id)
     queue: asyncio.Queue = asyncio.Queue()
     loop = asyncio.get_running_loop()
 
@@ -451,7 +453,7 @@ def patch_model_item(
 async def ask_stream(request: AskRequest) -> EventSourceResponse:
     from ..ask.pipeline import ask
 
-    context = registry.context(request.database_id)
+    context = await asyncio.to_thread(registry.context, request.database_id)
     queue: asyncio.Queue = asyncio.Queue()
     loop = asyncio.get_running_loop()
 

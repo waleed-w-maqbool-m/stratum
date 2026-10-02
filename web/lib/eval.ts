@@ -5,6 +5,8 @@
  * never computes a score or opens the answer key; it only serves these files.
  */
 
+import { DEMO, demoJson } from "./demo";
+
 export type Bucket = { correct: number; total: number; ex: number };
 
 export type Reliability = {
@@ -71,6 +73,7 @@ export type Recall = Record<
 >;
 
 async function get<T>(path: string): Promise<T> {
+  if (DEMO) return demoJson<T>(path);
   const response = await fetch(`/api${path}`);
   if (!response.ok) throw new Error(`${response.status}: ${await response.text()}`);
   return response.json() as Promise<T>;

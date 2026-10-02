@@ -155,8 +155,9 @@ class LLMClient:
             self.providers = [p for p in self.providers if p.name in pinned]
         # When false, cached completions are neither read nor counted. An eval sets it:
         # a replayed answer costs 0 tokens, so a second run of the same suite would
-        # report a token cost that never happened.
-        self.read_cache = True
+        # report a token cost that never happened. `STRATUM_LLM_REPLAY=0` turns it off
+        # for a whole engine, for recording real runs.
+        self.read_cache = os.environ.get("STRATUM_LLM_REPLAY", "1") != "0"
         self.budgeter = budgeter or Budgeter(load_budgets())
         self.cache_dir = cache_dir
         self.max_wait_s = max_wait_s

@@ -1,0 +1,4 @@
+# Cloudflare Pages: the public demo, a static export of this app (npm run build:demo).
+name = "stratum"
+pages_build_output_dir = "out"
+compatibility_date = "2026-10-01"

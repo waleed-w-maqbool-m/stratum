@@ -162,7 +162,7 @@ export default function Home() {
           </>
         }
       >
-        <div className="grid items-start gap-6 md:grid-cols-[minmax(0,0.7fr)_minmax(0,1fr)]">
+        <div className="grid grid-cols-1 items-start gap-6 md:grid-cols-[minmax(0,0.7fr)_minmax(0,1fr)]">
           <figure>
             <figcaption className="mb-2 text-[13px] text-[var(--fg-muted)]">
               What the model writes
@@ -187,7 +187,7 @@ export default function Home() {
         title="What it will never do"
         intro="Pointing a tool at a production database takes trust. These are enforced in code, not promised in a policy."
       >
-        <dl className="grid gap-x-12 gap-y-8 md:grid-cols-3">
+        <dl className="grid grid-cols-1 gap-x-12 gap-y-8 md:grid-cols-3">
           {[
             [
               "Change your data",

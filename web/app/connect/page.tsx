@@ -6,6 +6,7 @@ import { useCallback, useEffect, useState } from "react";
 
 import { PageTitle } from "@/components/PageTitle";
 import { api, type Connection } from "@/lib/api";
+import { CONNECT_LOCALLY, DEMO } from "@/lib/demo";
 
 /**
  * Connect.
@@ -44,7 +45,7 @@ export default function ConnectPage() {
   }, []);
 
   useEffect(() => {
-    if (!url.trim()) {
+    if (DEMO || !url.trim()) {
       setParsed(null);
       return;
     }
@@ -151,6 +152,16 @@ export default function ConnectPage() {
         </section>
       )}
 
+      {DEMO ? (
+        <section aria-labelledby="own" className="mt-14">
+          <h2 id="own" className="text-[19px] font-medium">Your own database</h2>
+          <p className="mt-2 max-w-[40rem] text-[15px] leading-relaxed text-[var(--fg-muted)]">
+            {CONNECT_LOCALLY} Run it locally with <code className="font-mono text-[var(--fg)]">make engine</code>{" "}
+            and <code className="font-mono text-[var(--fg)]">make web</code>, then paste a connection URL here.
+            It works with SQLite and Postgres, and it only ever reads.
+          </p>
+        </section>
+      ) : (
       <section aria-labelledby="own" className="mt-14">
         <h2 id="own" className="text-[19px] font-medium">Your own database</h2>
         <p className="mt-1 text-[15px] text-[var(--fg-muted)]">
@@ -223,6 +234,7 @@ export default function ConnectPage() {
           </div>
         )}
       </section>
+      )}
     </main>
   );
 }

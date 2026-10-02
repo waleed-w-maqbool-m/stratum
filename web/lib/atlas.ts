@@ -1,3 +1,5 @@
+import { DEMO, demoJson } from "./demo";
+
 export type AtlasNode = {
   id: string;
   entity: string | null;
@@ -34,6 +36,7 @@ export type AtlasData = {
 };
 
 export async function fetchAtlas(databaseId: string): Promise<AtlasData> {
+  if (DEMO) return demoJson<AtlasData>(`/databases/${databaseId}/atlas`);
   const response = await fetch(`/api/databases/${databaseId}/atlas`);
   if (!response.ok) throw new Error(await response.text());
   return response.json() as Promise<AtlasData>;
