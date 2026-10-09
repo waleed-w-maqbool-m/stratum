@@ -1,8 +1,9 @@
 "use client";
 
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
-import { Html, OrbitControls } from "@react-three/drei";
-import { useLayoutEffect, useMemo, useRef, useState } from "react";
+import { OrbitControls } from "@react-three/drei";
+import type { MutableRefObject } from "react";
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import * as THREE from "three";
 
 import type { AtlasData, AtlasNode } from "@/lib/atlas";
@@ -21,16 +22,22 @@ import type { AtlasData, AtlasNode } from "@/lib/atlas";
  *   one inferred from an inclusion test is faint. You can see which parts of the graph
  *   are guesses.
  *
- * Performance budget (5.4): instanced meshes, labels only for the nearest and selected
- * nodes, `frameloop="demand"` so an idle scene costs nothing, DPR clamped to 1.5.
+ * Performance budget (5.4): instanced meshes, labels only for the live tables and the
+ * selection, `frameloop="demand"` so an idle scene costs nothing, DPR clamped to 1.5.
+ *
+ * Labels and the hover tooltip are ordinary DOM laid over the canvas and placed by
+ * projecting each table's position every frame. They used to be drei `Html` elements,
+ * each of which mounts its own React root inside the canvas; tearing those down while
+ * the map was redrawn (as the schema page does on every edit) threw a DOM
+ * `removeChild` error. Plain elements owned by this component have no such problem.
  */
 
 const CLASS_COLOURS: Record<string, string> = {
-  core: "#ffb23f",      // phosphor — the live schema
-  archive: "#8a6021",   // phosphor, dimmed
+  core: "#ffb23f", // phosphor: the live schema
+  archive: "#8a6021", // phosphor, dimmed
   staging: "#6b7280",
   backup: "#4b5563",
-  dead: "#2a2d33",      // slate — barely there
+  dead: "#2a2d33", // slate: barely there
 };
 
 function colourFor(node: AtlasNode): THREE.Color {
@@ -46,20 +53,19 @@ function Nodes({
   nodes,
   selected,
   onSelect,
+  onHover,
 }: {
   nodes: AtlasNode[];
   selected: string | null;
   onSelect: (id: string | null) => void;
+  onHover: (id: string | null) => void;
 }) {
   const meshRef = useRef<THREE.InstancedMesh>(null);
-  const [hovered, setHovered] = useState<number | null>(null);
 
   // One instanced mesh for every node. The budget allows 5k; a legacy database of 134
   // is nothing, but the same code has to hold up on one with four hundred.
   const { positions, colours, scales } = useMemo(() => {
-    const positions = nodes.map(
-      (node) => new THREE.Vector3(...node.position),
-    );
+    const positions = nodes.map((node) => new THREE.Vector3(...node.position));
     const colours = nodes.map(colourFor);
     const scales = nodes.map(radiusFor);
     return { positions, colours, scales };
@@ -72,10 +78,7 @@ function Nodes({
     if (!mesh) return;
     const matrix = new THREE.Matrix4();
     nodes.forEach((node, index) => {
-      const emphasis =
-        selected === null || selected === node.id
-          ? 1
-          : 0.75;
+      const emphasis = selected === null || selected === node.id ? 1 : 0.75;
       matrix.makeScale(
         scales[index] * emphasis,
         scales[index] * emphasis,
@@ -90,74 +93,26 @@ function Nodes({
     mesh.computeBoundingSphere();
   }, [nodes, positions, colours, scales, selected]);
 
-  // Labels for the live tables and the selection only (5.4): the excluded ones are the
-  // point of sinking them, and naming all of them would bury the ones that matter.
-  const nearby = useMemo(
-    () =>
-      nodes
-        .filter((node) => node.class === "core" || node.id === selected)
-        .slice(0, 40)
-        .map((node) => ({ node })),
-    [nodes, selected],
-  );
-
   return (
-    <>
-      <instancedMesh
-        ref={meshRef}
-        args={[undefined, undefined, nodes.length]}
-        onPointerMove={(event) => {
-          event.stopPropagation();
-          setHovered(event.instanceId ?? null);
-        }}
-        onPointerOut={() => setHovered(null)}
-        onClick={(event) => {
-          event.stopPropagation();
-          const index = event.instanceId;
-          if (index === undefined) return;
-          onSelect(nodes[index].id === selected ? null : nodes[index].id);
-        }}
-      >
-        <sphereGeometry args={[1, 16, 16]} />
-        <meshStandardMaterial roughness={0.45} metalness={0.15} />
-      </instancedMesh>
-
-      {nearby.map(({ node }) => (
-        <Html
-          key={node.id}
-          position={node.position}
-          center
-          zIndexRange={[10, 0]}
-          style={{ pointerEvents: "none", transform: "translateY(-18px)" }}
-        >
-          <span
-            className="whitespace-nowrap text-[12px]"
-            style={{
-              color: node.id === selected ? "#ffb23f" : "#e9e4d8",
-              textShadow: "0 0 6px #0b0c0e, 0 0 3px #0b0c0e",
-            }}
-          >
-            {node.entity ?? node.id}
-          </span>
-        </Html>
-      ))}
-
-      {hovered !== null && nodes[hovered] && (
-        <Html position={nodes[hovered].position} center style={{ transform: "translateY(22px)" }}>
-          <span
-            className="whitespace-nowrap border px-2 py-1 text-[12px]"
-            style={{
-              background: "#0b0c0e",
-              borderColor: "#2a2d33",
-              color: "#e9e4d8",
-              pointerEvents: "none",
-            }}
-          >
-            {nodes[hovered].id}, {nodes[hovered].rows.toLocaleString()} rows
-          </span>
-        </Html>
-      )}
-    </>
+    <instancedMesh
+      ref={meshRef}
+      args={[undefined, undefined, nodes.length]}
+      onPointerMove={(event) => {
+        event.stopPropagation();
+        const index = event.instanceId;
+        onHover(index === undefined ? null : (nodes[index]?.id ?? null));
+      }}
+      onPointerOut={() => onHover(null)}
+      onClick={(event) => {
+        event.stopPropagation();
+        const index = event.instanceId;
+        if (index === undefined) return;
+        onSelect(nodes[index].id === selected ? null : nodes[index].id);
+      }}
+    >
+      <sphereGeometry args={[1, 16, 16]} />
+      <meshStandardMaterial roughness={0.45} metalness={0.15} />
+    </instancedMesh>
   );
 }
 
@@ -221,6 +176,56 @@ function Drift({ enabled }: { enabled: boolean }) {
   return null;
 }
 
+type Elements = MutableRefObject<Record<string, HTMLElement | null>>;
+
+/**
+ * Places the DOM labels and the hover tooltip over their tables. It renders nothing: its
+ * only job is to write each element's position from the camera, every frame the scene
+ * draws, and to ask for one more frame when the set of labels changes.
+ */
+function Projector({
+  nodes,
+  labelled,
+  hovered,
+  labels,
+  tooltip,
+}: {
+  nodes: AtlasNode[];
+  labelled: string[];
+  hovered: string | null;
+  labels: Elements;
+  tooltip: MutableRefObject<HTMLElement | null>;
+}) {
+  const { camera, size, invalidate } = useThree();
+  const byId = useMemo(() => new Map(nodes.map((node) => [node.id, node])), [nodes]);
+  const point = useMemo(() => new THREE.Vector3(), []);
+
+  useEffect(() => {
+    invalidate();
+  }, [labelled, hovered, invalidate]);
+
+  useFrame(() => {
+    const place = (element: HTMLElement | null | undefined, id: string, above: boolean) => {
+      const node = byId.get(id);
+      if (!element || !node) return;
+      point.set(...node.position).project(camera);
+      if (point.z > 1) {
+        element.style.opacity = "0";
+        return;
+      }
+      const x = (point.x * 0.5 + 0.5) * size.width;
+      const y = (-point.y * 0.5 + 0.5) * size.height;
+      element.style.transform = above
+        ? `translate3d(${x}px, ${y - 18}px, 0) translate(-50%, -100%)`
+        : `translate3d(${x}px, ${y + 22}px, 0) translate(-50%, 0)`;
+      element.style.opacity = "1";
+    };
+    for (const id of labelled) place(labels.current[id], id, true);
+    if (hovered) place(tooltip.current, hovered, false);
+  });
+  return null;
+}
+
 export function AtlasScene({
   data,
   selected,
@@ -233,35 +238,97 @@ export function AtlasScene({
   reducedMotion: boolean;
 }) {
   const [held, setHeld] = useState(false);
+  const [hovered, setHovered] = useState<string | null>(null);
+  const labels = useRef<Record<string, HTMLElement | null>>({});
+  const tooltip = useRef<HTMLElement | null>(null);
+
+  // Labels for the live tables and the selection only (5.4): the excluded ones are the
+  // point of sinking them, and naming all of them would bury the ones that matter.
+  const labelled = useMemo(
+    () =>
+      data.nodes
+        .filter((node) => node.class === "core" || node.id === selected)
+        .slice(0, 40)
+        .map((node) => node.id),
+    [data.nodes, selected],
+  );
+  const nodeById = useMemo(() => new Map(data.nodes.map((node) => [node.id, node])), [data.nodes]);
+  const hoveredNode = hovered ? nodeById.get(hovered) : undefined;
+
   return (
-    <Canvas
-      // `demand` means an idle scene costs no frames at all, which is what keeps this
-      // viable on an integrated GPU.
-      frameloop={reducedMotion || held ? "demand" : "always"}
-      onPointerMissed={() => onSelect(null)}
-      dpr={[1, 1.5]}
-      camera={{ position: [22, 12, 22], fov: 48 }}
-      style={{ background: "#0b0c0e" }}
-    >
-      <ambientLight intensity={0.55} />
-      <directionalLight position={[12, 20, 8]} intensity={1.1} />
-      <directionalLight position={[-14, -6, -10]} intensity={0.25} color="#ffb23f" />
+    <div className="relative h-full w-full" style={{ background: "#0b0c0e" }}>
+      <Canvas
+        // `demand` means an idle scene costs no frames at all, which is what keeps this
+        // viable on an integrated GPU.
+        frameloop={reducedMotion || held ? "demand" : "always"}
+        onPointerMissed={() => onSelect(null)}
+        dpr={[1, 1.5]}
+        camera={{ position: [22, 12, 22], fov: 48 }}
+        style={{ background: "#0b0c0e" }}
+      >
+        <ambientLight intensity={0.55} />
+        <directionalLight position={[12, 20, 8]} intensity={1.1} />
+        <directionalLight position={[-14, -6, -10]} intensity={0.25} color="#ffb23f" />
 
-      <Nodes nodes={data.nodes} selected={selected} onSelect={onSelect} />
-      <Edges data={data} selected={selected} />
+        <Nodes nodes={data.nodes} selected={selected} onSelect={onSelect} onHover={setHovered} />
+        <Edges data={data} selected={selected} />
 
-      {/* The plane the live schema sits on; everything excluded is below it. */}
-      <gridHelper args={[80, 40, "#1a1d22", "#141619"]} position={[0, -3, 0]} />
+        {/* The plane the live schema sits on; everything excluded is below it. */}
+        <gridHelper args={[80, 40, "#1a1d22", "#141619"]} position={[0, -3, 0]} />
 
-      <Drift enabled={!reducedMotion && !held} />
-      <OrbitControls
-        enableDamping
-        dampingFactor={0.08}
-        minDistance={6}
-        maxDistance={70}
-        makeDefault
-        onStart={() => setHeld(true)}
-      />
-    </Canvas>
+        <Projector
+          nodes={data.nodes}
+          labelled={labelled}
+          hovered={hovered}
+          labels={labels}
+          tooltip={tooltip}
+        />
+        <Drift enabled={!reducedMotion && !held} />
+        <OrbitControls
+          enableDamping
+          dampingFactor={0.08}
+          minDistance={6}
+          maxDistance={70}
+          makeDefault
+          onStart={() => setHeld(true)}
+        />
+      </Canvas>
+
+      <div aria-hidden className="pointer-events-none absolute inset-0 overflow-hidden">
+        {labelled.map((id) => {
+          const node = nodeById.get(id);
+          if (!node) return null;
+          return (
+            <span
+              key={id}
+              ref={(element) => {
+                labels.current[id] = element;
+              }}
+              className="absolute left-0 top-0 whitespace-nowrap text-[12px] opacity-0"
+              style={{
+                color: id === selected ? "#ffb23f" : "#e9e4d8",
+                textShadow: "0 0 6px #0b0c0e, 0 0 3px #0b0c0e",
+              }}
+            >
+              {node.entity ?? node.id}
+            </span>
+          );
+        })}
+        {hoveredNode && (
+          <span
+            ref={(element) => {
+              tooltip.current = element;
+            }}
+            className="absolute left-0 top-0 whitespace-nowrap border px-2 py-1 text-[12px] opacity-0"
+            style={{ background: "#0b0c0e", borderColor: "#2a2d33", color: "#e9e4d8" }}
+          >
+            {hoveredNode.id},{" "}
+            {hoveredNode.rows > 0
+              ? `${hoveredNode.rows.toLocaleString()} rows`
+              : `${hoveredNode.columns} columns`}
+          </span>
+        )}
+      </div>
+    </div>
   );
 }

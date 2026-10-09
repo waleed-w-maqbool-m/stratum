@@ -3,8 +3,7 @@
 import { useGSAP } from "@gsap/react";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
-import Lenis from "lenis";
-import { useEffect, useRef } from "react";
+import { useRef } from "react";
 
 import { PairedBar } from "@/components/PairedBar";
 
@@ -115,23 +114,6 @@ export const BLINDSPOTS: Blindspot[] = [
 
 export function Blindspots() {
   const root = useRef<HTMLDivElement>(null);
-
-  // Smooth scroll on the landing page only, and only when motion is welcome.
-  useEffect(() => {
-    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
-    const lenis = new Lenis({ duration: 1.05, smoothWheel: true });
-    let frame = 0;
-    const raf = (time: number) => {
-      lenis.raf(time);
-      frame = requestAnimationFrame(raf);
-    };
-    frame = requestAnimationFrame(raf);
-    lenis.on("scroll", ScrollTrigger.update);
-    return () => {
-      cancelAnimationFrame(frame);
-      lenis.destroy();
-    };
-  }, []);
 
   useGSAP(
     () => {

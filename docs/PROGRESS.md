@@ -290,8 +290,40 @@ Engine fixes that came out of building it:
   before this pass.
 - `DELETE /connections/{id}` forgets a connection and keeps its models.
 
-Known: drei's HTML labels log a React "synchronously unmount a root" warning in
-development mode only.
+The Atlas's table labels used to be drei `Html` elements, each mounting its own React
+root inside the canvas. They logged a "synchronously unmount a root" warning in
+development and, once the schema page redrew the map on every edit, a DOM `removeChild`
+error. They are now plain elements placed from the camera every frame, and the error no
+longer occurs in the browser tests.
+
+### Home page redesign
+
+The home page was one long scroll of text with the Atlas three clicks away. It is now the
+Atlas first, with three one-sentence beats driven by scroll (the leftover tables sink,
+the joins are drawn in, the revenue answer arrives), a two-second logo intro, and three
+ways in. The detail moved to a How it works page, and a Your database page draws the map
+of a pasted schema in the browser. What was checked:
+
+- Driven in Chrome as static files, at desktop and phone width and under reduced motion:
+  the intro, skipping it (about 0.9 s against 3.0 s), the docked logo landing on the
+  header's logo, both hero buttons, every header link, the scroll reveals, editing the
+  schema, and the labels. No console errors or failed requests. The timing checks were
+  flaky on a CPU-starved test machine and are now relative rather than fixed limits.
+- The schema reader was tried on SQL Server, Postgres and MySQL syntax, inline and
+  `ALTER TABLE` foreign keys, and on input that is not SQL.
+
+Found while testing:
+
+- **The scroll story ran behind the page.** Its trigger was the whole page, including
+  the section below the story, so the camera and the text lagged the scroll by about a
+  fifth. It now triggers on the story block alone.
+- **Hidden panels were hidden from screen readers too.** Beats and reveal sections used
+  `visibility: hidden` until their turn. The scroll reveals now use opacity only, the
+  three beats have an equivalent screen-reader copy, and the page has one real `h1`.
+
+Not verified: the schema reader is a pattern reader tested on examples I wrote, not on
+real dump files from production systems, and the intro has not been tried on a phone or
+a slow device (it is skipped if the page takes over seven seconds to start).
 
 ### Public demo build
 

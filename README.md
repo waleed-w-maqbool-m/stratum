@@ -290,14 +290,37 @@ make web            # web app on :3000
 
 | Page | What it is for |
 |---|---|
-| **Connect** | Open a benchmark database, or paste your own URL; credentials are stored encrypted |
-| **Excavate** | Watch each stage report what it found |
-| **Review** | Accept, reject or edit what was inferred, with the evidence in plain sentences |
+| **Home** | The Atlas fills the first screen; scrolling flies through three beats (the leftover tables sink, the joins nobody declared are drawn in, the answer arrives) and ends at three ways in. A two-second logo intro plays once per visit |
 | **Atlas** | The schema in 3D: live tables above the grid, excluded ones sunk below it |
 | **Ask** | Questions, with the pipeline trace, the rules applied and both forms of the SQL |
+| **Excavate** | Watch each stage report what it found |
+| **Review** | Accept, reject or edit what was inferred, with the evidence in plain sentences |
+| **Your database** | Paste or upload a schema and see its map, in the browser (below). With an engine running, Connect takes a database URL and excavates it fully |
+| **How it works** | The detail behind the home page: why a plain query gets it wrong, the results, the compiler, the guarantees |
 | **Benchmark** | Every question's gold result next to Stratum's |
 
+![The home page: the Atlas as the first screen](docs/images/landing.png)
+
 ![The Atlas: live tables above the grid, archives and leftovers sunk below it](docs/images/atlas.png)
+
+### Your database, as a map
+
+The **Your database** page takes `CREATE TABLE` statements (from `pg_dump --schema-only`,
+`mysqldump --no-data` or SQL Server's Generate Scripts), pasted or uploaded, and draws the
+same map. It runs entirely in the browser, so nothing is uploaded and it works on the
+static site.
+
+It is a smaller thing than excavation, and the page says so. A schema file shows names,
+not data, so the map can only:
+
+- sink the tables whose names look like backups, archives, staging or scratch copies;
+- draw declared foreign keys, and guess other joins from matching column names.
+
+It cannot find a soft delete, a unit that changed, a table holding several kinds of
+record, or what a code means. Those live in the rows, and finding them is what the full
+excavation does, against a read-only connection from your own machine.
+
+![The schema map: an invented legacy order system, with its backups and scratch tables sunk below the live tables](docs/images/schema.png)
 
 ---
 
@@ -318,13 +341,15 @@ flowchart LR
 ```
 
 In the static build, a visitor can ask the listed questions (including the clarification
-and cost-warning branches), replay an excavation, use Review, explore the Atlas and read
-the full Benchmark. A brand-new question or a new database needs the engine running
-locally, and the site says so.
+and cost-warning branches), replay an excavation, use Review, explore the Atlas, read
+the full Benchmark, and draw the map of a schema of their own. A brand-new question, or
+excavating a database, needs the engine running locally, and the site says so.
 
-The build has been tested locally as plain static files in Chrome, at desktop and phone
-widths, and `wrangler deploy --dry-run` reads its output correctly. It has not been
-deployed yet.
+The build is tested as plain static files in Chrome, at desktop and phone widths: the
+intro (including skipping it), the scroll story, every header link, both hero buttons,
+the schema page, and reduced-motion mode, with no console errors. Under
+`prefers-reduced-motion` there is no intro and no pinned scroll story: the same map is
+drawn once and the beats are ordinary sections.
 
 It deploys to Cloudflare as a Workers project serving static assets
 ([web/wrangler.toml](web/wrangler.toml)). `wrangler deploy` runs the build itself, so one
@@ -374,6 +399,13 @@ docs/       PLAN.md (the original build plan), PROGRESS.md (what was measured)
 - **The enrichment step varies between runs.** Re-excavating the same database can name
   columns or decode codes differently, because that step depends on the language model.
 - **A cached answer skips the cost check** that its first run went through.
+- **The schema map reads names, not data.** Its leftover-table calls rest on naming
+  conventions (`_bak`, `stg_`, `tmp_`, a year suffix) and can be wrong either way, and its
+  join guesses rest on matching column names. It understands the usual `CREATE TABLE`
+  forms of Postgres, MySQL and SQL Server, but it is a pattern reader, not a SQL parser,
+  and it draws at most 400 tables.
+- **The static site's questions are recorded.** Visitors can replay the listed questions,
+  not ask new ones, and a review decision there lasts for the visit only.
 - **The MCP server** (`engine/stratum/mcp/`, [docs/MCP.md](docs/MCP.md)) is written but
   has not been tested with a client.
 - Not done from the original plan: an ablation report and a run on the BIRD benchmark.

@@ -1,7 +1,9 @@
 import type { Metadata } from "next";
 import { Bricolage_Grotesque, IBM_Plex_Mono, IBM_Plex_Sans } from "next/font/google";
 
+import { Intro } from "@/components/Intro";
 import { SiteHeader } from "@/components/SiteHeader";
+import { SmoothScroll } from "@/components/SmoothScroll";
 
 import "./globals.css";
 
@@ -37,9 +39,24 @@ const mono = IBM_Plex_Mono({
   display: "swap",
 });
 
+/**
+ * Runs before first paint. On the landing page, on a first visit, for anyone who has not
+ * asked for reduced motion, it marks the page `data-intro="pending"`, which the CSS uses
+ * to keep the page hidden until the intro (components/Intro.tsx) takes over. The timer
+ * is a safety net: if the script that plays the intro never runs, the page still shows.
+ */
+const INTRO_GATE = `(function(){try{var d=document.documentElement;if(location.pathname==='/'&&!sessionStorage.getItem('stratum-intro')&&!matchMedia('(prefers-reduced-motion: reduce)').matches){d.setAttribute('data-intro','pending');setTimeout(function(){d.removeAttribute('data-intro')},7000)}}catch(e){}})()`;
+
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" className={`${display.variable} ${sans.variable} ${mono.variable}`}>
+    <html
+      lang="en"
+      className={`${display.variable} ${sans.variable} ${mono.variable}`}
+      suppressHydrationWarning
+    >
+      <head>
+        <script dangerouslySetInnerHTML={{ __html: INTRO_GATE }} />
+      </head>
       <body className="min-h-screen antialiased">
         <a
           href="#content"
@@ -49,6 +66,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         </a>
         <SiteHeader />
         <div id="content">{children}</div>
+        <SmoothScroll />
+        <Intro />
       </body>
     </html>
   );

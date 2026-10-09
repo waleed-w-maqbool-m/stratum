@@ -160,6 +160,13 @@ export default function ConnectPage() {
             and <code className="font-mono text-[var(--fg)]">make web</code>, then paste a connection URL here.
             It works with SQLite and Postgres, and it only ever reads.
           </p>
+          <p className="mt-4 max-w-[40rem] text-[15px] leading-relaxed text-[var(--fg-muted)]">
+            Just have the schema?{" "}
+            <Link href="/schema" className="text-[var(--accent)] underline underline-offset-4">
+              Paste it and see its map
+            </Link>
+            , right in your browser.
+          </p>
         </section>
       ) : (
       <section aria-labelledby="own" className="mt-14">
@@ -167,6 +174,13 @@ export default function ConnectPage() {
         <p className="mt-1 text-[15px] text-[var(--fg-muted)]">
           Paste a connection URL. For a SQLite file use{" "}
           <code className="font-mono text-[var(--fg)]">sqlite:///C:/path/to/file.db</code>; it is opened read-only.
+        </p>
+        <p className="mt-2 text-[14px] text-[var(--fg-muted)]">
+          Only have the schema?{" "}
+          <Link href="/schema" className="underline decoration-[var(--rule)] underline-offset-4 hover:text-[var(--fg)]">
+            Paste it and see its map
+          </Link>
+          .
         </p>
         <label htmlFor="url" className="sr-only">Connection URL</label>
         <input

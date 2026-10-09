@@ -218,3 +218,37 @@ body {
   white-space: nowrap;
   border-width: 0;
 }
+
+/* The intro (components/Intro.tsx). While it plays, the page is present but invisible;
+ * it fades in as the logo starts its trip to the header, and the header's own logo
+ * stays hidden until the travelling one has landed on it. */
+#content,
+[data-site-header] {
+  transition: opacity 0.7s ease;
+}
+html[data-intro="pending"] #content,
+html[data-intro="pending"] [data-site-header] {
+  opacity: 0;
+}
+html[data-intro="docking"] [data-brand] {
+  visibility: hidden;
+}
+
+/* The landing headline is the one place type is allowed to be enormous: tight, heavy
+ * and narrow, and it stretches wider as the page scrolls away from it. */
+.display-hero {
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-variation-settings: "wdth" 80, "opsz" 96;
+  letter-spacing: -0.012em;
+}
+
+/* A slow pulse on the scroll cue: it says "there is more below" and nothing else. */
+@keyframes cue {
+  0%, 100% { transform: scaleY(0.35); opacity: 0.4; }
+  50% { transform: scaleY(1); opacity: 1; }
+}
+.cue {
+  transform-origin: top;
+  animation: cue 2.2s ease-in-out infinite;
+}
