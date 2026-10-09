@@ -9,7 +9,7 @@
     "lint": "next lint",
     "typecheck": "tsc --noEmit",
     "build:demo": "node scripts/build-demo.mjs",
-    "deploy:demo": "npm run build:demo && npx wrangler pages deploy out --project-name stratum"
+    "deploy:demo": "npx wrangler deploy"
   },
   "dependencies": {
     "@gsap/react": "^2.1.2",

@@ -1,4 +1,15 @@
-# Cloudflare Pages: the public demo, a static export of this app (npm run build:demo).
+# Cloudflare Workers, serving the public demo as static assets: a static export of this
+# app (npm run build:demo). There is no Worker script, only files.
+#
+# `wrangler deploy` runs the build itself, so the deploy command is the only one needed.
+# It must run from this folder, which is why the project's root directory is `web`.
 name = "stratum"
-pages_build_output_dir = "out"
 compatibility_date = "2026-10-01"
+
+[build]
+command = "npm run build:demo"
+
+[assets]
+directory = "./out"
+# Next's export writes a 404.html; serve it for unknown paths.
+not_found_handling = "404-page"

@@ -1,4 +1,4 @@
-# Cloudflare Pages response headers for the public demo build.
+# Cloudflare response headers for the public demo build (served with the static assets).
 /_next/static/*
   Cache-Control: public, max-age=31536000, immutable
 

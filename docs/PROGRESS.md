@@ -295,7 +295,7 @@ development mode only.
 
 ### Public demo build
 
-The app builds as a static site for Cloudflare Pages (`npm run build:demo`), replaying
+The app builds as a static site for Cloudflare (`npm run build:demo`), replaying
 engine output recorded by `web/scripts/record_demo.py`. The recordings were checked
 answer by answer before publishing; every one shown is correct. Recording against a
 real engine turned up four more bugs, all fixed:
