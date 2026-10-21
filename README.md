@@ -1,23 +1,57 @@
+<div align="center">
+
 # Stratum
 
 **Ask questions of databases nobody documented.**
 
-Legacy databases accumulate decisions nobody wrote down: cryptic names, no foreign keys,
-one table holding several kinds of record, money that switched from dollars to cents
-partway through, and rows that were never deleted, only marked as deleted.
+[![Live site](https://img.shields.io/badge/Live_site-open-d4af37?style=flat-square&labelColor=111111)](https://stratum.wm-waleedmaqbool.workers.dev)
+![Tests](https://img.shields.io/badge/tests-125_passing-d4af37?style=flat-square&labelColor=111111)
+![Python](https://img.shields.io/badge/Python-3.12-d4af37?style=flat-square&labelColor=111111&logo=python&logoColor=white)
+![Databases](https://img.shields.io/badge/SQLite_%C2%B7_Postgres-d4af37?style=flat-square&labelColor=111111)
 
-Stratum connects to such a database, works out what it means from the schema and the
-data, compiles that into a semantic model a person can review and correct, and answers
-plain-English questions against it, showing the SQL it ran and every rule it applied.
+<br>
 
-![Asking Pagila who the best customers are: the pipeline trace on the left, the answer, confidence and rules on the right](docs/images/ask.png)
+<img src="docs/images/ask.png" alt="Asking Pagila who the best customers are: the pipeline trace on the left, the answer, confidence and rules on the right" width="900">
 
-The core idea: **the language model writes SQL against a clean, virtual schema, and a
-deterministic compiler rewrites it into the messy physical one.** Renames, casts on
-mismatched join keys, soft-delete filters, table discriminators and unit conversions are
-applied by reviewed code, not re-guessed by a model on every question.
+</div>
 
-A real answer from the benchmark's Postgres database (physical SQL abridged):
+<br>
+
+## The idea
+
+Old databases carry decisions nobody wrote down: cryptic names, no foreign keys, one table holding several kinds of record, money that switched from dollars to cents partway through, rows that were only marked as deleted.
+
+Stratum reads the schema and the data, works out what it all means, and compiles that into a **semantic model a person can review and correct**. Then it answers plain-English questions and shows the SQL it ran and every rule it applied.
+
+> **The language model writes SQL against a clean, virtual schema. A deterministic compiler rewrites it for the messy real one.**
+> Renames, casts, soft-delete filters, table discriminators and unit conversions are applied by reviewed code, not guessed again by a model on every question.
+
+## Results
+
+Same model with and without Stratum, on benchmark databases made deliberately messy. Execution accuracy against gold SQL:
+
+| Database | Model | Plain baseline | **Stratum** | Tokens per question |
+|---|---|---:|---:|---:|
+| Chinook (SQLite) | gpt-oss-120b | 23.9% | **60.9%** | 5,817 to **3,095** |
+| Pagila (Postgres 16) | a Qwen 27B model | 30.8%* | **57.8%** | 3,711* to **2,354** |
+
+<sub>*The Pagila baseline covers 26 of 45 questions, because the daily token quota ran out. Joins are found with F1 of 1.00 on Chinook and 0.85 on Pagila.</sub>
+
+The gains are largest where the mess is worst (Chinook, baseline to Stratum):
+
+| Problem | Baseline | Stratum |
+|---|---:|---:|
+| Mixed column types | 0% | **80%** |
+| Schema drift | 7.1% | **64.3%** |
+| Soft deletes | 23.3% | **63.3%** |
+| One table, several kinds of record | 15.8% | **63.2%** |
+| Vague question | 20% | **60%** |
+| Missing foreign keys | 31.6% | **57.9%** |
+| Messy strings | 0% | **37.5%** |
+
+## A real answer
+
+From the Postgres benchmark (physical SQL abridged). The question was about total revenue.
 
 ```sql
 -- what the model wrote
@@ -25,7 +59,7 @@ SELECT SUM(amount) AS total_revenue FROM payment WHERE txn_typ = 'P'
 
 -- what ran on the database
 SELECT SUM(amount) AS total_revenue FROM (
-  SELECT …,
+  SELECT ...,
          CASE WHEN txn_ts >= '2022-04-01 00:02:24.640021'
               THEN amt_c / 100.0 ELSE amt END AS amount
   FROM public.fin_txn
@@ -33,379 +67,61 @@ SELECT SUM(amount) AS total_revenue FROM (
 ) AS payment
 ```
 
-It returns 67,416.51, the clean database's total to the cent. Getting there needs two
-facts found in the data, not in the schema: `fin_txn` mixes payments with other record
-types, and amounts moved from a dollars column to a cents column on a cutover date.
+It returns 67,416.51, the clean database's total to the cent. Two facts made that possible, and neither is in the schema: `fin_txn` mixes payments with other record types, and amounts moved from a dollars column to a cents column on a cutover date. Stratum found both in the data.
 
----
-
-## Results
-
-Measured on two public sample databases that were deliberately made messy (see
-[The Gauntlet](#the-gauntlet)). Each is compared against a naive baseline using the same
-model: the whole schema in one prompt, no semantic layer.
-
-| | Chinook, SQLite | Pagila, Postgres 16 |
-|---|---:|---:|
-| model (Groq free tier) | `gpt-oss-120b` | `qwen3.8-27b` |
-| naive baseline | 23.9% | 30.8%\* |
-| **Stratum** | **60.9%** | **57.8%** |
-| tokens per question | 5,817 → **3,095** | 3,711 → **2,354**\* |
-| joins recovered (F1) | 1.00 | 0.85 |
-
-Execution accuracy: Stratum's result rows compared with the gold query's on the clean
-database.
-
-\* Pagila's baseline covers 26 of 45 questions, because the free tier's daily token budget
-ran out; the Pagila token figures compare those same 26.
-
-Where the gain comes from, on Chinook (same model, same questions):
-
-| Problem the question runs into | Baseline | Stratum |
-|---|---:|---:|
-| Mixed types (a date stored as text, a key as a string) | 0% | **80%** |
-| Schema drift (a column that moved, a unit that changed) | 7.1% | **64.3%** |
-| Soft deletes | 23.3% | **63.3%** |
-| One table holding several kinds of record | 15.8% | **63.2%** |
-| Vague question | 20% | **60%** |
-| Missing foreign keys | 31.6% | **57.9%** |
-| Messy strings (padding, case, spelling variants) | 0% | **37.5%** |
-
-Methodology, caveats and everything fixed along the way:
-[docs/PROGRESS.md](docs/PROGRESS.md).
-
----
-
-## How it fits together
+## How it works
 
 ```mermaid
 flowchart LR
-    web["Web app<br/>Next.js"] --> engine
-    cli["CLI"] --> engine
-
-    subgraph engine["Engine: FastAPI, Python 3.12"]
-        excavate["Excavation<br/>16 stages"]
-        model[("Semantic model<br/>versioned YAML")]
-        review["Review queue"]
-        ask["Ask pipeline"]
-        compiler["Logical → physical<br/>compiler"]
-        guard["Read-only executor<br/>profile linter, cost guard"]
-    end
-
-    llm["LLM over an OpenAI-compatible API<br/>Groq in every measurement"]
-    db[("Legacy database<br/>SQLite or Postgres")]
-
-    excavate --> model
-    review <--> model
-    model --> ask
-    ask --> compiler --> guard --> db
-    excavate --> guard
-    excavate -.->|"names, profiles, 3 sample values"| llm
-    ask -.->|"logical schema only"| llm
+    A["Messy database"] --> B["Excavate: 16 stages"]
+    B --> C["Review queue"]
+    C --> D["Semantic model"]
+    D --> E["Ask a question"]
+    E --> F["Model writes SQL"]
+    F --> G["Compile to real schema"]
+    G --> H["Lint, cost check, run read-only"]
+    H --> I["Answer with SQL and rules"]
 ```
 
-Excavation runs once per database and is mostly deterministic. Answering runs per
-question and uses the model only to turn a question into SQL over clean names.
+- **Excavate.** Sixteen stages, almost all deterministic. Only the last one, which names and describes things, calls a language model.
+- **Review.** The queue is ordered by impact. Each inference is stated as one sentence with its evidence, and you accept or correct it.
+- **Ask.** Joins are planned deterministically (a Steiner tree over the model). The model proposes two candidate queries, and each is compiled, checked against the connection's SQL profile, cost checked, run, and repaired on error. The answer is picked by agreement between results. The budget is 6,000 tokens per question.
 
----
-
-## Excavation
-
-```mermaid
-flowchart TD
-    A["introspect<br/>catalogue, declared keys, views, routines"] --> B["profile<br/>sample every table"]
-    B --> C["artifacts<br/>live tables vs backups, archives, leftovers"]
-    C --> D["procmine<br/>joins, codes and filters from views and procedures"]
-    D --> E["godtable<br/>tables holding several kinds of record"]
-    E --> F["joins<br/>inclusion tests rebuild missing foreign keys"]
-    F --> G["keys<br/>undeclared and composite keys"]
-    G --> H["softdelete · enums · formats · overloaded"]
-    H --> I["drift · types · quality · perf"]
-    I --> J["enrich<br/>LLM names what the data cannot"]
-    J --> K[("compile → semantic model")]
-    K --> L{"Review"}
-    L -->|accept or edit| M[("new model version<br/>rule applies to every query")]
-    L -->|reject| N[("new model version<br/>rule removed")]
-```
-
-Each detector is a pure function in [engine/stratum/excavate/](engine/stratum/excavate/)
-that returns typed findings with evidence and a confidence. Only the last stage calls a
-model, and only for what cannot be computed, such as what `'X'` means in a status
-column or what `CFNM1` is short for.
-
-### Review
-
-Every finding is a hypothesis until a person decides. The queue is ordered by impact, so
-the first thing asked about is the soft-delete rule that changes every revenue answer,
-not a description on a lookup table. Decisions survive re-excavation.
-
-```mermaid
-stateDiagram-v2
-    [*] --> hypothesis: detector finds it
-    hypothesis --> accepted: A
-    hypothesis --> accepted: E (edited value)
-    hypothesis --> rejected: R
-    accepted --> accepted: re-excavation keeps the decision
-    rejected --> rejected: re-excavation keeps the decision
-```
-
-![The Review page: the queue ordered by impact, and one inference stated as a sentence with its evidence](docs/images/review.png)
-
----
-
-## Asking a question
-
-```mermaid
-sequenceDiagram
-    autonumber
-    actor U as You
-    participant P as Ask pipeline
-    participant M as Semantic model
-    participant L as LLM
-    participant C as Compiler
-    participant D as Database
-
-    U->>P: "Who are our best customers?"
-    P->>M: link entities, bind literal values
-    alt question is ambiguous
-        P-->>U: "best" by what? options built from the model
-        U->>P: by total amount
-    end
-    P->>M: plan joins (Steiner tree over trusted edges)
-    P->>L: logical schema + join conditions
-    L-->>P: two candidate SELECTs over clean names
-    P->>C: compile each to physical SQL
-    C->>C: lint against the connection's profile
-    C->>D: cost check, then run read-only, rolled back
-    alt error
-        D-->>P: error
-        P->>L: repair with the error
-    end
-    D-->>P: rows
-    P->>P: pick by result agreement, score confidence
-    P-->>U: answer, rules applied, logical + physical SQL
-```
-
-The model never invents a join condition: joins are planned deterministically and handed
-to it. A question has a 6,000-token budget, which is what lets the system run on free
-tiers.
-
-### What the compiler does
-
-```mermaid
-flowchart LR
-    logical["SELECT SUM(amount)<br/>FROM payment"] --> rename["names → physical columns"]
-    rename --> god["mixed table → discriminator<br/>txn_typ = 'P'"]
-    god --> soft["soft delete → live rows only"]
-    soft --> drift["unit change → dollars and cents<br/>reconciled at the cutover"]
-    drift --> types["casts on mismatched keys,<br/>dates parsed from text"]
-    types --> lint["checked against the<br/>connection's SQL profile"]
-    lint --> physical["physical SQL<br/>that actually runs"]
-```
-
----
-
-## The Gauntlet
-
-Accuracy claims need ground truth, so the benchmark is built rather than annotated. Two
-public sample databases, Chinook (SQLite) and Pagila (Postgres 16), are **legacified**
-deterministically into messy copies. Gold answers are computed on the clean originals,
-so correctness is known without hand-writing SQL for the mess.
-
-```mermaid
-flowchart LR
-    clean[("Clean database<br/>Chinook, Pagila")] --> leg["Legacifier<br/>deterministic, seeded"]
-    leg --> messy[("Legacy copy")]
-    leg --> manifest[["manifest.json<br/>every injected problem"]]
-    clean --> gold["Gold SQL<br/>two formulations each"]
-
-    messy --> stratum["Stratum<br/>excavate + ask<br/>never sees the manifest"]
-    stratum --> scorer["Scorer"]
-    gold --> scorer
-    manifest --> scorer
-
-    scorer --> report["Execution accuracy,<br/>knowledge recall, calibration"]
-```
-
-**Every transformation is reversible.** Soft-deleted rows are *extra* rows that don't
-exist in the clean copy, so filtering them out reproduces the clean set exactly.
-`make gauntlet` checks this (21 checks on Chinook, 27 on Pagila) and cross-checks two
-independent gold queries per question (46 and 45 pairs) before any score is trusted.
-
-The manifest is the answer key. Engine code never opens it, and no part of either
-benchmark's semantic model was written by hand.
-
-![The Benchmark page: baseline and Stratum paired per kind of problem](docs/images/benchmark.png)
-
----
+<div align="center">
+<img src="docs/images/review.png" alt="The Review page: the queue ordered by impact, and one inference stated as a sentence with its evidence" width="48%">
+<img src="docs/images/benchmark.png" alt="The Benchmark page: baseline and Stratum paired per kind of problem" width="48%">
+</div>
 
 ## Guarantees
 
-1. **Read-only.** Every statement is parsed with sqlglot, and anything that is not a
-   single SELECT is rejected before it reaches a driver. Execution runs in a transaction
-   that is rolled back, with a statement timeout and a row cap.
-2. **Credentials never reach a model**, and neither do whole tables. A model sees the
-   schema, column profiles and at most three sample values per column.
-3. **The answer key is never read by engine code.** Only the scorer opens `manifest.json`.
-4. **A token budget per question.** Anything that can be computed deterministically is.
-5. **SQL profiles.** Generated SQL must pass the connection's capability-profile linter
-   before it runs.
+- **Read-only.** Every statement is parsed and must be a single SELECT. It runs in a transaction that is rolled back, with a timeout and a row cap.
+- **Private.** Credentials and whole tables never reach a model. Models see schema, profiles and a few sample values.
+- **Bounded.** A hard token budget per question.
+- **Dialect-safe.** Generated SQL must pass the connection's SQL profile linter.
 
----
+## The Gauntlet
 
-## Running it
+A benchmark with an answer key. Chinook and Pagila are made messy by a seeded, deterministic legacifier, and gold answers come from the clean copies. There are 46 and 45 question and gold SQL pairs, plus 21 and 27 reversibility checks. The legacifier records every change it makes in a manifest, and the engine never reads it.
 
-No Docker and no cloud account needed. Postgres runs from a pip wheel (`pgserver`).
+## Run it
 
 ```bash
-make setup          # install the engine (uv, Python 3.12) and a local Postgres
-make gauntlet       # build both benchmark databases, verify reversibility and gold
-make excavate       # excavate one into a semantic model (SUITE=pagila_v1 for Postgres)
-make test           # 125 tests, plus lint and the web typecheck
+make setup       # install dependencies
+make gauntlet    # build the clean and messy benchmark databases
+make excavate    # run the excavation pipeline
+make test        # 125 tests
+make engine      # API on :8000
+make web         # app on :3000
 ```
 
-Commands use Windows paths (`.venv/Scripts/python.exe`); on macOS or Linux use
-`.venv/bin/python`. Look at what excavation found:
+No Docker needed: Postgres runs through `pgserver`. The static demo in `web/` deploys to Cloudflare Workers, and its answers there are recorded, not live.
 
-```bash
-cd engine
-.venv/Scripts/python.exe -m stratum.cli model chinook_legacy
-.venv/Scripts/python.exe -m stratum.cli review chinook_legacy
-```
+## Honest limits
 
-Answering questions needs an LLM key. All results above used Groq's free tier:
+- Two databases and one model each. Calibration was fitted on reported questions.
+- The Pagila baseline is partial (see above).
+- SQLite and Postgres only. The SQL Server connector is untested.
+- Enrichment varies a little between runs.
+- No ablation study and no BIRD run yet.
 
-```bash
-cp .env.example .env                   # then set GROQ_API_KEY
-cd engine && .venv/Scripts/python.exe -m stratum.cli \
-    ask chinook_legacy "how many customers placed an order in 2022?"
-```
-
-Run the app:
-
-```bash
-make engine         # API on :8000
-make web            # web app on :3000
-```
-
-| Page | What it is for |
-|---|---|
-| **Home** | The Atlas fills the first screen; scrolling flies through three beats (the leftover tables sink, the joins nobody declared are drawn in, the answer arrives) and ends at three ways in. A two-second logo intro plays once per visit |
-| **Atlas** | The schema in 3D: live tables above the grid, excluded ones sunk below it |
-| **Ask** | Questions, with the pipeline trace, the rules applied and both forms of the SQL |
-| **Excavate** | Watch each stage report what it found |
-| **Review** | Accept, reject or edit what was inferred, with the evidence in plain sentences |
-| **Your database** | Paste or upload a schema and see its map, in the browser (below). With an engine running, Connect takes a database URL and excavates it fully |
-| **How it works** | The detail behind the home page: why a plain query gets it wrong, the results, the compiler, the guarantees |
-| **Benchmark** | Every question's gold result next to Stratum's |
-
-![The home page: the Atlas as the first screen](docs/images/landing.png)
-
-![The Atlas: live tables above the grid, archives and leftovers sunk below it](docs/images/atlas.png)
-
-### Your database, as a map
-
-The **Your database** page takes `CREATE TABLE` statements (from `pg_dump --schema-only`,
-`mysqldump --no-data` or SQL Server's Generate Scripts), pasted or uploaded, and draws the
-same map. It runs entirely in the browser, so nothing is uploaded and it works on the
-static site.
-
-It is a smaller thing than excavation, and the page says so. A schema file shows names,
-not data, so the map can only:
-
-- sink the tables whose names look like backups, archives, staging or scratch copies;
-- draw declared foreign keys, and guess other joins from matching column names.
-
-It cannot find a soft delete, a unit that changed, a table holding several kinds of
-record, or what a code means. Those live in the rows, and finding them is what the full
-excavation does, against a read-only connection from your own machine.
-
-![The schema map: an invented legacy order system, with its backups and scratch tables sunk below the live tables](docs/images/schema.png)
-
----
-
-## Static demo build
-
-The web app also builds as a static site that needs no engine and no API key, intended
-for free hosting on Cloudflare. Its data was recorded from the real engine:
-excavations and answers replay event by event at the pace they originally ran, so every
-page and animation works. Every recorded answer was checked against the clean database
-before it was kept.
-
-```mermaid
-flowchart LR
-    engine["Engine<br/>run locally"] --> rec["web/scripts/record_demo.py<br/>real runs, real timings"]
-    rec --> data[("web/public/demo<br/>JSON, committed")]
-    data --> build["npm run build:demo<br/>static export"]
-    build --> host["Static hosting<br/>e.g. Cloudflare"]
-```
-
-In the static build, a visitor can ask the listed questions (including the clarification
-and cost-warning branches), replay an excavation, use Review, explore the Atlas, read
-the full Benchmark, and draw the map of a schema of their own. A brand-new question, or
-excavating a database, needs the engine running locally, and the site says so.
-
-The build is tested as plain static files in Chrome, at desktop and phone widths: the
-intro (including skipping it), the scroll story, every header link, both hero buttons,
-the schema page, and reduced-motion mode, with no console errors. Under
-`prefers-reduced-motion` there is no intro and no pinned scroll story: the same map is
-drawn once and the beats are ordinary sections.
-
-It deploys to Cloudflare as a Workers project serving static assets
-([web/wrangler.toml](web/wrangler.toml)). `wrangler deploy` runs the build itself, so one
-command is enough. From the dashboard, create a Workers project from this repository and
-set:
-
-| Setting | Value |
-|---|---|
-| Root directory | `web` |
-| Build command | leave empty (`wrangler.toml` runs `npm run build:demo`) |
-| Deploy command | `npx wrangler deploy` |
-
-The root directory has to be `web`: that is where `wrangler.toml` and `package.json` are,
-and without it Cloudflare finds no config and no assets. Or deploy from your machine:
-
-```bash
-cd web
-npm ci
-npx wrangler login
-npm run deploy:demo
-```
-
----
-
-## Layout
-
-```
-engine/     Python 3.12, FastAPI, sqlglot, SQLAlchemy Core, networkx, DuckDB
-  stratum/connectors/   connectors, capability profiles, read-only executor, cost guard
-  stratum/excavate/     one module per detector, then the model compiler
-  stratum/semantic/     the model, its store, the review queue
-  stratum/ask/          link → plan → generate → compile → validate → explain
-  stratum/llm/          one OpenAI-compatible client, rate budgeting, response cache
-gauntlet/   legacifiers, question suites, scorer, eval runner, published reports
-web/        Next.js, TypeScript, Tailwind v4, GSAP, react-three-fiber
-docs/       PLAN.md (the original build plan), PROGRESS.md (what was measured)
-```
-
-## Limitations
-
-- **Two databases, one model each.** Results are from Chinook and Pagila only. Pagila's
-  baseline is partial (26 of 45 questions), and the confidence calibration was fitted
-  on the same questions it is reported on.
-- **SQLite and Postgres only.** The code has a SQL Server connector and a SQL Server
-  2008 profile, but neither has run against a real server; the Docker setup for it
-  (`infra/`) was abandoned.
-- **The enrichment step varies between runs.** Re-excavating the same database can name
-  columns or decode codes differently, because that step depends on the language model.
-- **A cached answer skips the cost check** that its first run went through.
-- **The schema map reads names, not data.** Its leftover-table calls rest on naming
-  conventions (`_bak`, `stg_`, `tmp_`, a year suffix) and can be wrong either way, and its
-  join guesses rest on matching column names. It understands the usual `CREATE TABLE`
-  forms of Postgres, MySQL and SQL Server, but it is a pattern reader, not a SQL parser,
-  and it draws at most 400 tables.
-- **The static site's questions are recorded.** Visitors can replay the listed questions,
-  not ask new ones, and a review decision there lasts for the visit only.
-- **The MCP server** (`engine/stratum/mcp/`, [docs/MCP.md](docs/MCP.md)) is written but
-  has not been tested with a client.
-- Not done from the original plan: an ablation report and a run on the BIRD benchmark.
+Full numbers, caveats and the build log are in [`docs/PROGRESS.md`](docs/PROGRESS.md). The MCP server is described in [`docs/MCP.md`](docs/MCP.md).
