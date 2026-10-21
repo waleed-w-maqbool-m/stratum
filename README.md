@@ -71,15 +71,22 @@ It returns 67,416.51, the clean database's total to the cent. Two facts made tha
 
 ## How it works
 
+**Learn the database once:**
+
 ```mermaid
 flowchart LR
     A["Messy database"] --> B["Excavate: 16 stages"]
     B --> C["Review queue"]
     C --> D["Semantic model"]
-    D --> E["Ask a question"]
-    E --> F["Model writes SQL"]
+```
+
+**Then answer questions:**
+
+```mermaid
+flowchart LR
+    E["Question"] --> F["Model writes SQL"]
     F --> G["Compile to real schema"]
-    G --> H["Lint, cost check, run read-only"]
+    G --> H["Lint, check, run read-only"]
     H --> I["Answer with SQL and rules"]
 ```
 
