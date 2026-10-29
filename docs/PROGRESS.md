@@ -634,6 +634,57 @@ no longer appears.
 |---|---|---|
 | engine tests | 155 | 182 (+1 live test that skips without a server) |
 
+### Phase F: large databases (partly done)
+
+*Measured first, then fixed.* A synthetic legacy-shaped schema generator (`python -m
+gauntlet.scale --tables N`) builds N tables with cryptic names, undeclared foreign-key
+columns whose true relationships are known by construction, and backup and scratch copies.
+The first measurement showed the cost was not where the plan guessed. It was not the database
+probes (about 12 ms each) but candidate generation: every identifier column was compared with
+every key by re-expanding both names and running a fuzzy match, about 230,000 pairs at 150
+tables.
+
+Two changes, neither of which alters a result: name expansions are computed once instead of
+once per pair, and the fuzzy tiebreak is skipped for same-type pairs, where it is capped at
+0.45 and the pair is discarded below 0.5 whatever it says.
+
+| Synthetic schema | Old: time | New: time | Recall / precision, old and new |
+|---|---:|---:|---|
+| 50 tables, 418 columns | 7.5 s | 3.2 s | 0.939 / 1.000, same |
+| 150 tables, 1,291 columns | 55.1 s | 9.8 s | 1.000 / 1.000, same |
+| 400 tables, 3,398 columns | not measured | 32.4 s | 0.987 / 1.000 |
+| 1,000 tables, 8,515 columns | not measured | 127.4 s | 0.975 / 1.000 |
+
+"Old" is the engine before phase A. Candidate generation alone, on the real benchmark
+databases and the 50-table schema, went from 18.5 s to 0.41 s (Chinook), 1.64 s to 0.06 s
+(Pagila) and 7.8 s to 0.2 s (50 tables). **The candidate sets and every name score are
+identical before and after** on all three, compared pair by pair, and a test pins the
+invariant that skipping the fuzzy tiebreak never changes a score that can clear the bar.
+
+What this does and does not show:
+
+- These are SQLite databases on the same machine as the engine, with no network latency,
+  and the data is synthetic. A real 1,000-table SQL Server across a network will be slower,
+  because the remaining time is database probes.
+- Recall falls slightly as the schema grows (0.987 at 400 tables, 0.975 at 1,000) because
+  many tables share similarly named keys. Precision stays at 1.0.
+- Time still grows faster than the table count (400 to 1,000 tables is 2.5 times the tables
+  and 3.9 times the time). The join stage is 87% of the 1,000-table run.
+- The generator refuses to make tables under 40 rows because under about 20 distinct values
+  the engine will not propose a join. Real schemas contain many small lookup tables; those
+  are found by exact-name matches only.
+
+**Not done, and not claimed:** a probe budget with a time limit, running probes in parallel,
+sampling from profile data instead of a fresh `SELECT DISTINCT`, incremental re-excavation, and
+the Atlas at this scale (a clustered view for more than about 800 tables, label levels of
+detail). The Atlas has only been looked at with 11 tables and with the 134-table Chinook model.
+No large database has been put through the web UI.
+
+| | Before | After |
+|---|---|---|
+| engine tests | 182 | 183 (+1 live skip) |
+| gauntlet tests | 16 | 17 |
+
 ---
 
 ## Not built

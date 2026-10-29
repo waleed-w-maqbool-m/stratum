@@ -241,3 +241,30 @@ def test_a_genuinely_vague_superlative_still_clarifies(model):
     for question in ("Who are our top customers?", "What is our best selling genre?"):
         terms = [a.term for a in detect(question, model).ambiguities]
         assert terms, f"{question!r} should still be ambiguous"
+
+
+# ------------------------------------------------------------------- name scoring at scale
+
+
+def test_skipping_the_fuzzy_tiebreak_never_changes_a_score_that_can_clear_the_bar():
+    """`fuzzy=False` exists for speed: it must agree with the full score wherever it matters.
+
+    Candidate generation discards same-type pairs scoring under 0.5. The fuzzy fallback is
+    capped at 0.45, so for those pairs it can only ever move a score between two values
+    that are both discarded. This pins that: any pair that clears 0.5 scores the same both
+    ways, and every pair that does not scores under 0.5 both ways.
+    """
+    from stratum.excavate.naming import fk_name_score
+
+    columns = ["CUST_NO", "CUST_ID", "REP_NO", "MGR_ID", "PRD_ID", "REC_ID", "ORD_NO", "STORE_CD",
+               "tblPrd_ID", "strCustNm", "EMP_ID", "ALBM_ID", "TRK_ID", "PLST_ID", "X"]
+    tables = ["CUST_MSTR", "EMP_MSTR", "tblPrd", "ALBM", "TRANS_MSTR", "PLST", "SO_LN", "t"]
+    for child in columns:
+        for parent_column in columns:
+            for table in tables:
+                full = fk_name_score(child, table, parent_column)
+                quick = fk_name_score(child, table, parent_column, fuzzy=False)
+                if full >= 0.5:
+                    assert quick == full, (child, table, parent_column)
+                else:
+                    assert quick < 0.5 and full <= 0.45, (child, table, parent_column)

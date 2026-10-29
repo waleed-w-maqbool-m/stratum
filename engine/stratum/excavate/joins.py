@@ -20,6 +20,7 @@ from __future__ import annotations
 
 import re
 from dataclasses import dataclass, field
+from functools import lru_cache
 
 from ..connectors.executor import ReadOnlyExecutor
 from ..origin import Origin
@@ -173,6 +174,7 @@ def _is_key_candidate(table: Table, column: str, profile: ColumnProfile | None) 
     return profile.is_unique_in_sample and profile.sampled_rows >= table.row_estimate
 
 
+@lru_cache(maxsize=200_000)
 def _looks_like_identifier(name: str) -> bool:
     words = set(expand(name).words)
     return bool(words & {"id", "number", "code", "key", "reference"})
@@ -225,25 +227,30 @@ def generate_candidates(
             own_primary_key = [c.lower() for c in child.primary_key] == [
                 column.name.lower()
             ]
+            identifier_like = _looks_like_identifier(column.name)
             for parent, parent_column, parent_f in parents:
                 if parent is child and parent_column.lower() == column.name.lower():
                     continue
                 if not _comparable(child_f, parent_f):
                     continue
-                score = fk_name_score(column.name, parent.name, parent_column)
+                cross_type = child_f.kind != parent_f.kind
+                # Two columns of the same type are dropped below the name threshold
+                # whatever a fuzzy tiebreak says, so only cross-type pairs pay for one.
+                score = fk_name_score(
+                    column.name, parent.name, parent_column, fuzzy=cross_type
+                )
                 # A table's own primary key is occasionally also a foreign key, but
                 # only in a 1:1 extension. Require the names to match outright before
                 # believing it, or every surrogate key points at every other one.
                 if own_primary_key and score < 1.0:
                     continue
-                cross_type = child_f.kind != parent_f.kind
                 hierarchy = _hierarchy_reference(column.name, child, parent, parent_column)
                 # Inclusion is only evidence for a column that holds identifiers. A
                 # rental *time* of '221533' sits inside a 400,000-row log's dense key,
                 # and a rental *duration* of 3 to 7 inside every surrogate key there
                 # is. Foreign keys are named for what they are — id, number, code, key,
                 # reference — and every true edge in both answer keys is.
-                if not (hierarchy or _looks_like_identifier(column.name)):
+                if not (hierarchy or identifier_like):
                     continue
                 if score < MIN_NAME_SIMILARITY and not (cross_type or hierarchy):
                     continue

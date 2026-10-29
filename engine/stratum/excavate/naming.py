@@ -12,6 +12,7 @@ from __future__ import annotations
 
 import re
 from dataclasses import dataclass, field
+from functools import lru_cache
 
 # Abbreviations that appear in nearly every legacy schema. Longest first at match time.
 ABBREVIATIONS: dict[str, str] = {
@@ -262,10 +263,29 @@ def entity_words(name: str) -> set[str]:
 
     `CUST_NO` -> {'customer'}, `ORD_NO` -> {'order'}, `ID` -> set().
     """
-    return set(expand(name).words) - ROLE_WORDS
+    return set(_entity_words(name))
 
 
-def fk_name_score(child_column: str, parent_table: str, parent_column: str) -> float:
+# Name comparison runs once per pair of columns, and a 1,300-column schema has a million
+# of them. A name expands the same way every time, so each is expanded once.
+@lru_cache(maxsize=200_000)
+def _entity_words(name: str) -> frozenset[str]:
+    return frozenset(expand(name).words) - ROLE_WORDS
+
+
+@lru_cache(maxsize=200_000)
+def _all_words(name: str) -> frozenset[str]:
+    return frozenset(expand(name).words)
+
+
+@lru_cache(maxsize=200_000)
+def _readable(name: str) -> str:
+    return expand(name).readable
+
+
+def fk_name_score(
+    child_column: str, parent_table: str, parent_column: str, *, fuzzy: bool = True
+) -> float:
     """How strongly a column's name says "this points at that table".
 
     Deliberately not a fuzzy string ratio. On short mainframe identifiers, character
@@ -273,14 +293,12 @@ def fk_name_score(child_column: str, parent_table: str, parent_column: str) -> f
     have nothing to do with each other — so the comparison is made on the expanded
     entity words instead, and a bare fuzzy score can never on its own clear the bar.
     """
-    from rapidfuzz import fuzz
-
     if child_column.lower() == parent_column.lower():
         return 1.0
 
-    child_entity = entity_words(child_column)
-    parent_entity = entity_words(parent_column)
-    table_entity = entity_words(parent_table) | set(expand(parent_table).words)
+    child_entity = _entity_words(child_column)
+    parent_entity = _entity_words(parent_column)
+    table_entity = _entity_words(parent_table) | _all_words(parent_table)
 
     # The child names the parent's entity: CUST_NO -> CUST_MSTR.CUST_ID
     if child_entity and child_entity & table_entity:
@@ -292,8 +310,14 @@ def fk_name_score(child_column: str, parent_table: str, parent_column: str) -> f
         return 0.75
 
     # No entity agreement at all. Fall back to a fuzzy score on the readable forms,
-    # capped below the acceptance threshold so it can only ever break a tie.
-    left, right = expand(child_column).readable, expand(parent_column).readable
+    # capped below the acceptance threshold so it can only ever break a tie. A caller that
+    # discards anything under that threshold (two columns of the same type) has no use for
+    # a tiebreak and passes `fuzzy=False`, which skips the most expensive step here.
+    if not fuzzy:
+        return 0.0
+    from rapidfuzz import fuzz
+
+    left, right = _readable(child_column), _readable(parent_column)
     if not left or not right:
         return 0.0
     return round(min(0.45, fuzz.token_sort_ratio(left, right) / 100.0), 3)
