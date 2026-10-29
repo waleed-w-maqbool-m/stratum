@@ -116,18 +116,30 @@ A benchmark with an answer key. Chinook and Pagila are made messy by a seeded, d
 make setup       # install dependencies
 make gauntlet    # build the clean and messy benchmark databases
 make excavate    # run the excavation pipeline
-make test        # 125 tests
+make test        # 183 engine tests, 17 gauntlet tests
 make engine      # API on :8000
 make web         # app on :3000
 ```
 
 No Docker needed: Postgres runs through `pgserver`. The static demo in `web/` deploys to Cloudflare Workers, and its answers there are recorded, not live.
 
+## Since the first benchmark
+
+The results above are the first run and are unchanged. Later work is recorded, with caveats, in the improvement log in [`docs/PROGRESS.md`](docs/PROGRESS.md):
+
+- Every relationship says where it came from: declared in the schema, written in a view or procedure, inferred from the data, or chosen by a model, with the numbers behind it.
+- A separate list of what the database seems to be missing, with SQL that is shown and never run. On a Chinook copy that keeps half its keys, 6 of 6 declared keys were labelled declared and 5 of 5 dropped keys were suggested.
+- A compiler bug fixed (a filter pushed into the nullable side of a `LEFT JOIN`). Replaying the recorded Chinook run gives 29 of 46 instead of 28, with no other question changed.
+- A second, tie-aware score beside the strict one (Chinook 30 of 46). The strict score stays the headline.
+- The Atlas can go full screen, switch between the database as submitted and as refined, and show a table's columns and where each join goes and why.
+- Excavation is 5.6 times faster at 150 tables with identical output, and a synthetic 1,000-table schema takes about two minutes.
+
 ## Honest limits
 
 - Two databases and one model each. Calibration was fitted on reported questions.
 - The Pagila baseline is partial (see above).
-- SQLite and Postgres only. The SQL Server connector is untested.
+- Benchmarked on SQLite and Postgres only. The SQL Server connector has run against one local SQL Server 2025 Express instance (Windows authentication, a named instance) on two small databases. There is no SQL Server accuracy benchmark, and the SQL-login path and remote servers have not been run.
+- The Chinook benchmark has a known defect: its legacifier destroyed the real composer of 74 tracks, so one question's gold answer cannot be recovered from the legacy data. It is not fixed, because that would change the data the published numbers were measured on. Tracing the 18 Chinook failures to their causes is in [`docs/ATTRIBUTION.md`](docs/ATTRIBUTION.md).
 - Enrichment varies a little between runs.
 - No ablation study and no BIRD run yet.
 
