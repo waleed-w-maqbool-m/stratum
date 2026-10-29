@@ -6,7 +6,7 @@ import type { MutableRefObject } from "react";
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import * as THREE from "three";
 
-import type { AtlasData, AtlasNode } from "@/lib/atlas";
+import { ORIGIN_COLOR, originOf, type AtlasData, type AtlasNode } from "@/lib/atlas";
 
 /**
  * The schema field in three dimensions (PLAN.md 5.3, 5.4).
@@ -122,8 +122,8 @@ function Edges({ data, selected }: { data: AtlasData; selected: string | null })
     [data.nodes],
   );
 
-  // Edge brightness is confidence: a join taken from shipped SQL is solid, one
-  // inferred statistically is faint, and you can tell at a glance which is which.
+  // Colour is where the join came from; brightness is confidence. A declared key is
+  // solid amber, one inferred statistically is a fainter green.
   const lines = useMemo(
     () =>
       data.edges.flatMap((edge, index) => {
@@ -136,7 +136,7 @@ function Edges({ data, selected }: { data: AtlasData; selected: string | null })
           new THREE.Vector3(...to.position),
         ]);
         const material = new THREE.LineBasicMaterial({
-          color: edge.inferred ? 0x9bc48a : 0xffb23f,
+          color: new THREE.Color(ORIGIN_COLOR[originOf(edge)]),
           transparent: true,
           opacity: involved ? 0.25 + edge.confidence * 0.65 : 0.06,
         });

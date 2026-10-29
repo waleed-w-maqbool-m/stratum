@@ -22,6 +22,7 @@ import re
 from dataclasses import dataclass, field
 
 from ..connectors.executor import ReadOnlyExecutor
+from ..origin import Origin
 from .findings import Finding, Kind, Status, merge_confidence
 from .introspect import Schema, Table
 from .naming import expand, fk_name_score
@@ -115,6 +116,14 @@ class Candidate:
     join_expression: str = ""
     parent_filter: str = ""      # god-table discriminator applied to the parent side
     hierarchy: bool = False      # a self-referencing chain such as MGR_ID -> EMP_ID
+    origin: str = Origin.DATA.value
+    sources: list[str] = field(default_factory=list)          # routines that wrote the join
+    corroborated_by: list[str] = field(default_factory=list)  # other origins that agree
+    fk_name: str = ""
+    enforced: bool | None = None      # declared only: does the engine check this constraint
+    orphan_count: int = 0             # distinct tested values with no parent row
+    orphan_samples: list[str] = field(default_factory=list)
+    probe_failed: bool = False
 
     @property
     def composite(self) -> bool:
@@ -145,6 +154,10 @@ class Candidate:
             self.parent_table.qualified.lower(),
             tuple(sorted(c.lower() for c in self.parent_columns)),
         )
+
+    def reversed_key(self) -> tuple:
+        child_t, child_c, parent_t, parent_c = self.key()
+        return (parent_t, parent_c, child_t, child_c)
 
 
 def _is_key_candidate(table: Table, column: str, profile: ColumnProfile | None) -> bool:
@@ -344,6 +357,7 @@ def test_inclusion(executor: ReadOnlyExecutor, candidate: Candidate) -> Candidat
         result = executor.run(probe, row_cap=2)
     except Exception:
         candidate.inclusion = 0.0
+        candidate.probe_failed = True
         return candidate
 
     if not result.rows:
@@ -351,7 +365,40 @@ def test_inclusion(executor: ReadOnlyExecutor, candidate: Candidate) -> Candidat
     total, matched = result.rows[0][0] or 0, result.rows[0][1] or 0
     candidate.tested = int(total)
     candidate.inclusion = round(matched / total, 4) if total else 0.0
+    candidate.orphan_count = int(total) - int(matched)
+    if candidate.orphan_count > 0:
+        candidate.orphan_samples = _orphan_samples(
+            executor, candidate, sample, condition, profile
+        )
     return candidate
+
+
+# How many unmatched values to keep for a reviewer. A handful, as for every sample.
+ORPHAN_SAMPLES = 3
+
+
+def _orphan_samples(
+    executor: ReadOnlyExecutor, candidate: Candidate, sample: str, condition: str, profile
+) -> list[str]:
+    """A few child values that found no parent, so "212 orphans" can be shown, not just counted.
+
+    These go to the reviewer's screen and nowhere else; they are never part of a prompt.
+    """
+    top = f"TOP {ORPHAN_SAMPLES} " if profile.top else ""
+    limit = f" LIMIT {ORPHAN_SAMPLES}" if profile.limit else ""
+    columns = ", ".join(f"c.{col}" for col in candidate.child_columns)
+    query = (
+        f"SELECT {top}{columns} FROM ({sample}) c "
+        f"LEFT JOIN {_quote(executor, candidate.parent_table)} p ON {condition} "
+        f"WHERE p.{candidate.parent_columns[0]} IS NULL{limit}"
+    )
+    try:
+        rows = executor.run(query, row_cap=ORPHAN_SAMPLES).rows
+    except Exception:
+        return []
+    return [
+        " / ".join(str(v)[:40] for v in row) for row in rows[:ORPHAN_SAMPLES]
+    ]
 
 
 def test_parent_uniqueness(executor: ReadOnlyExecutor, candidate: Candidate) -> Candidate:
@@ -378,6 +425,9 @@ def test_parent_uniqueness(executor: ReadOnlyExecutor, candidate: Candidate) -> 
 
 
 def score(candidate: Candidate) -> float:
+    if candidate.origin == Origin.DECLARED.value:
+        # The catalog says so. A constraint the engine is not enforcing is weaker.
+        return 1.0 if candidate.enforced is not False else 0.97
     if candidate.from_routine:
         return 0.96
     if candidate.inclusion < MIN_INCLUSION:
@@ -422,6 +472,39 @@ def score(candidate: Candidate) -> float:
     return confidence
 
 
+_SOURCE_LABEL = {
+    Origin.DECLARED.value: "declared foreign key",
+    Origin.SHIPPED_SQL.value: "shipped SQL",
+    Origin.DATA.value: "inclusion test",
+}
+
+# The detector name stays what it was for the two older origins, so findings reviewed
+# before `origin` existed keep matching their saved decisions.
+_DETECTOR = {
+    Origin.DECLARED.value: "declared",
+    Origin.SHIPPED_SQL.value: "joins",
+    Origin.DATA.value: "joins",
+}
+
+
+def _cardinality(candidate: Candidate, profiles: ProfileSet) -> tuple[str, bool, float | None]:
+    """How many children per parent, and whether a child may have none.
+
+    Read from the profiles, so it costs no query. A child column that is itself unique is
+    one-to-one (a 1:1 extension table); otherwise many children share a parent. Optional
+    means the column is sometimes null, so the child does not always have a parent.
+    """
+    if candidate.composite:
+        return "many_to_one", False, None
+    column = candidate.child_columns[0]
+    profile = profiles.get(candidate.child_table.qualified, column)
+    if profile is None or profile.sampled_rows == 0:
+        return "many_to_one", False, None
+    unique = _is_key_candidate(candidate.child_table, column, profile)
+    fraction = round(profile.null_fraction, 4)
+    return ("one_to_one" if unique else "many_to_one"), fraction > 0, fraction
+
+
 def detect(
     executor: ReadOnlyExecutor,
     schema: Schema,
@@ -429,6 +512,7 @@ def detect(
     mined: MinedKnowledge | None = None,
     table_classes: dict[str, str] | None = None,
     discriminators: dict[str, str] | None = None,
+    declared: list[Finding] | None = None,
 ) -> list[Finding]:
     classes = {k.lower(): v for k, v in (table_classes or {}).items()}
     core_tables = [
@@ -452,11 +536,34 @@ def detect(
         dominant = parent_profile.top_values[0][0]
         candidate.parent_filter = f"{column} = '{dominant}'"
 
-    # Fold in what shipped SQL already told us, and mark those as verified-by-code.
     by_key: dict[tuple, Candidate] = {}
     for candidate in candidates:
         by_key.setdefault(candidate.key(), candidate)
 
+    def column_form(table: Table, column: str) -> KeyForm:
+        info = table.column(column)
+        return key_form(profiles.get(table.qualified, column), info.data_type if info else "")
+
+    # What the catalog declares outranks everything else and is taken as given.
+    for finding in (declared or []):
+        value = finding.value
+        child, parent = schema.get(value["from_table"]), schema.get(value["to_table"])
+        if child is None or parent is None:
+            continue
+        candidate = Candidate(
+            child_table=child, child_columns=list(value["from_columns"]),
+            parent_table=parent, parent_columns=list(value["to_columns"]),
+            name_score=1.0,
+            child_forms=[column_form(child, c) for c in value["from_columns"]],
+            parent_forms=[column_form(parent, c) for c in value["to_columns"]],
+            join_expression=value.get("expression", ""),
+            origin=Origin.DECLARED.value,
+            fk_name=finding.evidence.get("fk_name", ""),
+            enforced=finding.evidence.get("enforced"),
+        )
+        by_key[candidate.key()] = candidate
+
+    # Fold in what shipped SQL already told us, and mark those as verified-by-code.
     for mined_join in (mined.joins if mined else []):
         child = schema.get(mined_join.left_table)
         parent = schema.get(mined_join.right_table)
@@ -480,19 +587,53 @@ def detect(
             parent_forms=[key_form(profiles.get(parent.qualified, c), "")
                           for c in parent_cols],
             join_expression=mined_join.expression,
+            origin=Origin.SHIPPED_SQL.value,
+            sources=[mined_join.source],
         )
+        prior = by_key.get(candidate.key()) or by_key.get(candidate.reversed_key())
+        if prior is not None and prior.origin != Origin.DATA.value:
+            # Already known, from the catalog or from another routine: note who else
+            # wrote it down rather than replacing the stronger record.
+            if mined_join.source not in prior.sources:
+                prior.sources.append(mined_join.source)
+            if (
+                prior.origin == Origin.DECLARED.value
+                and Origin.SHIPPED_SQL.value not in prior.corroborated_by
+            ):
+                prior.corroborated_by.append(Origin.SHIPPED_SQL.value)
+            continue
+        if prior is not None:
+            by_key.pop(prior.key(), None)
         by_key[candidate.key()] = candidate
+
+    def tested_core(candidate: Candidate) -> bool:
+        return all(
+            classes.get(t.qualified.lower(), "core") == "core"
+            for t in (candidate.child_table, candidate.parent_table)
+        )
 
     out: list[Finding] = []
     for candidate in by_key.values():
-        if not candidate.from_routine:
+        if candidate.origin == Origin.DATA.value:
             test_inclusion(executor, candidate)
             if candidate.inclusion < MIN_INCLUSION:
                 continue
             test_parent_uniqueness(executor, candidate)
+        elif tested_core(candidate):
+            # Given joins are not re-derived, but one probe says whether the data
+            # honours them, and how many values it does not.
+            test_inclusion(executor, candidate)
+            if (
+                candidate.tested
+                and candidate.inclusion >= MIN_INCLUSION
+                and Origin.DATA.value not in candidate.corroborated_by
+            ):
+                candidate.corroborated_by.append(Origin.DATA.value)
         confidence = score(candidate)
         if confidence < 0.5:
             continue
+        measured = candidate.tested > 0 and not candidate.probe_failed
+        cardinality, optional, null_fraction = _cardinality(candidate, profiles)
         out.append(
             Finding(
                 kind=Kind.JOIN,
@@ -509,16 +650,30 @@ def detect(
                 },
                 confidence=confidence,
                 evidence={
+                    "origin": candidate.origin,
+                    "corroborated_by": candidate.corroborated_by,
+                    "sources": candidate.sources,
+                    "fk_name": candidate.fk_name,
+                    "enforced": candidate.enforced,
                     "inclusion": candidate.inclusion,
                     "distinct_values_tested": candidate.tested,
+                    "inclusion_measured": measured,
+                    "orphan_count": candidate.orphan_count if measured else None,
+                    "orphan_samples": candidate.orphan_samples,
                     "name_similarity": candidate.name_score,
                     "parent_coverage": round(candidate.parent_coverage, 4),
                     "parent_key_is_unique": candidate.parent_unique,
                     "composite": candidate.composite,
-                    "source": "shipped SQL" if candidate.from_routine else "inclusion test",
+                    "needs_cast": any(f.needs_cast for f in candidate.child_forms)
+                    or any(f.needs_cast for f in candidate.parent_forms),
+                    "cardinality": cardinality,
+                    "optional": optional,
+                    "child_null_fraction": null_fraction,
+                    "source": _SOURCE_LABEL[candidate.origin],
                 },
-                detector="joins",
-                status=Status.ACCEPTED if candidate.from_routine else Status.HYPOTHESIS,
+                detector=_DETECTOR[candidate.origin],
+                status=Status.HYPOTHESIS if candidate.origin == Origin.DATA.value
+                else Status.ACCEPTED,
             )
         )
     return _dedupe(out)
@@ -547,6 +702,8 @@ def _dedupe(findings: list[Finding]) -> list[Finding]:
     # data, whichever one won the tiebreak. Carry the losers so enrichment can be asked
     # the question the values cannot answer, and so a reviewer sees what else fit.
     for key, winner in best.items():
+        if winner.evidence.get("origin") == "declared":
+            continue
         rivals = [
             f.value["to_table"]
             for f in contenders.get(key, [])

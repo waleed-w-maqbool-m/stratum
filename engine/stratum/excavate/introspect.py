@@ -91,6 +91,48 @@ class Schema:
     def total_columns(self) -> int:
         return sum(len(t.columns) for t in self.tables.values())
 
+    def to_catalog(self) -> dict[str, Any]:
+        """The database exactly as it was submitted: structure only, never a data value.
+
+        Saved beside the semantic model so the Atlas can draw what the database claims
+        about itself, and then show what excavation changed.
+        """
+        return {
+            "database": self.database,
+            "dialect": self.dialect,
+            "tables": [
+                {
+                    "name": t.qualified,
+                    "kind": t.info.kind,
+                    "rows": t.row_estimate,
+                    "primary_key": t.primary_key,
+                    "unique_keys": t.unique_keys,
+                    "columns": [
+                        {"name": c.name, "type": c.data_type, "nullable": c.nullable,
+                         "comment": c.comment}
+                        for c in t.columns
+                    ],
+                    "indexes": [
+                        {"name": ix.name, "columns": ix.columns, "unique": ix.is_unique}
+                        for ix in t.indexes
+                    ],
+                }
+                for t in self.tables.values()
+            ],
+            "foreign_keys": [
+                {
+                    "name": fk.name,
+                    "from_table": f"{fk.schema}.{fk.table}" if fk.schema else fk.table,
+                    "from_columns": fk.columns,
+                    "to_table": f"{fk.ref_schema}.{fk.ref_table}" if fk.ref_schema
+                    else fk.ref_table,
+                    "to_columns": fk.ref_columns,
+                    "enforced": fk.enforced,
+                }
+                for fk in self.foreign_keys
+            ],
+        }
+
     def summary(self) -> dict[str, Any]:
         return {
             "database": self.database,

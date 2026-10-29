@@ -4,7 +4,15 @@ import dynamic from "next/dynamic";
 import { use, useEffect, useMemo, useState } from "react";
 
 import { PageTitle } from "@/components/PageTitle";
-import { fetchAtlas, prefersReducedMotion, type AtlasData } from "@/lib/atlas";
+import {
+  ORIGIN_COLOR,
+  ORIGIN_LABEL,
+  cardinalityText,
+  fetchAtlas,
+  originOf,
+  prefersReducedMotion,
+  type AtlasData,
+} from "@/lib/atlas";
 
 /**
  * The Atlas (PLAN.md 5.3).
@@ -254,11 +262,7 @@ export default function AtlasPage({ params }: { params: Promise<{ id: string }> 
                         <li
                           key={index}
                           className="border-l-2 pl-2"
-                          style={{
-                            borderColor: edge.inferred
-                              ? "var(--good)"
-                              : "var(--accent)",
-                          }}
+                          style={{ borderColor: ORIGIN_COLOR[originOf(edge)] }}
                         >
                           <span className="font-mono">
                             {edge.from === selectedNode.id ? "→ " : "← "}
@@ -270,9 +274,23 @@ export default function AtlasPage({ params }: { params: Promise<{ id: string }> 
                           <p className="mt-0.5 break-all font-mono text-[12px] text-[var(--fg-muted)]">
                             {edge.on}
                           </p>
-                          {!edge.inferred && (
-                            <p className="text-[12px] text-[var(--accent)]">
-                              Read from the database&apos;s own views and procedures
+                          <p className="mt-0.5 text-[12px]">
+                            {ORIGIN_LABEL[originOf(edge)]}
+                            {edge.corroborated_by && edge.corroborated_by.length > 0 && (
+                              <span className="text-[var(--fg-muted)]">
+                                {" "}
+                                and confirmed by {edge.corroborated_by.map((o) => ORIGIN_LABEL[o].toLowerCase()).join(", ")}
+                              </span>
+                            )}
+                          </p>
+                          {edge.reason && (
+                            <p className="mt-0.5 text-[12px] leading-relaxed text-[var(--fg-muted)]">
+                              {edge.reason}
+                            </p>
+                          )}
+                          {edge.cardinality && (
+                            <p className="text-[12px] text-[var(--fg-muted)]">
+                              {cardinalityText(edge)}
                             </p>
                           )}
                           {edge.conditional && (
@@ -289,8 +307,8 @@ export default function AtlasPage({ params }: { params: Promise<{ id: string }> 
             ) : (
               <p className="mt-3 text-[14px] leading-relaxed text-[var(--fg-muted)]">
                 Click a sphere or a row to see its joins. Drag to turn the map, scroll to
-                zoom. Amber lines were read from the database&apos;s own views and procedures;
-                green ones were inferred from the data.
+                zoom. Amber lines are declared in the schema or written in its views and
+                procedures; green ones were inferred from the data.
               </p>
             )}
           </aside>

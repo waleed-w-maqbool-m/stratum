@@ -71,6 +71,7 @@ def excavate(
 ) -> ExcavationResult:
     from . import (
         artifacts,
+        declared,
         drift,
         enums,
         formats,
@@ -119,6 +120,15 @@ def excavate(
         if needs_quoting(name, schema.dialect)
     }
 
+    # What the catalog declares is read before anything is inferred, and is only ever
+    # confirmed afterwards, never re-derived.
+    done = stage("declared")
+    declared_findings = declared.detect(schema)
+    done(foreign_keys=len(declared_findings),
+         not_enforced=sum(
+             1 for f in declared_findings if f.evidence.get("enforced") is False
+         ))
+
     done = stage("profile")
     profiles = profile_schema(
         executor, schema, sample_size=sample_size, time_budget_s=profile_budget_s
@@ -137,7 +147,10 @@ def excavate(
 
     done = stage("procmine")
     mined_findings, mined = procmine.detect(schema)
-    findings.extend(mined_findings)
+    # Its join findings are left out: `joins` re-emits every mined join with the right
+    # parent and child, the routines that wrote it and a measurement against the data.
+    # Keeping procmine's copy gave each such edge twice, sometimes backwards.
+    findings.extend(f for f in mined_findings if f.kind is not Kind.JOIN)
     done(routines_parsed=mined.parsed, joins=len(mined.joins), enums=len(mined.enums),
          filters=len(mined.filters))
 
@@ -148,9 +161,17 @@ def excavate(
     done(god_tables=len(god_findings))
 
     done = stage("joins")
-    join_findings = joins.detect(executor, schema, profiles, mined, classes, discriminators)
+    join_findings = joins.detect(
+        executor, schema, profiles, mined, classes, discriminators,
+        declared=declared_findings,
+    )
     findings.extend(join_findings)
-    done(relationships=len(join_findings))
+    by_origin: dict[str, int] = {}
+    for f in join_findings:
+        origin = f.evidence.get("origin", "data")
+        by_origin[origin] = by_origin.get(origin, 0) + 1
+    done(relationships=len(join_findings), **{f"from_{k}": v for k, v in by_origin.items()},
+         orphaned=sum(1 for f in join_findings if f.evidence.get("orphan_count")))
 
     done = stage("keys")
     key_findings = keys.detect(

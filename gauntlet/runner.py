@@ -83,6 +83,7 @@ def load_context(
         model = compile_model(result, database=database, profile_name=connector.profile.name)
         store.save(model)
         store.save_findings(database, [f.to_dict() for f in result.findings])
+        store.save_catalog(database, result.schema.to_catalog())
 
     # From here on every answer is generated, not replayed. A cached completion costs
     # nothing and is reported as 0 tokens, so a repeated run would claim a token cost
@@ -92,7 +93,7 @@ def load_context(
     if "join_inference" in ablate:
         model.relationships = [
             r for r in model.relationships
-            if (r.provenance.detector if r.provenance else "") == "procmine"
+            if r.origin in ("declared", "shipped_sql")
         ]
 
     from stratum.ask.cache import SemanticCache

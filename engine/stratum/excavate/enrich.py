@@ -506,6 +506,9 @@ def merge_referent_findings(
         columns = value.get("from_columns") or []
         if len(columns) != 1 or not (finding.evidence or {}).get("rival_parents"):
             continue
+        # The catalog is not a guess, so a model's preference cannot override it.
+        if (finding.evidence or {}).get("origin") == "declared":
+            continue
         key = f"{value.get('from_table')}.{columns[0]}".lower()
         answer = chosen.get(key)
         if answer is None:
@@ -515,6 +518,9 @@ def merge_referent_findings(
             finding.evidence["referent_confirmed"] = True
             continue
         finding.evidence["referent_was"] = value["to_table"]
+        # The numbers on this edge were measured against the parent it started with.
+        finding.evidence["measured_against"] = value["to_table"]
+        finding.evidence["chosen_by"] = "llm"
         finding.evidence["referent_reason"] = answer.evidence.get("reason", "")
         value["to_table"] = target
         # The parent's key column travels with the parent. The rival was generated

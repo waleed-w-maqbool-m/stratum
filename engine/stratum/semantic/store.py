@@ -91,6 +91,15 @@ class ModelStore:
             json.dumps(findings, indent=2, default=str), "utf-8"
         )
 
+    def save_catalog(self, database: str, catalog: dict[str, Any]) -> None:
+        (self._dir(database) / "catalog.json").write_text(
+            json.dumps(catalog, indent=1, default=str), "utf-8"
+        )
+
+    def load_catalog(self, database: str) -> dict[str, Any] | None:
+        path = self._dir(database) / "catalog.json"
+        return json.loads(path.read_text("utf-8")) if path.exists() else None
+
     def load_findings(self, database: str) -> list[dict[str, Any]]:
         path = self._dir(database) / "findings.json"
         if not path.exists():

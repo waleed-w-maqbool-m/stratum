@@ -279,7 +279,8 @@ class PostgresConnector(Connector):
                          JOIN pg_attribute a ON a.attrelid = cl.oid AND a.attnum = k),
                    fn.nspname, fcl.relname,
                    ARRAY(SELECT a.attname FROM unnest(con.confkey) k
-                         JOIN pg_attribute a ON a.attrelid = fcl.oid AND a.attnum = k)
+                         JOIN pg_attribute a ON a.attrelid = fcl.oid AND a.attnum = k),
+                   con.convalidated
             FROM pg_constraint con
             JOIN pg_class cl ON cl.oid = con.conrelid
             JOIN pg_namespace n ON n.oid = cl.relnamespace
@@ -291,8 +292,9 @@ class PostgresConnector(Connector):
         )
         return [
             ForeignKeyInfo(name=name, schema=s, table=t, columns=list(cols),
-                           ref_schema=fs, ref_table=ft, ref_columns=list(fcols))
-            for name, s, t, cols, fs, ft, fcols in rows
+                           ref_schema=fs, ref_table=ft, ref_columns=list(fcols),
+                           enforced=bool(valid))
+            for name, s, t, cols, fs, ft, fcols, valid in rows
         ]
 
     def list_routines(self) -> list[RoutineInfo]:

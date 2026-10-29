@@ -427,6 +427,7 @@ export function readSchema(sql: string): SchemaMap | null {
     on: link.on,
     conditional: false,
     inferred: !link.declared,
+    origin: link.declared ? "declared" : "names",
   }));
 
   const details = new Map<string, TableDetail>();

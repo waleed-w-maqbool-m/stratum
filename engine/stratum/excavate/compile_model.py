@@ -19,6 +19,7 @@ from __future__ import annotations
 from collections import defaultdict
 from typing import Any
 
+from ..origin import Origin, derive_origin, strongest
 from ..semantic.model import (
     Column,
     DefaultFilter,
@@ -30,11 +31,21 @@ from ..semantic.model import (
     Relationship,
     SemanticModel,
 )
+from .explain_relationship import describe
 from .findings import Finding, Kind, Status
 from .introspect import Schema, Table
 from .naming import expand
 from .pipeline import ExcavationResult
 from .profile import ProfileSet
+
+
+def _edge_key(from_table: str, from_columns: list[str], to_table: str,
+              to_columns: list[str]) -> frozenset:
+    """An edge with its direction removed, so A->B and B->A compare equal."""
+    return frozenset({
+        (from_table.lower(), tuple(sorted(c.lower() for c in from_columns))),
+        (to_table.lower(), tuple(sorted(c.lower() for c in to_columns))),
+    })
 
 
 def _logical_entity_name(table: Table, taken: set[str]) -> str:
@@ -280,9 +291,27 @@ def compile_model(
         to_entity = model.entity_for_table(value["to_table"])
         if from_entity is None or to_entity is None:
             continue
+        origin = derive_origin(finding.detector, finding.evidence)
+        edge = _edge_key(value["from_table"], value["from_columns"],
+                         value["to_table"], value["to_columns"])
+        twin = next(
+            (r for r in model.relationships
+             if not r.condition and _edge_key(r.from_table, r.from_columns,
+                                              r.to_table, r.to_columns) == edge),
+            None,
+        )
+        if twin is not None:
+            # The same edge written down twice, once in either direction. Keep one, under
+            # the strongest origin, and remember who else found it.
+            winner = strongest([twin.origin, origin])
+            others = {twin.origin, origin, *twin.corroborated_by} - {winner}
+            twin.corroborated_by = sorted(others)
+            twin.origin = winner
+            continue
         name = f"{from_entity.name}_{to_entity.name}"
         if any(r.name == name for r in model.relationships):
             name = f"{name}_{len(model.relationships)}"
+        evidence = finding.evidence
         model.relationships.append(
             Relationship(
                 name=name,
@@ -296,11 +325,19 @@ def compile_model(
                 logical_on=logical_condition(
                     from_entity, to_entity, value["from_columns"], value["to_columns"]
                 ),
+                cardinality=evidence.get("cardinality", "many_to_one"),
+                optional=bool(evidence.get("optional", False)),
+                origin=origin,
+                corroborated_by=list(evidence.get("corroborated_by") or []),
                 status=finding.status.value,
                 confidence=finding.confidence,
                 provenance={
                     "detector": finding.detector,
-                    "reason": finding.evidence.get("source", ""),
+                    "reason": describe(
+                        origin, {**evidence, "needs_cast": value.get("needs_cast")},
+                        value["from_table"], value["from_columns"],
+                        value["to_table"], value["to_columns"],
+                    ),
                     "evidence": finding.evidence,
                 },
             )
@@ -339,6 +376,7 @@ def compile_model(
                         if target else ""
                     ),
                     condition=spec["predicate"],
+                    origin=Origin.CONDITIONAL.value,
                     status="hypothesis",
                     confidence=finding.confidence * 0.85,
                     provenance={

@@ -17,7 +17,9 @@ from __future__ import annotations
 from typing import Any, Literal
 
 import yaml
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, model_validator
+
+from ..origin import derive_origin
 
 Status = Literal["hypothesis", "accepted", "rejected"]
 
@@ -94,7 +96,12 @@ class Entity(BaseModel):
 
 
 class Relationship(BaseModel):
-    """A join the physical schema does not declare."""
+    """A join between two entities, and where the belief in it came from.
+
+    `origin` says whether the catalog declares it, shipped SQL writes it, the data implies
+    it, or a language model chose it; `corroborated_by` lists the other origins that found
+    the same edge. Models saved before these fields existed derive them on load.
+    """
 
     name: str
     from_entity: str
@@ -107,9 +114,20 @@ class Relationship(BaseModel):
     logical_on: str = ""                        # the same join in logical column names
     condition: str = ""                         # extra predicate for overloaded columns
     cardinality: Literal["many_to_one", "one_to_one", "one_to_many"] = "many_to_one"
+    optional: bool = False                      # the child column is sometimes null
+    origin: str = ""
+    corroborated_by: list[str] = Field(default_factory=list)
     status: Status = "hypothesis"
     confidence: float = 0.5
     provenance: Provenance | None = None
+
+    @model_validator(mode="after")
+    def _fill_origin(self) -> Relationship:
+        if not self.origin:
+            detector = self.provenance.detector if self.provenance else ""
+            evidence = self.provenance.evidence if self.provenance else {}
+            self.origin = derive_origin(detector, evidence)
+        return self
 
 
 class Metric(BaseModel):

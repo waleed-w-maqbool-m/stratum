@@ -86,6 +86,9 @@ class ForeignKeyInfo:
     ref_table: str
     ref_columns: list[str]
     name: str = ""
+    # False when the constraint exists but is disabled or was added without checking
+    # existing rows (WITH NOCHECK); None when the engine does not say.
+    enforced: bool | None = None
 
 
 @dataclass

@@ -376,6 +376,7 @@ async def excavate_stream(database_id: str) -> EventSourceResponse:
             )
             version = registry.store.save(model)
             registry.store.save_findings(database_id, findings)
+            registry.store.save_catalog(database_id, result.schema.to_catalog())
             registry.invalidate(database_id)
             await queue.put({
                 "event": "done",
@@ -582,6 +583,56 @@ def verified_add(request: VerifiedRequest) -> dict[str, Any]:
     return entry.to_dict()
 
 
+@router.get("/databases/{database_id}/catalog")
+def catalog(database_id: str) -> dict[str, Any]:
+    """The database as submitted: its own tables, columns and declared keys."""
+    snapshot = registry.store.load_catalog(database_id)
+    if snapshot is None:
+        raise HTTPException(404, "no catalog snapshot — run excavation again to record one")
+    return snapshot
+
+
+def _edge_payload(r) -> dict[str, Any]:
+    """One relationship as the Atlas and the inspector need it.
+
+    `inferred` is kept for older clients and means only "not declared in the catalog and
+    not written in shipped SQL": the two origins a person did not have to be told.
+    """
+    evidence = (r.provenance.evidence if r.provenance else {}) or {}
+    return {
+        "from": r.from_table,
+        "to": r.to_table,
+        "confidence": round(r.confidence, 3),
+        "on": r.logical_on or r.on,
+        "physical_on": r.on,
+        "from_columns": r.from_columns,
+        "to_columns": r.to_columns,
+        "conditional": bool(r.condition),
+        "condition": r.condition,
+        "origin": r.origin,
+        "corroborated_by": r.corroborated_by,
+        "inferred": r.origin not in ("declared", "shipped_sql"),
+        "reason": r.provenance.reason if r.provenance else "",
+        "cardinality": r.cardinality,
+        "optional": r.optional,
+        "status": r.status,
+        "evidence": {
+            "inclusion": evidence.get("inclusion"),
+            "values_tested": evidence.get("distinct_values_tested"),
+            "measured": evidence.get("inclusion_measured", False),
+            "orphan_count": evidence.get("orphan_count"),
+            "orphan_samples": evidence.get("orphan_samples") or [],
+            "name_similarity": evidence.get("name_similarity"),
+            "parent_unique": evidence.get("parent_key_is_unique"),
+            "needs_cast": evidence.get("needs_cast"),
+            "sources": evidence.get("sources") or [],
+            "fk_name": evidence.get("fk_name") or "",
+            "enforced": evidence.get("enforced"),
+            "chosen_by": evidence.get("chosen_by") or "",
+        },
+    }
+
+
 @router.get("/databases/{database_id}/atlas")
 def atlas(database_id: str) -> dict[str, Any]:
     """Nodes and edges for the Atlas.
@@ -669,14 +720,7 @@ def atlas(database_id: str) -> dict[str, Any]:
         })
 
     edges = [
-        {
-            "from": r.from_table,
-            "to": r.to_table,
-            "confidence": round(r.confidence, 3),
-            "on": r.logical_on or r.on,
-            "conditional": bool(r.condition),
-            "inferred": (r.provenance.detector if r.provenance else "") != "procmine",
-        }
+        _edge_payload(r)
         for r in model.relationships
         if r.status != "rejected" and r.from_table and r.to_table
     ]
@@ -688,6 +732,10 @@ def atlas(database_id: str) -> dict[str, Any]:
         "edges": edges,
         "domains": domain_id,
         "summary": {
+            "relationships_by_origin": {
+                origin: sum(1 for e in edges if e["origin"] == origin)
+                for origin in sorted({e["origin"] for e in edges})
+            },
             "core": sum(1 for n in nodes if n["class"] == "core"),
             "excluded": sum(1 for n in nodes if n["class"] != "core"),
             "by_class": {

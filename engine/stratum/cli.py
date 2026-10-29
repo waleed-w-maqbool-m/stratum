@@ -78,6 +78,7 @@ def excavate(
     model = compile_model(result, database=database, profile_name=info.profile.name)
     version = store.save(model)
     store.save_findings(database, [f.to_dict() for f in result.findings])
+    store.save_catalog(database, result.schema.to_catalog())
 
     console.print()
     console.print(f"[green]model v{version}[/green]  {json.dumps(model.stats())}")

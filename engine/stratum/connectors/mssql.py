@@ -290,7 +290,8 @@ class MSSQLConnector(Connector):
     def list_foreign_keys(self) -> list[ForeignKeyInfo]:
         rows = self._query(
             """
-            SELECT fk.name, ps.name, pt.name, pc.name, rs.name, rt.name, rc.name
+            SELECT fk.name, ps.name, pt.name, pc.name, rs.name, rt.name, rc.name,
+                   fk.is_disabled, fk.is_not_trusted
             FROM sys.foreign_keys fk
             JOIN sys.foreign_key_columns fkc ON fkc.constraint_object_id = fk.object_id
             JOIN sys.tables pt ON pt.object_id = fk.parent_object_id
@@ -307,11 +308,12 @@ class MSSQLConnector(Connector):
             """
         )
         grouped: dict[str, ForeignKeyInfo] = {}
-        for name, ps, pt, pc, rs, rt, rc in rows:
+        for name, ps, pt, pc, rs, rt, rc, disabled, untrusted in rows:
             if name not in grouped:
                 grouped[name] = ForeignKeyInfo(
                     name=name, schema=ps, table=pt, columns=[],
                     ref_schema=rs, ref_table=rt, ref_columns=[],
+                    enforced=not (disabled or untrusted),
                 )
             grouped[name].columns.append(pc)
             grouped[name].ref_columns.append(rc)

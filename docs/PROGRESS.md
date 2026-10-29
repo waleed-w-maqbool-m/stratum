@@ -352,6 +352,60 @@ Found and not fixed:
 - **A cached answer skips the cost guard.** The replayed SQL runs without the estimate
   check that the first run went through.
 
+## Improvement log
+
+Changes made after the v1 benchmark runs above, in the order of `docs/IMPROVEMENT_PLAN.md`.
+**The v1 numbers above are not replaced.** Each entry says what was measured, against
+what, and what it does not show. Everything here that is a number was produced by the
+command given.
+
+### Phase A: every relationship says where it came from
+
+*Before:* the Atlas had one flag, `inferred`, set from the detector's name. Declared foreign
+keys were read from the catalog and never used. A join found in a view was saved twice, once
+from `procmine` and once from `joins`, and the `procmine` copy was sometimes backwards.
+
+*Now:* each relationship has one `origin` (declared in the schema, written in shipped SQL,
+inferred from the data, chosen by a language model, or conditional), the other origins that
+found the same edge, a sentence saying why, its cardinality and optionality, and, when the
+data was checked, the inclusion rate and the unmatched values.
+
+| | Before | After |
+|---|---|---|
+| relationship origins distinguished | 2 (`inferred` yes/no, by detector name) | 5, one per relationship, with corroboration |
+| declared foreign keys used by excavation | 0 (read, never used) | all, taken as given and checked against the data once |
+| unmatched ("orphan") values reported for a join | no | count and up to 3 examples, per join |
+| a declared key the database does not enforce | not detected | detected (SQL Server `is_disabled` / `is_not_trusted`, Postgres `convalidated`), confidence 0.97 |
+| why-a-join-is-believed sentence | the detector's name | built from the measurements, no language model |
+| the database as submitted | not kept | `catalog.json` saved with each excavation (structure only, no values) |
+| engine tests | 114 | 132 (18 new, on a fixture with one relationship of each origin) |
+
+Regression check on the two benchmark databases, excavating the legacy databases with no
+language model before and after the change, scored against the answer key:
+
+| | Chinook before | Chinook after | Pagila before | Pagila after |
+|---|---:|---:|---:|---:|
+| join recall | 0.929 | 0.929 | 0.762 | 0.762 |
+| join precision | 0.938 | 0.929 | 0.842 | 0.842 |
+| keys F1 | 1.000 | 1.000 | 0.875 | 0.875 |
+| composite keys found | 3 / 3 | 3 / 3 | 1 / 3 | 1 / 3 |
+| relationships in the model | 16 | 14 | 19 | 19 |
+
+What this shows and does not show:
+
+- No true edge was lost. The 2 Chinook relationships that disappeared were duplicates of
+  edges already present, in the wrong direction (`CUST_MSTR -> TRANS_MSTR` beside
+  `TRANS_MSTR -> CUST_MSTR`). Precision moved by 0.009 only because the denominator shrank;
+  the one wrong edge (`CUST_MSTR.REP_NO`) is the same before and after.
+- These figures are lower than the v1 recall table above (Chinook 1.0, Pagila 0.81) because
+  that run used the language model to settle ties between parents. The comparison here is
+  like with like, with the model off.
+- The benchmark databases have no declared foreign keys (the legacifier drops them), so this
+  phase cannot change their scores. Its effect is measured on the new fixture and will be
+  measured on a database that keeps its constraints in phase B (`chinook_partial`) and on
+  AdventureWorks in phase E.
+- Not yet re-run: the question-answering suites. Phase A does not touch the ask pipeline.
+
 ---
 
 ## Not built
