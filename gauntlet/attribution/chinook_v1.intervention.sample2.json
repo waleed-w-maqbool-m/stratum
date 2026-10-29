@@ -1,0 +1,112 @@
+{
+ "c-010": {
+  "given_entities": [
+   "album",
+   "artist"
+  ],
+  "status": "ok",
+  "correct": true,
+  "reason": "",
+  "logical_sql": "SELECT COUNT(*) AS album_count FROM album JOIN artist ON album.artist_id = artist.id WHERE artist.name = 'Led Zeppelin'",
+  "tokens": 960
+ },
+ "c-011": {
+  "given_entities": [
+   "product",
+   "genre"
+  ],
+  "status": "ok",
+  "correct": false,
+  "reason": "no system column matches a gold column (1/2 matched)",
+  "logical_sql": "SELECT genre.name\nFROM product\nJOIN genre ON product.genre_id = genre.id\nGROUP BY genre.name\nORDER BY COUNT(*) DESC\nLIMIT 1",
+  "tokens": 1099
+ },
+ "c-019": {
+  "given_entities": [
+   "product"
+  ],
+  "status": "ok",
+  "correct": true,
+  "reason": "",
+  "logical_sql": "SELECT AVG(product.price) AS average_price FROM product",
+  "tokens": 938
+ },
+ "c-023": {
+  "given_entities": [
+   "product"
+  ],
+  "status": "ok",
+  "correct": true,
+  "reason": "",
+  "logical_sql": "SELECT COUNT(*) AS track_count\nFROM product\nWHERE milliseconds > 300000",
+  "tokens": 974
+ },
+ "c-026": {
+  "given_entities": [
+   "sales_order_line",
+   "billing",
+   "product",
+   "album",
+   "artist"
+  ],
+  "status": "ok",
+  "correct": true,
+  "reason": "",
+  "logical_sql": "SELECT\n  artist.id,\n  artist.name,\n  SUM(sales_order_line.quantity * sales_order_line.unit_price) AS revenue\nFROM product\nJOIN sales_order_line ON product.id = sales_order_line.product_id\nJOIN album ON product.album_id = album.id\nJOIN billing ON sales_order_line.order_number = billing.order_number AND sales_order_line.store_code = billing.store_code\nJOIN artist ON album.artist_id = artist.id\nGROUP BY artist.id, artist.name\nORDER BY revenue DESC\nLIMIT 5",
+  "tokens": 2256
+ },
+ "c-028": {
+  "given_entities": [
+   "sales_order_line",
+   "billing"
+  ],
+  "status": "ok",
+  "correct": false,
+  "reason": "no system column matches a gold column (0/1 matched)",
+  "logical_sql": "SELECT AVG(line_count) AS avg_line_items_per_invoice\nFROM (\n    SELECT sol.order_number, COUNT(*) AS line_count\n    FROM sales_order_line sol\n    JOIN billing b ON sol.order_number = b.order_number AND sol.store_code = b.store_code\n    WHERE b.type_code = 'I'\n    GROUP BY sol.order_number\n) sub",
+  "tokens": 1696
+ },
+ "c-030": {
+  "given_entities": [
+   "product",
+   "media_type"
+  ],
+  "status": "ok",
+  "correct": true,
+  "reason": "",
+  "logical_sql": "SELECT media_type.media_type_name, COUNT(*) AS track_count\nFROM product\nJOIN media_type ON product.media_type_id = media_type.media_type_id\nGROUP BY media_type.media_type_name",
+  "tokens": 1147
+ },
+ "c-038": {
+  "given_entities": [
+   "product"
+  ],
+  "status": "ok",
+  "correct": true,
+  "reason": "",
+  "logical_sql": "SELECT COUNT(*) AS track_count\nFROM product\nWHERE price > 0.99",
+  "tokens": 962
+ },
+ "c-040": {
+  "given_entities": [
+   "product",
+   "album",
+   "artist"
+  ],
+  "status": "ok",
+  "correct": false,
+  "reason": "no system column matches a gold column (1/2 matched)",
+  "logical_sql": "SELECT artist.name\nFROM product\nJOIN album ON product.album_id = album.id\nJOIN artist ON album.artist_id = artist.id\nGROUP BY artist.id, artist.name\nORDER BY COUNT(*) DESC\nLIMIT 1",
+  "tokens": 1241
+ },
+ "c-045": {
+  "given_entities": [
+   "billing"
+  ],
+  "status": "ok",
+  "correct": false,
+  "reason": "no system column matches a gold column (0/2 matched)",
+  "logical_sql": "SELECT order_number, order_timestamp, total_amount\nFROM billing\nWHERE type_code = 'I'\n  AND SUBSTR(order_timestamp, 1, 4) = '2025'\nORDER BY order_timestamp DESC",
+  "tokens": 1377
+ }
+}

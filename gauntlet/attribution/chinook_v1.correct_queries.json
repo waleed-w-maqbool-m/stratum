@@ -1,0 +1,20 @@
+{
+  "c-005": "SELECT billing_country, ROUND(SUM(total_amount), 2) AS revenue FROM billing GROUP BY billing_country ORDER BY revenue DESC, billing_country ASC LIMIT 1",
+  "c-006": "SELECT c.first_name, c.last_name, ROUND(SUM(b.total_amount), 2) AS spend FROM customer c JOIN billing b ON c.id = b.customer_number GROUP BY c.id, c.first_name, c.last_name ORDER BY spend DESC, c.last_name ASC LIMIT 10",
+  "c-010": "SELECT COUNT(*) AS n FROM album JOIN artist ON album.artist_id = artist.id WHERE artist.name = 'Led Zeppelin'",
+  "c-011": "SELECT genre.name, COUNT(*) AS n FROM product JOIN genre ON product.genre_id = genre.id GROUP BY genre.id, genre.name ORDER BY n DESC, genre.name ASC LIMIT 1",
+  "c-012": "SELECT COUNT(*) AS n FROM product WHERE composer IS NULL",
+  "c-013": "SELECT COUNT(*) AS n FROM customer WHERE country_code IN ('US', 'USA')",
+  "c-019": "SELECT ROUND(AVG(price), 4) AS avg_price FROM product",
+  "c-021": "SELECT artist.name FROM artist WHERE NOT EXISTS (SELECT 1 FROM album WHERE album.artist_id = artist.id) ORDER BY artist.name",
+  "c-023": "SELECT COUNT(*) AS n FROM product WHERE milliseconds > 300000",
+  "c-025": "SELECT UPPER(city) AS city, COUNT(*) AS n FROM customer GROUP BY UPPER(city) ORDER BY n DESC, city ASC LIMIT 1",
+  "c-026": "SELECT artist.name, ROUND(SUM(sol.unit_price * sol.quantity), 2) AS revenue FROM sales_order_line sol JOIN billing b ON b.store_code = sol.store_code AND b.order_number = sol.order_number JOIN product p ON p.id = sol.product_id JOIN album ON album.id = p.album_id JOIN artist ON artist.id = album.artist_id GROUP BY artist.id, artist.name ORDER BY revenue DESC, artist.name ASC LIMIT 5",
+  "c-028": "SELECT ROUND(CAST(COUNT(*) AS REAL) / COUNT(DISTINCT b.store_code || '-' || b.order_number), 3) AS avg_lines FROM sales_order_line sol JOIN billing b ON b.store_code = sol.store_code AND b.order_number = sol.order_number",
+  "c-030": "SELECT media_type.media_type_name, COUNT(*) AS n FROM product JOIN media_type ON product.media_type_id = media_type.media_type_id GROUP BY media_type.media_type_id, media_type.media_type_name ORDER BY media_type.media_type_name",
+  "c-036": "SELECT billing_country, COUNT(*) AS n FROM billing GROUP BY billing_country ORDER BY billing_country",
+  "c-038": "SELECT COUNT(*) AS n FROM product WHERE price > 0.99",
+  "c-040": "SELECT artist.name, COUNT(*) AS n FROM product JOIN album ON product.album_id = album.id JOIN artist ON album.artist_id = artist.id GROUP BY artist.id, artist.name ORDER BY n DESC, artist.name ASC LIMIT 1",
+  "c-042": "SELECT c.first_name, c.last_name, ROUND(SUM(b.total_amount), 2) AS spend FROM customer c JOIN billing b ON c.id = b.customer_number GROUP BY c.id, c.first_name, c.last_name ORDER BY spend DESC, c.last_name ASC LIMIT 10",
+  "c-045": "SELECT order_date_text AS invoice_date, ROUND(total_amount, 2) AS total FROM billing WHERE SUBSTR(order_date_text, 1, 4) = '2025' ORDER BY order_date_text, total_amount"
+}

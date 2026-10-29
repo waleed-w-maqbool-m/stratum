@@ -1,0 +1,12 @@
+{
+  "c-010": ["album", "artist"],
+  "c-011": ["product", "genre"],
+  "c-019": ["product"],
+  "c-023": ["product"],
+  "c-026": ["sales_order_line", "billing", "product", "album", "artist"],
+  "c-028": ["sales_order_line", "billing"],
+  "c-030": ["product", "media_type"],
+  "c-038": ["product"],
+  "c-040": ["product", "album", "artist"],
+  "c-045": ["billing"]
+}

@@ -1,0 +1,698 @@
+{
+ "suite": "chinook_v1",
+ "scored_failures": 18,
+ "model": "openai/gpt-oss-120b (Groq)",
+ "semantic_model": "chinook_legacy model.v1 (reproduces all 48 recorded physical queries exactly)",
+ "by_primary_cause": {
+  "excavation": 3,
+  "compilation": 1,
+  "benchmark": 4,
+  "retrieval": 8,
+  "generation": 2
+ },
+ "failures": [
+  {
+   "id": "c-005",
+   "question": "Which billing country generated the most revenue?",
+   "tags": [
+    "god_table",
+    "drift",
+    "string_quality"
+   ],
+   "primary_cause": "excavation",
+   "also": "",
+   "evidence": "The model exposes 33 country spellings where the clean data has 24: 'USA' and 'U.S.A.' stay separate. A correct query over the model returns 420.07 against gold's 523.06.",
+   "original": {
+    "linked_entities": [
+     "billing"
+    ],
+    "join_plan_root": "playlist_track"
+   },
+   "counterfactual_correct_query": {
+    "logical_sql": "SELECT billing_country, ROUND(SUM(total_amount), 2) AS revenue FROM billing GROUP BY billing_country ORDER BY revenue DESC, billing_country ASC LIMIT 1",
+    "matches_gold": false,
+    "matches_gold_ignoring_order": false
+   },
+   "intervention_given_correct_entities": null
+  },
+  {
+   "id": "c-013",
+   "question": "How many customers are based in the USA?",
+   "tags": [
+    "string_quality",
+    "embedded_format",
+    "soft_delete"
+   ],
+   "primary_cause": "excavation",
+   "also": "retrieval",
+   "evidence": "customer.country_code carries four US spellings (U.S.A., US, USA, usa). A correct query over the model counts 5 customers against gold's 13. Stratum also bound the literal 'USA' to billing_country rather than the customer's country.",
+   "original": {
+    "linked_entities": [
+     "customer",
+     "billing"
+    ],
+    "join_plan_root": "playlist_track"
+   },
+   "counterfactual_correct_query": {
+    "logical_sql": "SELECT COUNT(*) AS n FROM customer WHERE country_code IN ('US', 'USA')",
+    "matches_gold": false,
+    "matches_gold_ignoring_order": false
+   },
+   "intervention_given_correct_entities": null
+  },
+  {
+   "id": "c-036",
+   "question": "How many invoices were issued per billing country?",
+   "tags": [
+    "god_table",
+    "string_quality",
+    "soft_delete"
+   ],
+   "primary_cause": "excavation",
+   "also": "",
+   "evidence": "Same unmerged country spellings: 33 groups against 24.",
+   "original": {
+    "linked_entities": [
+     "billing"
+    ],
+    "join_plan_root": "playlist_track"
+   },
+   "counterfactual_correct_query": {
+    "logical_sql": "SELECT billing_country, COUNT(*) AS n FROM billing GROUP BY billing_country ORDER BY billing_country",
+    "matches_gold": false,
+    "matches_gold_ignoring_order": false
+   },
+   "intervention_given_correct_entities": null
+  },
+  {
+   "id": "c-021",
+   "question": "Which artists have no albums in the catalog?",
+   "tags": [
+    "missing_fk",
+    "cryptic_names",
+    "sprawl"
+   ],
+   "primary_cause": "compilation",
+   "also": "",
+   "evidence": "The model's logical SQL was a valid anti-join. The compiler pushed `album.id IS NULL` into the left join's right-hand side, so every artist looked album-less: 275 rows against 71. The equivalent NOT EXISTS passes.",
+   "original": {
+    "linked_entities": [
+     "artist",
+     "album"
+    ],
+    "join_plan_root": "playlist_track"
+   },
+   "counterfactual_correct_query": {
+    "logical_sql": "SELECT artist.name FROM artist WHERE NOT EXISTS (SELECT 1 FROM album WHERE album.artist_id = artist.id) ORDER BY artist.name",
+    "matches_gold": true,
+    "matches_gold_ignoring_order": true
+   },
+   "intervention_given_correct_entities": null
+  },
+  {
+   "id": "c-006",
+   "question": "Who are the top 10 customers by total amount spent? Give first and last name and the amount.",
+   "tags": [
+    "god_table",
+    "drift",
+    "missing_fk",
+    "inconsistent_types",
+    "cryptic_names"
+   ],
+   "primary_cause": "benchmark",
+   "also": "",
+   "evidence": "Returns exactly the same ten customers as gold. They differ only in the order of customers with tied totals (Barnett and Zimmermann, 43.62), under an order-sensitive scorer. Passes when order is ignored.",
+   "original": {
+    "linked_entities": [
+     "billing",
+     "customer"
+    ],
+    "join_plan_root": "billing"
+   },
+   "counterfactual_correct_query": {
+    "logical_sql": "SELECT c.first_name, c.last_name, ROUND(SUM(b.total_amount), 2) AS spend FROM customer c JOIN billing b ON c.id = b.customer_number GROUP BY c.id, c.first_name, c.last_name ORDER BY spend DESC, c.last_name ASC LIMIT 10",
+    "matches_gold": true,
+    "matches_gold_ignoring_order": true
+   },
+   "intervention_given_correct_entities": null
+  },
+  {
+   "id": "c-042",
+   "question": "Who are our top customers?",
+   "tags": [
+    "ambiguous",
+    "god_table",
+    "drift",
+    "missing_fk"
+   ],
+   "primary_cause": "benchmark",
+   "also": "",
+   "evidence": "Same as c-006: the same ten customers, tied totals in a different order.",
+   "original": {
+    "linked_entities": [
+     "billing",
+     "customer"
+    ],
+    "join_plan_root": "playlist_track"
+   },
+   "counterfactual_correct_query": {
+    "logical_sql": "SELECT c.first_name, c.last_name, ROUND(SUM(b.total_amount), 2) AS spend FROM customer c JOIN billing b ON c.id = b.customer_number GROUP BY c.id, c.first_name, c.last_name ORDER BY spend DESC, c.last_name ASC LIMIT 10",
+    "matches_gold": true,
+    "matches_gold_ignoring_order": true
+   },
+   "intervention_given_correct_entities": null
+  },
+  {
+   "id": "c-025",
+   "question": "Which city has the most customers?",
+   "tags": [
+    "embedded_format",
+    "string_quality",
+    "soft_delete"
+   ],
+   "primary_cause": "benchmark",
+   "also": "",
+   "evidence": "At least five cities tie at two customers (Berlin, London, Mountain View, Paris, Prague). Gold picks Berlin by alphabetical tie-break; the question has no unique answer.",
+   "original": {
+    "linked_entities": [
+     "customer"
+    ],
+    "join_plan_root": "billing"
+   },
+   "counterfactual_correct_query": {
+    "logical_sql": "SELECT UPPER(city) AS city, COUNT(*) AS n FROM customer GROUP BY UPPER(city) ORDER BY n DESC, city ASC LIMIT 1",
+    "matches_gold": true,
+    "matches_gold_ignoring_order": true
+   },
+   "intervention_given_correct_entities": null
+  },
+  {
+   "id": "c-012",
+   "question": "How many tracks have no composer recorded?",
+   "tags": [
+    "string_quality",
+    "soft_delete",
+    "cryptic_names"
+   ],
+   "primary_cause": "benchmark",
+   "also": "",
+   "evidence": "The legacifier replaced the real composer of 74 tracks with a blank or marker (clean data has 'AC/DC', 'Billy Cobham', ...). Stratum counts 1,051 blank composers; gold's 977 cannot be recovered from the legacy data by any system.",
+   "original": {
+    "linked_entities": [
+     "playlist_track",
+     "product"
+    ],
+    "join_plan_root": "playlist_track"
+   },
+   "counterfactual_correct_query": {
+    "logical_sql": "SELECT COUNT(*) AS n FROM product WHERE composer IS NULL",
+    "matches_gold": false,
+    "matches_gold_ignoring_order": false
+   },
+   "intervention_given_correct_entities": null
+  },
+  {
+   "id": "c-010",
+   "question": "How many albums does Led Zeppelin have?",
+   "tags": [
+    "cryptic_names",
+    "missing_fk"
+   ],
+   "primary_cause": "retrieval",
+   "also": "",
+   "evidence": "'Led Zeppelin' was not bound to artist.name and `artist` was not linked, so the model matched the album title instead.",
+   "original": {
+    "linked_entities": [
+     "album"
+    ],
+    "join_plan_root": "playlist_track"
+   },
+   "counterfactual_correct_query": {
+    "logical_sql": "SELECT COUNT(*) AS n FROM album JOIN artist ON album.artist_id = artist.id WHERE artist.name = 'Led Zeppelin'",
+    "matches_gold": true,
+    "matches_gold_ignoring_order": true
+   },
+   "intervention_given_correct_entities": {
+    "entities": [
+     "album",
+     "artist"
+    ],
+    "valid_samples": 3,
+    "correct_under_benchmark_scoring": 3,
+    "correct_in_substance": 3,
+    "samples": [
+     {
+      "strict": true,
+      "substance": true,
+      "sql": "SELECT COUNT(*) AS album_count FROM album JOIN artist ON album.artist_id = artist.id WHERE artist.name = 'Led Zeppelin'"
+     },
+     {
+      "strict": true,
+      "substance": true,
+      "sql": "SELECT COUNT(*) AS album_count FROM album JOIN artist ON album.artist_id = artist.id WHERE artist.name = 'Led Zeppelin'"
+     },
+     {
+      "strict": true,
+      "substance": true,
+      "sql": "SELECT COUNT(*) AS album_count FROM album JOIN artist ON album.artist_id = artist.id WHERE artist.name = 'Led Zeppelin'"
+     }
+    ]
+   }
+  },
+  {
+   "id": "c-019",
+   "question": "What is the average unit price of a track?",
+   "tags": [
+    "cryptic_names",
+    "soft_delete"
+   ],
+   "primary_cause": "retrieval",
+   "also": "",
+   "evidence": "Only sales_order_line was linked (it has a column called unit_price); the track table `product` was not.",
+   "original": {
+    "linked_entities": [
+     "sales_order_line"
+    ],
+    "join_plan_root": "playlist_track"
+   },
+   "counterfactual_correct_query": {
+    "logical_sql": "SELECT ROUND(AVG(price), 4) AS avg_price FROM product",
+    "matches_gold": true,
+    "matches_gold_ignoring_order": true
+   },
+   "intervention_given_correct_entities": {
+    "entities": [
+     "product"
+    ],
+    "valid_samples": 3,
+    "correct_under_benchmark_scoring": 3,
+    "correct_in_substance": 3,
+    "samples": [
+     {
+      "strict": true,
+      "substance": true,
+      "sql": "SELECT AVG(product.price) AS average_price FROM product"
+     },
+     {
+      "strict": true,
+      "substance": true,
+      "sql": "SELECT AVG(product.price) AS average_price FROM product"
+     },
+     {
+      "strict": true,
+      "substance": true,
+      "sql": "SELECT AVG(product.price) AS average_price FROM product"
+     }
+    ]
+   }
+  },
+  {
+   "id": "c-023",
+   "question": "How many tracks are longer than five minutes?",
+   "tags": [
+    "cryptic_names",
+    "soft_delete"
+   ],
+   "primary_cause": "retrieval",
+   "also": "excavation (naming)",
+   "evidence": "The track table is named `product`, so 'tracks' linked to playlist_track and the join plan was rooted there, multiplying counts by playlist membership.",
+   "original": {
+    "linked_entities": [
+     "playlist_track",
+     "product"
+    ],
+    "join_plan_root": "playlist_track"
+   },
+   "counterfactual_correct_query": {
+    "logical_sql": "SELECT COUNT(*) AS n FROM product WHERE milliseconds > 300000",
+    "matches_gold": true,
+    "matches_gold_ignoring_order": true
+   },
+   "intervention_given_correct_entities": {
+    "entities": [
+     "product"
+    ],
+    "valid_samples": 3,
+    "correct_under_benchmark_scoring": 3,
+    "correct_in_substance": 3,
+    "samples": [
+     {
+      "strict": true,
+      "substance": true,
+      "sql": "SELECT COUNT(*) AS track_count FROM product WHERE milliseconds > 300000"
+     },
+     {
+      "strict": true,
+      "substance": true,
+      "sql": "SELECT COUNT(*) AS track_count FROM product WHERE milliseconds > 300000"
+     },
+     {
+      "strict": true,
+      "substance": true,
+      "sql": "SELECT COUNT(*) AS track_count FROM product WHERE milliseconds > 300000"
+     }
+    ]
+   }
+  },
+  {
+   "id": "c-030",
+   "question": "How many tracks are there of each media type?",
+   "tags": [
+    "missing_fk",
+    "embedded_format",
+    "soft_delete"
+   ],
+   "primary_cause": "retrieval",
+   "also": "excavation (naming)",
+   "evidence": "Same: rooted at playlist_track.",
+   "original": {
+    "linked_entities": [
+     "playlist_track",
+     "product",
+     "media_type"
+    ],
+    "join_plan_root": "playlist_track"
+   },
+   "counterfactual_correct_query": {
+    "logical_sql": "SELECT media_type.media_type_name, COUNT(*) AS n FROM product JOIN media_type ON product.media_type_id = media_type.media_type_id GROUP BY media_type.media_type_id, media_type.media_type_name ORDER BY media_type.media_type_name",
+    "matches_gold": true,
+    "matches_gold_ignoring_order": true
+   },
+   "intervention_given_correct_entities": {
+    "entities": [
+     "product",
+     "media_type"
+    ],
+    "valid_samples": 2,
+    "correct_under_benchmark_scoring": 2,
+    "correct_in_substance": 2,
+    "samples": [
+     {
+      "strict": true,
+      "substance": true,
+      "sql": "SELECT media_type.media_type_name, COUNT(*) AS track_count FROM product JOIN media_type ON product.media_type_id = media_type.media_type_id GROUP BY media_type.media_type_name"
+     },
+     {
+      "strict": true,
+      "substance": true,
+      "sql": "SELECT media_type.media_type_name, COUNT(*) AS track_count FROM product JOIN media_type ON product.media_type_id = media_type.media_type_id GROUP BY media_type.media_type_name"
+     }
+    ]
+   }
+  },
+  {
+   "id": "c-038",
+   "question": "How many tracks cost more than 99 cents?",
+   "tags": [
+    "cryptic_names",
+    "soft_delete"
+   ],
+   "primary_cause": "retrieval",
+   "also": "excavation (naming)",
+   "evidence": "Same: rooted at playlist_track.",
+   "original": {
+    "linked_entities": [
+     "playlist_track",
+     "product"
+    ],
+    "join_plan_root": "playlist_track"
+   },
+   "counterfactual_correct_query": {
+    "logical_sql": "SELECT COUNT(*) AS n FROM product WHERE price > 0.99",
+    "matches_gold": true,
+    "matches_gold_ignoring_order": true
+   },
+   "intervention_given_correct_entities": {
+    "entities": [
+     "product"
+    ],
+    "valid_samples": 2,
+    "correct_under_benchmark_scoring": 2,
+    "correct_in_substance": 2,
+    "samples": [
+     {
+      "strict": true,
+      "substance": true,
+      "sql": "SELECT COUNT(*) AS track_count FROM product WHERE price > 0.99"
+     },
+     {
+      "strict": true,
+      "substance": true,
+      "sql": "SELECT COUNT(*) AS track_count FROM product WHERE price > 0.99"
+     }
+    ]
+   }
+  },
+  {
+   "id": "c-011",
+   "question": "Which genre has the most tracks?",
+   "tags": [
+    "cryptic_names",
+    "missing_fk",
+    "embedded_format",
+    "soft_delete"
+   ],
+   "primary_cause": "retrieval",
+   "also": "excavation (naming); benchmark (latent)",
+   "evidence": "Same root cause. With the right entities Stratum answers 'Rock' correctly but omits the count column that gold includes, so the scorer still marks it wrong.",
+   "original": {
+    "linked_entities": [
+     "playlist_track",
+     "product",
+     "genre"
+    ],
+    "join_plan_root": "playlist_track"
+   },
+   "counterfactual_correct_query": {
+    "logical_sql": "SELECT genre.name, COUNT(*) AS n FROM product JOIN genre ON product.genre_id = genre.id GROUP BY genre.id, genre.name ORDER BY n DESC, genre.name ASC LIMIT 1",
+    "matches_gold": true,
+    "matches_gold_ignoring_order": true
+   },
+   "intervention_given_correct_entities": {
+    "entities": [
+     "product",
+     "genre"
+    ],
+    "valid_samples": 3,
+    "correct_under_benchmark_scoring": 0,
+    "correct_in_substance": 3,
+    "samples": [
+     {
+      "strict": false,
+      "substance": true,
+      "sql": "SELECT genre.name FROM product JOIN genre ON product.genre_id = genre.id GROUP BY genre.name ORDER BY COUNT(*) DESC LIMIT 1"
+     },
+     {
+      "strict": false,
+      "substance": true,
+      "sql": "SELECT genre.name FROM product JOIN genre ON product.genre_id = genre.id GROUP BY genre.name ORDER BY COUNT(*) DESC LIMIT 1"
+     },
+     {
+      "strict": false,
+      "substance": true,
+      "sql": "SELECT genre.name FROM product JOIN genre ON product.genre_id = genre.id GROUP BY genre.name ORDER BY COUNT(*) DESC LIMIT 1"
+     }
+    ]
+   }
+  },
+  {
+   "id": "c-040",
+   "question": "Which artist has the most tracks?",
+   "tags": [
+    "missing_fk",
+    "cryptic_names",
+    "soft_delete"
+   ],
+   "primary_cause": "retrieval",
+   "also": "excavation (naming); benchmark (latent)",
+   "evidence": "Same as c-011: 'Iron Maiden' is right, the count column is missing.",
+   "original": {
+    "linked_entities": [
+     "playlist_track",
+     "product",
+     "album",
+     "artist"
+    ],
+    "join_plan_root": "playlist_track"
+   },
+   "counterfactual_correct_query": {
+    "logical_sql": "SELECT artist.name, COUNT(*) AS n FROM product JOIN album ON product.album_id = album.id JOIN artist ON album.artist_id = artist.id GROUP BY artist.id, artist.name ORDER BY n DESC, artist.name ASC LIMIT 1",
+    "matches_gold": true,
+    "matches_gold_ignoring_order": true
+   },
+   "intervention_given_correct_entities": {
+    "entities": [
+     "product",
+     "album",
+     "artist"
+    ],
+    "valid_samples": 2,
+    "correct_under_benchmark_scoring": 0,
+    "correct_in_substance": 2,
+    "samples": [
+     {
+      "strict": false,
+      "substance": true,
+      "sql": "SELECT artist.name FROM product JOIN album ON product.album_id = album.id JOIN artist ON album.artist_id = artist.id GROUP BY artist.id, artist.name ORDER BY COUNT(*) DESC LIMIT 1"
+     },
+     {
+      "strict": false,
+      "substance": true,
+      "sql": "SELECT artist.name FROM product JOIN album ON product.album_id = album.id JOIN artist ON album.artist_id = artist.id GROUP BY artist.id, artist.name ORDER BY COUNT(*) DESC LIMIT 1"
+     }
+    ]
+   }
+  },
+  {
+   "id": "c-045",
+   "question": "Show me recent sales.",
+   "tags": [
+    "ambiguous",
+    "god_table",
+    "drift",
+    "inconsistent_types"
+   ],
+   "primary_cause": "retrieval",
+   "also": "benchmark (latent)",
+   "evidence": "Noise entities (playlist_track, product, album) led to a line-level join: 200 rows against 80. With billing alone the 80 rows, dates and totals match gold; only the ordering (descending against gold's ascending) differs.",
+   "original": {
+    "linked_entities": [
+     "playlist_track",
+     "product",
+     "sales_order_line",
+     "album",
+     "billing"
+    ],
+    "join_plan_root": "playlist_track"
+   },
+   "counterfactual_correct_query": {
+    "logical_sql": "SELECT order_date_text AS invoice_date, ROUND(total_amount, 2) AS total FROM billing WHERE SUBSTR(order_date_text, 1, 4) = '2025' ORDER BY order_date_text, total_amount",
+    "matches_gold": true,
+    "matches_gold_ignoring_order": true
+   },
+   "intervention_given_correct_entities": {
+    "entities": [
+     "billing"
+    ],
+    "valid_samples": 2,
+    "correct_under_benchmark_scoring": 0,
+    "correct_in_substance": 2,
+    "samples": [
+     {
+      "strict": false,
+      "substance": true,
+      "sql": "SELECT order_number, order_date_text, total_amount FROM billing WHERE type_code = 'I' AND STRFTIME('%Y', order_date_text) = '2025' ORDER BY order_date_text DESC"
+     },
+     {
+      "strict": false,
+      "substance": true,
+      "sql": "SELECT order_number, order_timestamp, total_amount FROM billing WHERE type_code = 'I' AND SUBSTR(order_timestamp, 1, 4) = '2025' ORDER BY order_timestamp DESC"
+     }
+    ]
+   }
+  },
+  {
+   "id": "c-026",
+   "question": "What are the top 5 artists by revenue?",
+   "tags": [
+    "missing_fk",
+    "composite_key",
+    "god_table",
+    "drift",
+    "cryptic_names"
+   ],
+   "primary_cause": "generation",
+   "also": "",
+   "evidence": "The right entities were linked in the original run. The model sums per-order header totals across order lines, which multiplies revenue. Wrong in 2 of 4 attempts with the right entities.",
+   "original": {
+    "linked_entities": [
+     "artist",
+     "album",
+     "product",
+     "sales_order_line",
+     "billing"
+    ],
+    "join_plan_root": "playlist_track"
+   },
+   "counterfactual_correct_query": {
+    "logical_sql": "SELECT artist.name, ROUND(SUM(sol.unit_price * sol.quantity), 2) AS revenue FROM sales_order_line sol JOIN billing b ON b.store_code = sol.store_code AND b.order_number = sol.order_number JOIN product p ON p.id = sol.product_id JOIN album ON album.id = p.album_id JOIN artist ON artist.id = album.artist_id GROUP BY artist.id, artist.name ORDER BY revenue DESC, artist.name ASC LIMIT 5",
+    "matches_gold": true,
+    "matches_gold_ignoring_order": true
+   },
+   "intervention_given_correct_entities": {
+    "entities": [
+     "sales_order_line",
+     "billing",
+     "product",
+     "album",
+     "artist"
+    ],
+    "valid_samples": 3,
+    "correct_under_benchmark_scoring": 2,
+    "correct_in_substance": 2,
+    "samples": [
+     {
+      "strict": false,
+      "substance": false,
+      "sql": "SELECT a.id, a.name, SUM(b.order_total) AS revenue FROM ( SELECT store_code, order_number, SUM(total_amount) AS order_total FROM billing GROUP BY store_code, order_number ) b JOIN sales_order_line sol ON sol.store_code = b.store_code AND sol.order_number = b.order_number JOIN product p ON p.id = sol.product_id JOIN album al ON al.id = p.album_id JOIN artist a ON a.id = al.artist_id GROUP BY a.id, a.name ORDER BY revenue DESC LIMIT 5"
+     },
+     {
+      "strict": true,
+      "substance": true,
+      "sql": "SELECT artist.id, artist.name, SUM(sales_order_line.quantity * sales_order_line.unit_price) AS revenue FROM product JOIN sales_order_line ON product.id = sales_order_line.product_id JOIN album ON product.album_id = album.id JOIN billing ON sales_order_line.order_number = billing.order_number AND sales_order_line.store_code = billing.store_code JOIN artist ON album.artist_id = artist.id GROUP BY artist.id, artist.name ORDER BY revenue DESC LIMIT 5"
+     },
+     {
+      "strict": true,
+      "substance": true,
+      "sql": "SELECT artist.name AS artist_name, SUM(sales_order_line.quantity * sales_order_line.unit_price) AS revenue FROM product JOIN sales_order_line ON product.id = sales_order_line.product_id JOIN album ON product.album_id = album.id JOIN billing ON sales_order_line.order_number = billing.order_number AND sales_order_line.store_code = billing.store_code JOIN artist ON album.artist_id = artist.id GROUP BY artist.name ORDER BY revenue DESC LIMIT 5"
+     }
+    ]
+   }
+  },
+  {
+   "id": "c-028",
+   "question": "What is the average number of line items per invoice?",
+   "tags": [
+    "composite_key",
+    "god_table",
+    "soft_delete"
+   ],
+   "primary_cause": "generation",
+   "also": "",
+   "evidence": "The right entities were linked. The model groups by order_number without store_code, though order numbers restart per store (a composite key). Wrong in every valid attempt.",
+   "original": {
+    "linked_entities": [
+     "sales_order_line",
+     "billing"
+    ],
+    "join_plan_root": "playlist_track"
+   },
+   "counterfactual_correct_query": {
+    "logical_sql": "SELECT ROUND(CAST(COUNT(*) AS REAL) / COUNT(DISTINCT b.store_code || '-' || b.order_number), 3) AS avg_lines FROM sales_order_line sol JOIN billing b ON b.store_code = sol.store_code AND b.order_number = sol.order_number",
+    "matches_gold": true,
+    "matches_gold_ignoring_order": true
+   },
+   "intervention_given_correct_entities": {
+    "entities": [
+     "sales_order_line",
+     "billing"
+    ],
+    "valid_samples": 2,
+    "correct_under_benchmark_scoring": 0,
+    "correct_in_substance": 0,
+    "samples": [
+     {
+      "strict": false,
+      "substance": false,
+      "sql": "SELECT AVG(line_count) AS avg_line_items_per_invoice FROM ( SELECT sol.order_number, COUNT(*) AS line_count FROM sales_order_line sol JOIN billing b ON sol.order_number = b.order_number AND sol.store_code = b.store_code WHERE b.type_code = 'I' GROUP BY sol.order_number ) sub"
+     },
+     {
+      "strict": false,
+      "substance": false,
+      "sql": "SELECT AVG(line_count) AS avg_line_items_per_invoice FROM ( SELECT sol.order_number, COUNT(*) AS line_count FROM sales_order_line sol JOIN billing b ON sol.order_number = b.order_number AND sol.store_code = b.store_code WHERE b.type_code = 'I' GROUP BY sol.order_number ) sub"
+     }
+    ]
+   }
+  }
+ ]
+}

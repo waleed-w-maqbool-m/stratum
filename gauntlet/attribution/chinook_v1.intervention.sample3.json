@@ -1,0 +1,112 @@
+{
+ "c-010": {
+  "given_entities": [
+   "album",
+   "artist"
+  ],
+  "status": "ok",
+  "correct": true,
+  "reason": "",
+  "logical_sql": "SELECT COUNT(*) AS album_count\nFROM album\nJOIN artist ON album.artist_id = artist.id\nWHERE artist.name = 'Led Zeppelin'",
+  "tokens": 963
+ },
+ "c-011": {
+  "given_entities": [
+   "product",
+   "genre"
+  ],
+  "status": "ok",
+  "correct": false,
+  "reason": "no system column matches a gold column (1/2 matched)",
+  "logical_sql": "SELECT genre.name\nFROM product\nJOIN genre ON product.genre_id = genre.id\nGROUP BY genre.name\nORDER BY COUNT(*) DESC\nLIMIT 1",
+  "tokens": 1093
+ },
+ "c-019": {
+  "given_entities": [
+   "product"
+  ],
+  "status": "ok",
+  "correct": true,
+  "reason": "",
+  "logical_sql": "SELECT AVG(product.price) AS average_price FROM product",
+  "tokens": 939
+ },
+ "c-023": {
+  "given_entities": [
+   "product"
+  ],
+  "status": "ok",
+  "correct": true,
+  "reason": "",
+  "logical_sql": "SELECT COUNT(*) AS track_count FROM product WHERE milliseconds > 300000",
+  "tokens": 978
+ },
+ "c-026": {
+  "given_entities": [
+   "sales_order_line",
+   "billing",
+   "product",
+   "album",
+   "artist"
+  ],
+  "status": "ok",
+  "correct": true,
+  "reason": "",
+  "logical_sql": "SELECT artist.name AS artist_name,\n       SUM(sales_order_line.quantity * sales_order_line.unit_price) AS revenue\nFROM product\nJOIN sales_order_line ON product.id = sales_order_line.product_id\nJOIN album ON product.album_id = album.id\nJOIN billing ON sales_order_line.order_number = billing.order_number\n               AND sales_order_line.store_code = billing.store_code\nJOIN artist ON album.artist_id = artist.id\nGROUP BY artist.name\nORDER BY revenue DESC\nLIMIT 5",
+  "tokens": 2373
+ },
+ "c-028": {
+  "given_entities": [
+   "sales_order_line",
+   "billing"
+  ],
+  "status": "abstain",
+  "correct": false,
+  "reason": "every provider failed or is rate limited: groq: rate limited for another 600s",
+  "logical_sql": "",
+  "tokens": 0
+ },
+ "c-030": {
+  "given_entities": [
+   "product",
+   "media_type"
+  ],
+  "status": "abstain",
+  "correct": false,
+  "reason": "every provider failed or is rate limited: groq: rate limited for another 600s",
+  "logical_sql": "",
+  "tokens": 0
+ },
+ "c-038": {
+  "given_entities": [
+   "product"
+  ],
+  "status": "abstain",
+  "correct": false,
+  "reason": "every provider failed or is rate limited: groq: rate limited for another 600s",
+  "logical_sql": "",
+  "tokens": 0
+ },
+ "c-040": {
+  "given_entities": [
+   "product",
+   "album",
+   "artist"
+  ],
+  "status": "abstain",
+  "correct": false,
+  "reason": "every provider failed or is rate limited: groq: rate limited for another 600s",
+  "logical_sql": "",
+  "tokens": 0
+ },
+ "c-045": {
+  "given_entities": [
+   "billing"
+  ],
+  "status": "abstain",
+  "correct": false,
+  "reason": "every provider failed or is rate limited: groq: rate limited for another 600s",
+  "logical_sql": "",
+  "tokens": 0
+ }
+}
