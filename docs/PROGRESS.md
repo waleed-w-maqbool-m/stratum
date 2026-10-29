@@ -513,6 +513,29 @@ domain-cluster view for very large schemas (phase F). The iPhone fullscreen fall
 written but was not run on a phone. The static demo does not include the new views until it
 is re-recorded; it falls back to the refined view and hides the inspector's column tab.
 
+### Phase D: ask accuracy (in progress)
+
+Only the items below are done. The rest of phase D (entity naming and synonyms, a bridge-table
+penalty in linking, country canonicalisation, fan-out and composite-key guards, deterministic
+tie-breaks, the fixed legacifier and a tie-aware score) is **not started**.
+
+**D4. The compiler no longer pushes a filter into the nullable side of an outer join.**
+A `WHERE` predicate on the right side of a `LEFT JOIN` runs after the join and sees the NULLs
+it produced. Moved inside that table's derived query it filters before the join, so
+`WHERE album.id IS NULL` emptied `album` and every artist looked album-less.
+
+| | Before | After |
+|---|---:|---:|
+| c-021 ("artists with no albums"), the recorded Chinook query, replayed through the compiler on the benchmarked model | 275 rows, FAIL (gold 71) | 71 rows, PASS |
+| regression test: anti-join on a constructed database, correct answer 58 | 60 | 58 |
+| a filter on the preserved side of a left join is still pushed down | yes | yes (tested) |
+
+What this does and does not show: the replay uses the logical SQL the language model wrote in
+the recorded run, compiled by the old and new compiler against the same saved model. It
+shows the compiler fault is fixed for that query. It is not a re-run of the suite, so the
+headline 28/46 is unchanged until the whole suite is run again. At most this moves one
+question (60.9% to 63.0% if nothing else changes).
+
 ---
 
 ## Not built

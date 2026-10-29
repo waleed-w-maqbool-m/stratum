@@ -285,6 +285,30 @@ def compile_logical(
     return result
 
 
+def _nullable_aliases(tree: exp.Expression) -> set[str]:
+    """Aliases on the side of an outer join that can be filled with NULLs.
+
+    A predicate in WHERE on one of these runs *after* the join and sees the NULLs the join
+    produced. Moved inside the table instead, it filters before the join and the NULLs
+    never arise: `WHERE b.id IS NULL` pushed into `b` empties `b`, so every row of the left
+    side looks unmatched. These are the aliases a predicate must never be moved into.
+    """
+    nullable: set[str] = set()
+    if not isinstance(tree, exp.Select):
+        return nullable
+    from_clause = select_from(tree)
+    before = [from_clause.this.alias_or_name.lower()] if from_clause is not None else []
+    for join in tree.args.get("joins") or []:
+        side = (join.side or "").upper()
+        name = join.this.alias_or_name.lower()
+        if side in ("LEFT", "FULL"):
+            nullable.add(name)
+        if side in ("RIGHT", "FULL"):
+            nullable.update(before)
+        before.append(name)
+    return nullable
+
+
 def _collect_pushdown(
     tree: exp.Expression, model: SemanticModel
 ) -> dict[str, list[exp.Expression]]:
@@ -303,6 +327,7 @@ def _collect_pushdown(
         return out
 
     aliases = _alias_map(tree, model)
+    nullable = _nullable_aliases(tree)
 
     def conjuncts(node: exp.Expression):
         if isinstance(node, exp.And):
@@ -320,7 +345,7 @@ def _collect_pushdown(
         if len(owners) != 1:
             continue
         owner = next(iter(owners))
-        if owner not in aliases:
+        if owner not in aliases or owner in nullable:
             continue
         if any(predicate.find_all(exp.Select)):
             continue          # a correlated subquery cannot be moved safely

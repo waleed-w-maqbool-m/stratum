@@ -296,3 +296,57 @@ def test_the_atlas_has_an_as_submitted_view_and_a_table_inspector(result, tmp_pa
         api.atlas("old", view="submitted")
     assert excinfo.value.status_code == 404
     assert api.table_detail("old", "orders")["entity"]     # refined still works without it
+
+
+# ------------------------------------------------------------------ the compiler
+
+
+def _logical(model, table, physical):
+    entity = model.entity_for_table(table)
+    column = next(c for c in entity.columns.values() if c.physical_column == physical)
+    return entity.name, column.name
+
+
+@pytest.fixture(scope="module")
+def live(tmp_path_factory):
+    path = build_gaps(tmp_path_factory.mktemp("compile") / "gaps.sqlite")
+    conn = build(f"sqlite:///{path}")
+    conn.connect()
+    try:
+        yield conn, compile_model(excavate(conn))
+    finally:
+        conn.close()
+
+
+@pytest.mark.parametrize("push", [True, False])
+def test_an_anti_join_filter_on_the_nullable_side_is_not_pushed_into_the_join(live, push):
+    """c-021: `WHERE o.id IS NULL` pushed into `o` made every row look unmatched."""
+    from stratum.ask.compiler import compile_logical
+    from stratum.connectors.executor import ReadOnlyExecutor
+
+    conn, model = live
+    customer, cust_key = _logical(model, "customer", "cust_id")
+    orders, order_cust = _logical(model, "orders", "cust_id")
+    _, order_key = _logical(model, "orders", "order_id")
+    sql = (
+        f"SELECT COUNT(*) AS n FROM {customer} c LEFT JOIN {orders} o "
+        f"ON o.{order_cust} = c.{cust_key} AND o.{order_key} < 3 "
+        f"WHERE o.{order_key} IS NULL"
+    )
+    compiled = compile_logical(sql, model, conn.profile, push_predicates=push)
+    # Orders 1 and 2 belong to customers 2 and 3, so 58 of 60 customers have no such order.
+    assert ReadOnlyExecutor(conn, conn.profile).run(compiled.physical_sql).rows[0][0] == 58
+
+
+def test_a_filter_on_the_preserved_side_of_a_left_join_is_still_pushed(live):
+    from stratum.ask.compiler import compile_logical
+
+    conn, model = live
+    customer, cust_key = _logical(model, "customer", "cust_id")
+    orders, order_cust = _logical(model, "orders", "cust_id")
+    sql = (
+        f"SELECT COUNT(*) AS n FROM {customer} c LEFT JOIN {orders} o "
+        f"ON o.{order_cust} = c.{cust_key} WHERE c.{cust_key} < 10"
+    )
+    physical = compile_logical(sql, model, conn.profile).physical_sql
+    assert physical.lower().count("< 10") == 2      # once inside c's table, once outside
