@@ -475,8 +475,43 @@ contain them. That is a test of the mechanism, not a measurement of how often it
 
 | | Before | After |
 |---|---|---|
-| engine tests | 132 | 150 |
+| engine tests | 132 | 152 |
 | gauntlet tests | 11 | 14 |
+
+### Phase C: an Atlas for studying a database
+
+*Before:* one view of the refined model, a side panel with a flat list of joins, and no way
+to go full screen.
+
+*Now:*
+
+- **Full screen** (button or `F`): the whole viewer, including the inspector, uses the
+  browser's Fullscreen API, with a fixed-position overlay where there is none (iPhone
+  Safari). `Esc` exits and focus returns to the button.
+- **As submitted / Refined**: the first draws the database from the catalog saved at
+  excavation: every table on one level, nothing judged or renamed, and only the foreign keys
+  it declares. The second is the excavated model. A sentence under the toolbar states the
+  difference in numbers (relationships found, tables set aside, columns renamed, coded
+  columns decoded, soft-delete rules found, suggestions).
+- **A table inspector** (click a sphere or a row): *Overview* (kind and why, key, rules
+  applied to every query), *Columns* (as stored beside what it means, with the expression
+  and decoded values), *Joins* (points at / pointed at by; for each, its origin, who else
+  confirmed it, the join, cardinality, values matched, unmatched values with examples, name
+  match, and a sentence saying why), and *Missing* (the suggestions for that table, with SQL).
+- **Find a table** (`/`): matches table and entity names.
+- Edges are coloured by origin, with a legend that counts each.
+
+Checked by driving the page in headless Chrome against a live engine: native fullscreen
+entered and left (`F` toggles it), the submitted view stated that the example database
+declares no keys, the inspector tabs rendered provenance and evidence, search selected a
+table, and the console showed no errors. Engine endpoints (`/atlas?view=`, `/tables/{name}`)
+are covered by a test; the front end has no automated tests.
+
+**Not done from the plan, and not claimed:** an animated transition between the two views,
+search by column name, the path between two tables, exports (CSV, Mermaid, PNG), and a
+domain-cluster view for very large schemas (phase F). The iPhone fullscreen fallback is
+written but was not run on a phone. The static demo does not include the new views until it
+is re-recorded; it falls back to the refined view and hides the inspector's column tab.
 
 ---
 

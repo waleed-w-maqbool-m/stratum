@@ -169,19 +169,88 @@ export type AtlasData = {
   /** Absent in demo recordings made before gaps existed. */
   ghost_edges?: GhostEdge[];
   domains: number;
+  view?: "submitted" | "refined";
   summary: {
     relationships_by_origin?: Record<string, number>;
+    gaps_by_type?: Record<string, number>;
+    /** Present in the refined view only. */
+    entities?: number;
+    columns_renamed?: number;
+    columns_decoded?: number;
+    soft_delete_rules?: number;
+    /** Present in the submitted view only. */
+    views?: number;
+    columns?: number;
     core: number;
     excluded: number;
     by_class: Record<string, number>;
   };
 };
 
-export async function fetchAtlas(databaseId: string): Promise<AtlasData> {
-  if (DEMO) return demoJson<AtlasData>(`/databases/${databaseId}/atlas`);
-  const response = await fetch(`/api/databases/${databaseId}/atlas`);
+export type AtlasView = "submitted" | "refined";
+
+export async function fetchAtlas(
+  databaseId: string,
+  view: AtlasView = "refined",
+): Promise<AtlasData> {
+  if (DEMO) {
+    // Recordings were made before the catalog was kept, so only the refined view exists.
+    if (view === "submitted") throw new Error("not recorded");
+    return demoJson<AtlasData>(`/databases/${databaseId}/atlas`);
+  }
+  const response = await fetch(`/api/databases/${databaseId}/atlas?view=${view}`);
   if (!response.ok) throw new Error(await response.text());
   return response.json() as Promise<AtlasData>;
+}
+
+export type TableColumn = {
+  physical: string;
+  logical: string;
+  type: string;
+  nullable: boolean | null;
+  is_primary_key: boolean;
+  references: string;
+  reference_origin?: string;
+  decoded: Record<string, string>;
+  derived: boolean;
+  expr: string;
+  description: string;
+  status: string;
+  confidence: number | null;
+};
+
+export type TableDetail = {
+  table: string;
+  view: AtlasView;
+  entity: string | null;
+  kind: string;
+  reason: string;
+  description: string;
+  rows: number;
+  primary_key: string[];
+  columns: TableColumn[];
+  filters: { expr: string; reason: string; kind: string; rows_excluded: number; status: string }[];
+  gaps: Pick<
+    Gap,
+    "id" | "gap_type" | "columns" | "to_table" | "table" | "reason" | "fix" | "blockers" | "confidence" | "status"
+  >[];
+};
+
+/** The inspector's data. A recording or an older engine has none; callers show less. */
+export async function fetchTable(
+  databaseId: string,
+  table: string,
+  view: AtlasView,
+): Promise<TableDetail | null> {
+  if (DEMO) return null;
+  try {
+    const response = await fetch(
+      `/api/databases/${databaseId}/tables/${encodeURIComponent(table)}?view=${view}`,
+    );
+    return response.ok ? ((await response.json()) as TableDetail) : null;
+  } catch {
+    return null;
+  }
 }
 
 /** The suggestions list. A recording or an older engine without it just has none. */

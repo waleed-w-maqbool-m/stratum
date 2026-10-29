@@ -255,3 +255,44 @@ def test_a_join_whose_parent_is_unique_only_under_a_filter_is_not_offered_as_a_f
     assert [g.value["gap_type"] for g in found] == ["missing_unique"]
     assert found[0].evidence["fix"] == ""
     assert "kind = 'I'" in found[0].evidence["reason"]
+
+
+def test_the_atlas_has_an_as_submitted_view_and_a_table_inspector(result, tmp_path, monkeypatch):
+    from stratum.api import app as api
+    from stratum.semantic.store import ModelStore
+
+    store = ModelStore(tmp_path)
+    store.save(compile_model(result, database="gapdb"))
+    store.save_findings("gapdb", [f.to_dict() for f in result.findings])
+    store.save_catalog("gapdb", result.schema.to_catalog())
+    monkeypatch.setattr(api.registry, "store", store)
+
+    submitted = api.atlas("gapdb", view="submitted")
+    refined = api.atlas("gapdb")
+    # Nothing is judged in the submitted view: every table is live, and none is renamed.
+    assert submitted["summary"]["excluded"] == 0
+    assert {n["class"] for n in submitted["nodes"]} == {"core"}
+    assert all(n["entity"] is None and n["position"][1] == 0.0 for n in submitted["nodes"])
+    assert submitted["edges"] == []                       # this database declares no keys
+    assert refined["summary"]["excluded"] >= 1            # the backup table
+    assert refined["summary"]["entities"] >= 1
+
+    detail = api.table_detail("gapdb", "orders")
+    columns = {c["physical"]: c for c in detail["columns"]}
+    assert columns["cust_id"]["logical"] and columns["cust_id"]["type"]
+    assert detail["entity"] and detail["kind"] == "core"
+    assert any(g["gap_type"] == "broken_relationship" for g in detail["gaps"])
+    assert "ticket" == api.table_detail("gapdb", "ticket")["table"]
+
+    raw = api.table_detail("gapdb", "orders", view="submitted")
+    assert raw["entity"] is None and raw["columns"][0]["logical"] == ""
+
+    store_without_catalog = ModelStore(tmp_path / "empty")
+    store_without_catalog.save(compile_model(result, database="old"))
+    monkeypatch.setattr(api.registry, "store", store_without_catalog)
+    import pytest as _pytest
+    from fastapi import HTTPException
+    with _pytest.raises(HTTPException) as excinfo:
+        api.atlas("old", view="submitted")
+    assert excinfo.value.status_code == 404
+    assert api.table_detail("old", "orders")["entity"]     # refined still works without it

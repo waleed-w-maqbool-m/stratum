@@ -611,6 +611,104 @@ def gaps(database_id: str, type: str | None = None, limit: int = 100) -> dict[st
     }
 
 
+@router.get("/databases/{database_id}/tables/{table:path}")
+def table_detail(database_id: str, table: str, view: str = "refined") -> dict[str, Any]:
+    """Everything the inspector shows for one table: its columns, rules and gaps.
+
+    `view=submitted` is the table as its own catalog describes it. The refined view merges
+    that with what excavation made of each column, so a reader can see `CFNM1` and
+    `first_name` side by side and what separated them.
+    """
+    from .submitted import table_from_catalog
+
+    snapshot = registry.store.load_catalog(database_id)
+    base = table_from_catalog(snapshot, table) if snapshot else None
+    if view == "submitted":
+        if base is None:
+            raise HTTPException(404, "table not found in the recorded catalog")
+        return {**base, "view": "submitted", "entity": None, "kind": "", "reason": "",
+                "description": "", "filters": [], "gaps": []}
+
+    model = registry.store.load(database_id)
+    if model is None:
+        raise HTTPException(404, "no semantic model — run excavation first")
+    lowered = table.lower()
+    klass = next((v for k, v in model.table_classes.items() if k.lower() == lowered), "")
+    entity = model.entity_for_table(table)
+    if base is None and entity is None and not klass:
+        raise HTTPException(404, "unknown table")
+
+    reason = ""
+    for finding in registry.store.load_findings(database_id):
+        if finding.get("kind") == "table_class" and finding["target"].lower() == lowered:
+            evidence = finding.get("evidence") or {}
+            reason = evidence.get("reason") or "; ".join(evidence.get("reasons") or [])
+            break
+
+    outgoing = {
+        c.lower(): r for r in model.relationships if r.from_table.lower() == lowered
+        and r.status != "rejected" for c in r.from_columns
+    }
+    by_physical = {
+        c.physical_column.lower(): c for c in (entity.columns.values() if entity else [])
+        if c.physical_column
+    }
+
+    def merged(physical: str, catalog_row: dict[str, Any] | None) -> dict[str, Any]:
+        logical = by_physical.get(physical.lower())
+        reference = outgoing.get(physical.lower())
+        return {
+            **(catalog_row or {"physical": physical, "type": "", "nullable": None,
+                               "is_primary_key": False, "references": "", "description": ""}),
+            "logical": logical.name if logical else "",
+            "decoded": logical.enum if logical else {},
+            "derived": logical.is_derived if logical else False,
+            "expr": logical.expr if logical else "",
+            "description": (logical.description if logical and logical.description
+                            else (catalog_row or {}).get("description", "")),
+            "status": logical.status if logical else "",
+            "confidence": round(logical.confidence, 3) if logical else None,
+            "references": reference.to_table if reference else (catalog_row or {}).get(
+                "references", ""),
+            "reference_origin": reference.origin if reference else "",
+        }
+
+    columns = [merged(c["physical"], c) for c in (base["columns"] if base else [])]
+    seen = {c["physical"].lower() for c in columns}
+    if entity:
+        for logical in entity.columns.values():
+            if (logical.physical_column or "").lower() in seen:
+                continue
+            row = merged(logical.physical_column or logical.name, None)
+            row["physical"] = logical.physical_column or ""
+            row["type"] = logical.data_type
+            columns.append(row)
+
+    return {
+        "table": base["table"] if base else table,
+        "view": "refined",
+        "entity": entity.name if entity else None,
+        "kind": klass,
+        "reason": reason,
+        "description": entity.description if entity else "",
+        "rows": base["rows"] if base else (entity.row_estimate if entity else 0),
+        "primary_key": base["primary_key"] if base else (entity.key if entity else []),
+        "columns": columns,
+        "filters": [
+            {"expr": f.expr, "reason": f.reason, "kind": f.kind,
+             "rows_excluded": f.rows_excluded, "status": f.status}
+            for f in (entity.active_filters() if entity else [])
+        ],
+        "gaps": [
+            {"id": g.id, "gap_type": g.gap_type, "columns": g.columns, "to_table": g.to_table,
+             "table": g.table, "reason": g.reason, "fix": g.fix, "blockers": g.blockers,
+             "confidence": round(g.confidence, 3), "status": g.status}
+            for g in model.gaps
+            if g.status != "rejected" and lowered in (g.table.lower(), g.to_table.lower())
+        ],
+    }
+
+
 @router.get("/databases/{database_id}/catalog")
 def catalog(database_id: str) -> dict[str, Any]:
     """The database as submitted: its own tables, columns and declared keys."""
@@ -662,7 +760,7 @@ def _edge_payload(r) -> dict[str, Any]:
 
 
 @router.get("/databases/{database_id}/atlas")
-def atlas(database_id: str) -> dict[str, Any]:
+def atlas(database_id: str, view: str = "refined") -> dict[str, Any]:
     """Nodes and edges for the Atlas.
 
     Everything the 3D view needs in one request, including the tables excavation
@@ -673,6 +771,16 @@ def atlas(database_id: str) -> dict[str, Any]:
     nodes is not expensive, but doing it server-side means the layout is stable across
     reloads — a map that rearranges itself every time you open it is not a map.
     """
+    if view == "submitted":
+        from .submitted import submitted_atlas
+
+        snapshot = registry.store.load_catalog(database_id)
+        if snapshot is None:
+            raise HTTPException(
+                404, "the database as submitted was not recorded — run excavation again"
+            )
+        return submitted_atlas(database_id, snapshot)
+
     model = registry.store.load(database_id)
     if model is None:
         raise HTTPException(404, "no semantic model — run excavation first")
@@ -755,6 +863,7 @@ def atlas(database_id: str) -> dict[str, Any]:
 
     return {
         "database": database_id,
+        "view": "refined",
         "version": model.version,
         "nodes": nodes,
         "edges": edges,
@@ -773,6 +882,18 @@ def atlas(database_id: str) -> dict[str, Any]:
                 origin: sum(1 for e in edges if e["origin"] == origin)
                 for origin in sorted({e["origin"] for e in edges})
             },
+            "entities": len(entity_by_table),
+            "columns_renamed": sum(
+                1 for e in entity_by_table.values() for c in e.columns.values()
+                if c.physical_column and c.name.lower() != c.physical_column.lower()
+            ),
+            "columns_decoded": sum(
+                1 for e in entity_by_table.values() for c in e.columns.values() if c.enum
+            ),
+            "soft_delete_rules": sum(
+                1 for e in entity_by_table.values()
+                for f in e.active_filters() if f.kind == "soft_delete"
+            ),
             "gaps_by_type": {
                 t: sum(1 for g in model.gaps if g.gap_type == t and g.status != "rejected")
                 for t in sorted({g.gap_type for g in model.gaps})
