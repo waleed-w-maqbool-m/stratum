@@ -5,6 +5,18 @@ plan follows `docs/PLAN.md` and does not replace it; the non-negotiables in `CLA
 still apply to every item below. Work the phases in order. Each one ends with acceptance
 checks; do not start the next phase until they pass.
 
+## Status (updated after the first implementation pass)
+
+| Phase | State | What is left |
+|---|---|---|
+| A. Where each relationship came from | **Done** | `llm` as an origin of its own (a model's choice of parent is recorded as `chosen_by` on a data-origin edge instead) |
+| B. Relationships that should exist | **Done** | `missing_lookup` suggestions are not scored against an answer key; the broken/dangling/archive kinds are tested only on a constructed fixture |
+| C. Atlas for study | **Mostly done**: full screen, as submitted vs refined, tabbed inspector, search, origin colours, ghost edges | animated transition between views; search by column; path between two tables; exports; demo recordings do not include the new views |
+| D. Ask accuracy | **Started**: D4 (compiler bug), tie-aware score | D1 entity naming/synonyms, D2 bridge-table penalty, D3 country canonicalisation, D5 fan-out and composite-key guards, D6 value binding, D7 determinism, D8 ablations, fixing the legacifier and a v2 benchmark, attributing Pagila |
+| E. SQL Server / Express | **Mostly done**: ADO.NET strings, named instances, Windows auth, compat-level profiles, FK trust flags, run live | Connect page fields, `MS_Description`, least-privilege script, Docker Express test, HALCYON benchmark |
+| F. Large databases | **Started**: candidate generation 5-45x faster, identical output, synthetic scale benchmark | probe budget and parallel probes, sampling from profiles, incremental re-excavation, clustered Atlas for 800+ tables |
+| G. Re-measure and publish | **Not done** | re-run both suites with a model after phase D; re-record the demo; deploy |
+
 ## What the code does today (the starting point)
 
 These facts were checked in the code, and several of them drive the plan.

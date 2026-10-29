@@ -359,6 +359,27 @@ Changes made after the v1 benchmark runs above, in the order of `docs/IMPROVEMEN
 what, and what it does not show. Everything here that is a number was produced by the
 command given.
 
+### Numbers you can cite, and how to word them
+
+Each row is a measured result from this log. The wording is the strongest the evidence
+supports; the last column is what to leave out so the claim stays true.
+
+| Claim | Number | Measured how | Leave out / do not say |
+|---|---|---|---|
+| Compiler fault fixed | A recorded Chinook query went from 275 rows to the correct 71; replaying all 46 recorded queries through the fixed compiler gives 29/46 strict (was 28/46), one question changed, none regressed | Recorded model output, replayed; no model called | Do not say "accuracy improved to 63%": it is a replay of recorded output, not a fresh run |
+| Labelling declared against guessed relationships | 6/6 declared keys labelled declared, 5/5 dropped keys returned as suggestions, 0 mislabelled | `chinook_partial`, built from Chinook with half its keys declared | One database; the answer key was written by the same author as the system |
+| Benchmark found a defect in my own output | The first run proposed a foreign key whose `ALTER TABLE` a database would refuse (a key unique only under a discriminator); fixed and tested | Same benchmark | |
+| Excavation speed | 150 tables: 55 s to 9.8 s (5.6x) with identical candidates and name scores; 1,000 tables / 8,515 columns in 127 s | Synthetic legacy-shaped schemas on SQLite, local | Not a real 1,000-table database; network latency not included |
+| SQL Server | Connected to a live SQL Server 2025 Express instance with Windows authentication and a named instance through ODBC; excavated two small databases and found 4 untrusted foreign keys on one | Live run on one machine | No SQL Server accuracy benchmark; two databases of 5 and 11 tables |
+| A second, tie-aware score | Chinook 30/46 against strict 28/46; Pagila unchanged at 26/45 | Re-scoring recorded answers | The strict score is the headline; the extra two are questions already classed as the benchmark's fault |
+| Tests | 114 to 183 engine tests, 11 to 17 gauntlet tests | `pytest` | |
+
+What did **not** improve, so nobody claims it: the strict Chinook and Pagila accuracy from a
+fresh run (28/46 and 26/45) have not been re-measured; the 18 Chinook failures other than
+c-021 are still failing, because their causes (entity naming, country spellings, fan-out,
+composite-key grouping) are in the retrieval, excavation and generation stages and have not
+been changed.
+
 ### Phase A: every relationship says where it came from
 
 *Before:* the Atlas had one flag, `inferred`, set from the detector's name. Declared foreign
