@@ -472,6 +472,27 @@ def score(candidate: Candidate) -> float:
     return confidence
 
 
+@dataclass
+class Rejected:
+    """A candidate that was tested and turned down, kept so the near-misses can be shown.
+
+    A relationship that almost holds is the most useful thing a reviewer can be told
+    about: 91% of values match because the rest were deleted, or the parent is not quite
+    unique. Throwing it away means the tool can only ever say what it is sure of.
+    """
+
+    candidate: Candidate
+    reason: str      # inclusion | parent_not_unique | name | thin_evidence
+
+
+def _why_rejected(candidate: Candidate) -> str:
+    if candidate.parent_unique is False:
+        return "parent_not_unique"
+    if candidate.name_score < MIN_NAME_TO_ACCEPT:
+        return "name"
+    return "thin_evidence"
+
+
 _SOURCE_LABEL = {
     Origin.DECLARED.value: "declared foreign key",
     Origin.SHIPPED_SQL.value: "shipped SQL",
@@ -513,6 +534,7 @@ def detect(
     table_classes: dict[str, str] | None = None,
     discriminators: dict[str, str] | None = None,
     declared: list[Finding] | None = None,
+    rejected: list[Rejected] | None = None,
 ) -> list[Finding]:
     classes = {k.lower(): v for k, v in (table_classes or {}).items()}
     core_tables = [
@@ -617,6 +639,8 @@ def detect(
         if candidate.origin == Origin.DATA.value:
             test_inclusion(executor, candidate)
             if candidate.inclusion < MIN_INCLUSION:
+                if rejected is not None:
+                    rejected.append(Rejected(candidate, "inclusion"))
                 continue
             test_parent_uniqueness(executor, candidate)
         elif tested_core(candidate):
@@ -631,6 +655,8 @@ def detect(
                 candidate.corroborated_by.append(Origin.DATA.value)
         confidence = score(candidate)
         if confidence < 0.5:
+            if rejected is not None and candidate.origin == Origin.DATA.value:
+                rejected.append(Rejected(candidate, _why_rejected(candidate)))
             continue
         measured = candidate.tested > 0 and not candidate.probe_failed
         cardinality, optional, null_fraction = _cardinality(candidate, profiles)

@@ -9,10 +9,13 @@ import {
   ORIGIN_LABEL,
   cardinalityText,
   fetchAtlas,
+  fetchGaps,
   originOf,
   prefersReducedMotion,
   type AtlasData,
+  type GapsResponse,
 } from "@/lib/atlas";
+import { GapsSection } from "@/components/GapsSection";
 
 /**
  * The Atlas (PLAN.md 5.3).
@@ -73,12 +76,15 @@ export default function AtlasPage({ params }: { params: Promise<{ id: string }> 
   const [selected, setSelected] = useState<string | null>(null);
   const [reduced, setReduced] = useState(false);
   const [show3D, setShow3D] = useState(true);
+  const [gaps, setGaps] = useState<GapsResponse | null>(null);
+  const [showGhosts, setShowGhosts] = useState(false);
 
   useEffect(() => {
     const isReduced = prefersReducedMotion();
     setReduced(isReduced);
     setShow3D(!isReduced);
     fetchAtlas(id).then(setData).catch((exception) => setError(String(exception)));
+    fetchGaps(id).then(setGaps);
   }, [id]);
 
   const selectedNode = useMemo(
@@ -131,6 +137,16 @@ export default function AtlasPage({ params }: { params: Promise<{ id: string }> 
                   </span>
                 ),
               )}
+              {(data.ghost_edges?.length ?? 0) > 0 && show3D && (
+                <label className="flex cursor-pointer items-center gap-1.5 text-[var(--fg-muted)]">
+                  <input
+                    type="checkbox"
+                    checked={showGhosts}
+                    onChange={(event) => setShowGhosts(event.target.checked)}
+                  />
+                  Show {data.ghost_edges?.length} missing links (dashed)
+                </label>
+              )}
               <button
                 onClick={() => setShow3D((v) => !v)}
                 className="ml-auto border rule px-3 py-1"
@@ -146,6 +162,7 @@ export default function AtlasPage({ params }: { params: Promise<{ id: string }> 
                   selected={selected}
                   onSelect={setSelected}
                   reducedMotion={reduced}
+                  showGhosts={showGhosts}
                 />
               </div>
             ) : (
@@ -313,6 +330,16 @@ export default function AtlasPage({ params }: { params: Promise<{ id: string }> 
             )}
           </aside>
         </div>
+      )}
+
+      {data && gaps && gaps.total > 0 && (
+        <GapsSection
+          gaps={gaps}
+          onSelect={(table) => {
+            setSelected(table);
+            window.scrollTo({ top: 0, behavior: reduced ? "auto" : "smooth" });
+          }}
+        />
       )}
     </main>
   );

@@ -45,6 +45,8 @@ def apply_review_action(
         _apply_soft_delete(model, new_value, status)
     elif kind == "join":
         _apply_join(model, new_value, status)
+    elif kind == "gap":
+        _apply_gap(model, item_id, new_value, status)
     elif kind == "enum":
         _apply_enum(model, target, new_value, status)
     elif kind in ("type_mismatch", "quality", "drift"):
@@ -81,6 +83,59 @@ def _apply_join(model: SemanticModel, value: dict, status: str) -> None:
             relationship.status = status
             if status == "accepted":
                 relationship.confidence = 1.0
+
+
+# Gaps that name a parent which is not yet a relationship in the model. Accepting one is
+# a person saying "yes, this is a real join", so it becomes one.
+_GAPS_THAT_BECOME_JOINS = {"broken_relationship", "dangling_reference"}
+
+
+def _apply_gap(model: SemanticModel, item_id: str, value: dict, status: str) -> None:
+    gap = next((g for g in model.gaps if g.id == item_id), None)
+    if gap is None:
+        return
+    gap.status = status
+    if status != "accepted" or value.get("gap_type") not in _GAPS_THAT_BECOME_JOINS:
+        return
+    child, parent = model.entity_for_table(gap.table), model.entity_for_table(gap.to_table)
+    if child is None or parent is None:
+        return
+    if any(
+        r.from_table.lower() == gap.table.lower()
+        and [c.lower() for c in r.from_columns] == [c.lower() for c in gap.columns]
+        for r in model.relationships
+    ):
+        return
+    from ..semantic.model import Provenance, Relationship
+
+    left = [_logical(child, c) for c in gap.columns]
+    right = [_logical(parent, c) for c in gap.to_columns]
+    model.relationships.append(
+        Relationship(
+            name=f"{child.name}_{parent.name}_{len(model.relationships)}",
+            from_entity=child.name, to_entity=parent.name,
+            from_table=gap.table, to_table=gap.to_table,
+            from_columns=gap.columns, to_columns=gap.to_columns,
+            logical_on=" AND ".join(
+                f"{child.name}.{a} = {parent.name}.{b}"
+                for a, b in zip(left, right, strict=False) if a and b
+            ),
+            origin="data", status="accepted", confidence=0.9,
+            provenance=Provenance(
+                detector="gaps",
+                reason="Accepted by a reviewer. " + gap.reason,
+                evidence=gap.evidence,
+            ),
+        )
+    )
+
+
+def _logical(entity, physical: str) -> str:
+    return next(
+        (name for name, column in entity.columns.items()
+         if column.physical_column.lower() == physical.lower()),
+        "",
+    )
 
 
 def _apply_enum(model: SemanticModel, target: str, value: dict, status: str) -> None:

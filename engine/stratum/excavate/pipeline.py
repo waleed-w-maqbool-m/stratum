@@ -75,6 +75,7 @@ def excavate(
         drift,
         enums,
         formats,
+        gaps,
         godtable,
         joins,
         keys,
@@ -161,9 +162,10 @@ def excavate(
     done(god_tables=len(god_findings))
 
     done = stage("joins")
+    rejected_joins: list[joins.Rejected] = []
     join_findings = joins.detect(
         executor, schema, profiles, mined, classes, discriminators,
-        declared=declared_findings,
+        declared=declared_findings, rejected=rejected_joins,
     )
     findings.extend(join_findings)
     by_origin: dict[str, int] = {}
@@ -262,6 +264,18 @@ def excavate(
         trace.append(event)
         if emit is not None:
             emit(event)
+
+    # Last, so it sees the relationships and enum decodings after any model-assisted
+    # repointing. It only suggests; nothing it finds is used until a reviewer accepts it.
+    done = stage("gaps")
+    gap_findings = gaps.detect(
+        executor, schema, profiles, join_findings, rejected_joins, classes, enum_findings
+    )
+    findings.extend(gap_findings)
+    by_type: dict[str, int] = {}
+    for g in gap_findings:
+        by_type[g.value["gap_type"]] = by_type.get(g.value["gap_type"], 0) + 1
+    done(gaps=len(gap_findings), **by_type)
 
     return ExcavationResult(
         schema=schema,

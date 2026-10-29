@@ -583,6 +583,34 @@ def verified_add(request: VerifiedRequest) -> dict[str, Any]:
     return entry.to_dict()
 
 
+# Gap types that name a table pair no relationship covers, so they can be drawn as an edge.
+_DRAWABLE_GAPS = {"broken_relationship", "dangling_reference", "points_outside_core",
+                  "missing_unique"}
+
+
+@router.get("/databases/{database_id}/gaps")
+def gaps(database_id: str, type: str | None = None, limit: int = 100) -> dict[str, Any]:
+    """What Stratum thinks the database is missing, most confident first.
+
+    Suggestions only: none of these are used to answer a question, and the `fix` text is
+    shown for a person to review, never executed.
+    """
+    model = registry.store.load(database_id)
+    if model is None:
+        raise HTTPException(404, "no semantic model — run excavation first")
+    chosen = [g for g in model.gaps if g.status != "rejected" and (type is None or g.gap_type == type)]
+    chosen.sort(key=lambda g: -g.confidence)
+    return {
+        "database": database_id,
+        "total": len(chosen),
+        "by_type": {
+            t: sum(1 for g in model.gaps if g.gap_type == t and g.status != "rejected")
+            for t in sorted({g.gap_type for g in model.gaps})
+        },
+        "items": [g.model_dump() for g in chosen[: max(1, min(limit, 500))]],
+    }
+
+
 @router.get("/databases/{database_id}/catalog")
 def catalog(database_id: str) -> dict[str, Any]:
     """The database as submitted: its own tables, columns and declared keys."""
@@ -730,11 +758,24 @@ def atlas(database_id: str) -> dict[str, Any]:
         "version": model.version,
         "nodes": nodes,
         "edges": edges,
+        "ghost_edges": [
+            {
+                "from": g.table, "to": g.to_table, "gap_type": g.gap_type,
+                "confidence": round(g.confidence, 3), "reason": g.reason,
+                "id": g.id, "status": g.status,
+            }
+            for g in model.gaps
+            if g.gap_type in _DRAWABLE_GAPS and g.to_table and g.status != "rejected"
+        ],
         "domains": domain_id,
         "summary": {
             "relationships_by_origin": {
                 origin: sum(1 for e in edges if e["origin"] == origin)
                 for origin in sorted({e["origin"] for e in edges})
+            },
+            "gaps_by_type": {
+                t: sum(1 for g in model.gaps if g.gap_type == t and g.status != "rejected")
+                for t in sorted({g.gap_type for g in model.gaps})
             },
             "core": sum(1 for n in nodes if n["class"] == "core"),
             "excluded": sum(1 for n in nodes if n["class"] != "core"),

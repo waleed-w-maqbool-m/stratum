@@ -26,6 +26,7 @@ from ..semantic.model import (
     DriftNote,
     EmbeddedFormat,
     Entity,
+    Gap,
     GodTable,
     PerfHint,
     Relationship,
@@ -390,6 +391,29 @@ def compile_model(
                     },
                 )
             )
+
+    # Suggestions, kept apart from relationships so none of them can reach a query.
+    for finding in findings.of(Kind.GAP):
+        value = finding.value
+        model.gaps.append(
+            Gap(
+                id=finding.id,
+                gap_type=value["gap_type"],
+                table=value["table"],
+                columns=value["columns"],
+                to_table=value["to_table"],
+                to_columns=value["to_columns"],
+                reason=finding.evidence.get("reason", ""),
+                fix=finding.evidence.get("fix", ""),
+                blockers=finding.evidence.get("blockers", []),
+                evidence={
+                    k: v for k, v in finding.evidence.items()
+                    if k not in ("reason", "fix", "blockers")
+                },
+                status=finding.status.value,
+                confidence=finding.confidence,
+            )
+        )
 
     # ------------------------------------------------- non-schema excavation output
     for finding in findings.of(Kind.ENUM):

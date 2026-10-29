@@ -89,11 +89,85 @@ export function cardinalityText(edge: AtlasEdge): string {
   return edge.optional ? `${base}, optional` : base;
 }
 
+/** A link Stratum thinks is missing, drawn faintly between the two tables it names. */
+export type GhostEdge = {
+  from: string;
+  to: string;
+  gap_type: GapType;
+  confidence: number;
+  reason: string;
+  id: string;
+  status: string;
+};
+
+export type GapType =
+  | "undeclared_fk"
+  | "broken_relationship"
+  | "dangling_reference"
+  | "points_outside_core"
+  | "missing_unique"
+  | "missing_lookup"
+  | "isolated_table";
+
+export const GAP_LABEL: Record<GapType, { title: string; blurb: string }> = {
+  undeclared_fk: {
+    title: "Keys nothing enforces",
+    blurb: "Stratum is confident these joins are real, but the database has no foreign key for them.",
+  },
+  broken_relationship: {
+    title: "Relationships worn away",
+    blurb: "The names match and most values do. The rest point at rows that were deleted.",
+  },
+  points_outside_core: {
+    title: "Pointing into an archive",
+    blurb: "The live table does not hold these values; a backup or archive table does.",
+  },
+  dangling_reference: {
+    title: "References to nowhere",
+    blurb: "Named like a reference, but most of the values match nothing.",
+  },
+  missing_unique: {
+    title: "Keys that are not unique",
+    blurb: "The values match, but the column they match holds duplicates, so it cannot be a key.",
+  },
+  missing_lookup: {
+    title: "Codes with no lookup table",
+    blurb: "A coded column whose meaning was found in code or inferred, but no table holds it.",
+  },
+  isolated_table: {
+    title: "Tables with no relationships",
+    blurb: "Nothing was found to join these to the rest of the database.",
+  },
+};
+
+export type Gap = {
+  id: string;
+  gap_type: GapType;
+  table: string;
+  columns: string[];
+  to_table: string;
+  to_columns: string[];
+  reason: string;
+  fix: string;
+  blockers: string[];
+  confidence: number;
+  status: string;
+  evidence: Record<string, unknown>;
+};
+
+export type GapsResponse = {
+  total: number;
+  by_type: Record<string, number>;
+  items: Gap[];
+};
+
 export type AtlasData = {
   database: string;
   version: number;
   nodes: AtlasNode[];
   edges: AtlasEdge[];
+  /** Absent in demo recordings made before gaps existed. */
+  ghost_edges?: GhostEdge[];
   domains: number;
   summary: {
     relationships_by_origin?: Record<string, number>;
@@ -108,6 +182,18 @@ export async function fetchAtlas(databaseId: string): Promise<AtlasData> {
   const response = await fetch(`/api/databases/${databaseId}/atlas`);
   if (!response.ok) throw new Error(await response.text());
   return response.json() as Promise<AtlasData>;
+}
+
+/** The suggestions list. A recording or an older engine without it just has none. */
+export async function fetchGaps(databaseId: string): Promise<GapsResponse> {
+  const empty: GapsResponse = { total: 0, by_type: {}, items: [] };
+  try {
+    if (DEMO) return await demoJson<GapsResponse>(`/databases/${databaseId}/gaps`);
+    const response = await fetch(`/api/databases/${databaseId}/gaps?limit=200`);
+    return response.ok ? ((await response.json()) as GapsResponse) : empty;
+  } catch {
+    return empty;
+  }
 }
 
 /** Respect the OS setting, and react if it changes while the page is open. */

@@ -31,6 +31,7 @@ class Kind(StrEnum):
     NAMING = "naming"                      # a logical name for a cryptic one
     DESCRIPTION = "description"            # a one-line description of an object
     JOIN_REFERENT = "join_referent"        # which parent a key points at, when values tie
+    GAP = "gap"                            # something that should exist and does not
 
 
 class Status(StrEnum):

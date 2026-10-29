@@ -130,6 +130,27 @@ class Relationship(BaseModel):
         return self
 
 
+class Gap(BaseModel):
+    """Something the database seems to be missing, kept apart from what it has.
+
+    Never used to answer a question. Accepting one confirms it for the reviewer's
+    records; for gaps that name a parent table it also adds the relationship.
+    """
+
+    id: str = ""
+    gap_type: str
+    table: str
+    columns: list[str] = Field(default_factory=list)
+    to_table: str = ""
+    to_columns: list[str] = Field(default_factory=list)
+    reason: str = ""
+    fix: str = ""                               # SQL a person could review and run; never run here
+    blockers: list[str] = Field(default_factory=list)
+    evidence: dict[str, Any] = Field(default_factory=dict)
+    status: Status = "hypothesis"
+    confidence: float = 0.5
+
+
 class Metric(BaseModel):
     name: str
     expr: str
@@ -182,6 +203,7 @@ class SemanticModel(BaseModel):
 
     entities: dict[str, Entity] = Field(default_factory=dict)
     relationships: list[Relationship] = Field(default_factory=list)
+    gaps: list[Gap] = Field(default_factory=list)
     metrics: dict[str, Metric] = Field(default_factory=dict)
     glossary: dict[str, str] = Field(default_factory=dict)
 

@@ -149,6 +149,7 @@ def build_review_queue(
         "soft_delete": 1.0,     # changes the row set of every query on the entity
         "god_table": 0.95,      # defines what an entity even is
         "join": 0.9,            # a wrong join is silently wrong
+        "gap": 0.35,            # a suggestion; nothing depends on it until accepted
         "drift": 0.85,          # silently halves a measure
         "key": 0.7,             # fan-out
         "overloaded": 0.7,

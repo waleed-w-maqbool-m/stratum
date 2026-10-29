@@ -116,7 +116,15 @@ function Nodes({
   );
 }
 
-function Edges({ data, selected }: { data: AtlasData; selected: string | null }) {
+function Edges({
+  data,
+  selected,
+  showGhosts,
+}: {
+  data: AtlasData;
+  selected: string | null;
+  showGhosts: boolean;
+}) {
   const byId = useMemo(
     () => new Map(data.nodes.map((node) => [node.id, node])),
     [data.nodes],
@@ -144,6 +152,41 @@ function Edges({ data, selected }: { data: AtlasData; selected: string | null })
       }),
     [data.edges, byId, selected],
   );
+  // Links Stratum thinks are missing: dashed and faint, so they read as a suggestion
+  // beside the solid lines that are believed.
+  const ghosts = useMemo(
+    () =>
+      !showGhosts
+        ? []
+        : (data.ghost_edges ?? []).flatMap((edge, index) => {
+            const from = byId.get(edge.from);
+            const to = byId.get(edge.to);
+            if (!from || !to) return [];
+            const geometry = new THREE.BufferGeometry().setFromPoints([
+              new THREE.Vector3(...from.position),
+              new THREE.Vector3(...to.position),
+            ]);
+            const material = new THREE.LineDashedMaterial({
+              color: 0xc9ced6,
+              dashSize: 0.5,
+              gapSize: 0.4,
+              transparent: true,
+              opacity: selected === null || selected === edge.from || selected === edge.to ? 0.55 : 0.12,
+            });
+            const line = new THREE.Line(geometry, material);
+            line.computeLineDistances();
+            return [{ key: `ghost-${edge.from}-${edge.to}-${index}`, line }];
+          }),
+    [data.ghost_edges, byId, selected, showGhosts],
+  );
+  useLayoutEffect(
+    () => () =>
+      ghosts.forEach(({ line }) => {
+        line.geometry.dispose();
+        (line.material as THREE.Material).dispose();
+      }),
+    [ghosts],
+  );
   useLayoutEffect(
     () => () =>
       lines.forEach(({ line }) => {
@@ -156,6 +199,9 @@ function Edges({ data, selected }: { data: AtlasData; selected: string | null })
   return (
     <>
       {lines.map(({ key, line }) => (
+        <primitive key={key} object={line} />
+      ))}
+      {ghosts.map(({ key, line }) => (
         <primitive key={key} object={line} />
       ))}
     </>
@@ -231,11 +277,13 @@ export function AtlasScene({
   selected,
   onSelect,
   reducedMotion,
+  showGhosts = false,
 }: {
   data: AtlasData;
   selected: string | null;
   onSelect: (id: string | null) => void;
   reducedMotion: boolean;
+  showGhosts?: boolean;
 }) {
   const [held, setHeld] = useState(false);
   const [hovered, setHovered] = useState<string | null>(null);
@@ -271,7 +319,7 @@ export function AtlasScene({
         <directionalLight position={[-14, -6, -10]} intensity={0.25} color="#ffb23f" />
 
         <Nodes nodes={data.nodes} selected={selected} onSelect={onSelect} onHover={setHovered} />
-        <Edges data={data} selected={selected} />
+        <Edges data={data} selected={selected} showGhosts={showGhosts} />
 
         {/* The plane the live schema sits on; everything excluded is below it. */}
         <gridHelper args={[80, 40, "#1a1d22", "#141619"]} position={[0, -3, 0]} />
