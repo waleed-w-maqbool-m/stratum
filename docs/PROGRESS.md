@@ -566,12 +566,80 @@ is the scorer being changed to match a finding made independently, not tuned unt
 It does not help c-025 (a tie at the cut-off lets a different city through, so the rows
 differ) or c-011 / c-040 (gold requires a column the system did not return).
 
+### Phase E: SQL Server and SQL Express (partly done)
+
+*Before:* the SQL Server connector had never connected to a server. It spoke SQL logins to a
+host and port through pymssql only, so `.\SQLEXPRESS` and Windows authentication, the two things
+SSMS users have, could not be expressed.
+
+*Now:*
+
+- **ADO.NET connection strings** (what SSMS and Visual Studio show) are accepted directly:
+  `Server=.\SQLEXPRESS;Database=Northwind;Trusted_Connection=True;`. `host,port`, `tcp:`,
+  `(local)`, `Data Source`, `Initial Catalog`, `UID`/`PWD`, quoted values and
+  `Integrated Security=SSPI` are all handled.
+- **ODBC through pyodbc** for named instances and Windows authentication; a SQL login on a
+  known port still uses pymssql. The newest installed driver is chosen (Driver 18, 17, then
+  older, then the one that ships with Windows). A local instance's self-signed certificate is
+  trusted on this machine only; a remote server is never given trust it did not ask for.
+- **Profiles follow the database's compatibility level** (`profile=auto` on the connection):
+  `tsql2008` below 110, `tsql2012` (OFFSET/FETCH, IIF, CONCAT, TRY_CAST, LAG/LEAD),
+  `tsql2016` (JSON), `tsql2017` (STRING_AGG). The default stays the conservative `tsql2008`,
+  and says so in a note that names the level the database is actually at. `tsql2016` used to
+  allow `STRING_AGG`, which SQL Server only added in 2017; corrected.
+- **Declared foreign keys report whether they can be trusted**: `disabled`, or `not
+  validated` (enabled, but existing rows were never checked).
+
+**Run for real, for the first time**, against the SQL Server 2025 Express instance on this
+machine, using Windows authentication, `.\SQLEXPRESS` and ODBC Driver 18, on two small
+databases that were already there (5 and 11 tables), read-only and with no language model:
+
+| | Database 1 (5 tables) | Database 2 (11 tables) |
+|---|---:|---:|
+| excavation, end to end | 2.4 s | 10.3 s |
+| declared foreign keys read from `sys.foreign_keys` | 4 | 10 |
+| ...labelled `declared` in the model | 4 | 10 |
+| ...whose constraint is not trusted (`is_not_trusted`) | 4 | 0 |
+| relationships inferred from data on top of those | 1 | 0 |
+| SHOWPLAN cost estimate (the cost guard's input) | | works |
+| read-only execution with row cap | | works |
+
+The four untrusted keys in database 1 are real: `sys.foreign_keys` reports `is_not_trusted =
+1` for each, so they were added without checking existing rows. Stratum reports that instead
+of treating them as proven.
+
+**Found by running it live:** a suggestion on database 2 that one column was "a relationship
+eroded by deleted rows" rested on only 5 distinct values (4 matched). That is one missing value,
+not erosion. The minimum sample for those claims is now 20 distinct values, and the suggestion
+no longer appears.
+
+**Not done, and not claimed:**
+
+- The Docker image (SQL Server 2022 Express) was not pulled; Docker Desktop was not running.
+  `STRATUM_MSSQL_URL=... pytest tests/test_mssql_connection.py` runs the live test against any
+  server.
+- Not run live: the pymssql path (SQL login), the legacy "SQL Server" ODBC driver, a remote
+  server, a named instance resolved through SQL Server Browser (it is stopped on this
+  machine, and the connection worked without it), TLS to a certificate that is not
+  self-signed.
+- The Connect page has no SQL Server fields yet; the string can be pasted into the existing
+  URL box.
+- The HALCYON benchmark (the SQL Server legacifier on branch `halcyon-wip`) was not run, so
+  there is no accuracy number for SQL Server, only a demonstration that the connector, the
+  catalog queries, declared-key handling, gap detection and the cost guard work on a live
+  server.
+- MS_Description extended properties are not read.
+
+| | Before | After |
+|---|---|---|
+| engine tests | 155 | 182 (+1 live test that skips without a server) |
+
 ---
 
 ## Not built
 
 | | |
 |---|---|
-| **HALCYON** (SQL Server) | first blocked by hardware virtualisation, then out of time. The `tsql2008` profile and its linter are implemented and unit-tested, but have never run against a live SQL Server. An unrun draft of the legacifier is on the `halcyon-wip` branch |
+| **HALCYON** (SQL Server benchmark) | first blocked by hardware virtualisation, then out of time. The connector has since been run against a live SQL Server 2025 Express instance (see Phase E), but there is no SQL Server accuracy benchmark. An unrun draft of the legacifier is on the `halcyon-wip` branch |
 | ablation report, BIRD mini-dev, `legacy_strict` runs | the harness supports all three (`--ablate`); each needs its own day of free-tier budget |
 | held-out calibration | the fit above is in-sample |

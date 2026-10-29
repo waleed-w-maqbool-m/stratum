@@ -14,6 +14,7 @@ import contextlib
 import re
 from typing import Any
 
+from . import mssql_url
 from .base import (
     ColumnInfo,
     Connector,
@@ -25,7 +26,7 @@ from .base import (
     ServerInfo,
     TableInfo,
 )
-from .profiles import TSQL2008, CapabilityProfile, for_server
+from .profiles import PROFILES, TSQL2008, CapabilityProfile, for_compat_level, for_server
 
 
 class MSSQLConnector(Connector):
@@ -44,6 +45,15 @@ class MSSQLConnector(Connector):
         ("The SELECT permission was denied",
          "The login lacks SELECT on that object. Stratum needs SELECT plus VIEW "
          "DEFINITION to read the catalog."),
+        ("Data source name not found",
+         "No ODBC driver is installed for SQL Server. Install 'ODBC Driver 18 for SQL "
+         "Server' from Microsoft, then try again."),
+        ("certificate",
+         "The server's TLS certificate is not trusted. A local SQL Express instance uses a "
+         "self-signed one: add trust_cert=1 to the connection, or Encrypt=False."),
+        ("SQL Server Browser",
+         "A named instance is found through the SQL Server Browser service (UDP 1434). "
+         "Start it, or connect by port instead: Server=host,port."),
         ("Invalid object name",
          "The query references an object that does not exist, or the login cannot see it."),
     ]
@@ -54,8 +64,14 @@ class MSSQLConnector(Connector):
 
         self.fields = parse_url(url)
         self.conn: Any = None
+        self.driver = "pymssql"
 
     def connect(self) -> None:
+        # Windows authentication and named instances (`.\SQLEXPRESS`) are what SSMS users
+        # have and pymssql cannot do, so those go through ODBC.
+        if mssql_url.needs_odbc(self.fields):
+            self._connect_odbc()
+            return
         try:
             import pymssql
         except ImportError as exc:  # pragma: no cover - optional extra
@@ -74,6 +90,24 @@ class MSSQLConnector(Connector):
             autocommit=False,
         )
 
+    def _connect_odbc(self) -> None:
+        try:
+            import pyodbc
+        except ImportError as exc:  # pragma: no cover - optional extra
+            raise RuntimeError(
+                "pyodbc is not installed. Install the extra: uv sync --extra mssql"
+            ) from exc
+        driver = mssql_url.pick_driver(list(pyodbc.drivers()))
+        if driver is None:
+            raise RuntimeError(
+                "Data source name not found: no ODBC driver for SQL Server is installed. "
+                "Install 'ODBC Driver 18 for SQL Server' from Microsoft."
+            )
+        connection_string = mssql_url.odbc_connection_string(self.fields, driver)
+        self.conn = pyodbc.connect(connection_string, timeout=15, autocommit=False)
+        self.conn.timeout = 30
+        self.driver = driver
+
     def close(self) -> None:
         if self.conn is not None:
             self.conn.close()
@@ -89,9 +123,10 @@ class MSSQLConnector(Connector):
             "SELECT @@VERSION, DB_NAME(), SUSER_SNAME(), "
             "  CAST(SERVERPROPERTY('ProductMajorVersion') AS INT), "
             "  IS_SRVROLEMEMBER('sysadmin'), "
-            "  DATABASEPROPERTYEX(DB_NAME(), 'Collation')"
+            "  DATABASEPROPERTYEX(DB_NAME(), 'Collation'), "
+            "  (SELECT compatibility_level FROM sys.databases WHERE name = DB_NAME())"
         )
-        version, database, user, major, sysadmin, _collation = rows[0]
+        version, database, user, major, sysadmin, _collation, compat = rows[0]
         # Whether the login can write at all — a warning, never a permission we use.
         write_rows = self._query(
             "SELECT COUNT(*) FROM fn_my_permissions(NULL, 'DATABASE') "
@@ -104,11 +139,21 @@ class MSSQLConnector(Connector):
                 "This login can modify data. Stratum executes read-only regardless, "
                 "but a dedicated read-only login is safer."
             )
-        profile = self._profile or for_server("mssql", str(major))
-        if profile is TSQL2008 and major and int(major) >= 13:
+        requested = self.fields.get("option_map", {}).get("profile", "")
+        if self._profile is not None:
+            profile = self._profile
+        elif requested == "auto":
+            profile = for_compat_level(int(compat) if compat else None)
+        elif requested in PROFILES:
+            profile = PROFILES[requested]
+        else:
+            profile = for_server("mssql", str(major))
+        if profile is TSQL2008 and compat and int(compat) >= 110:
+            wider = for_compat_level(int(compat))
             notes.append(
-                f"Server reports major version {major}, but the tsql2008 profile is "
-                "applied by default. Widen it on the connection if the shop allows it."
+                f"This database is at compatibility level {compat}, which allows "
+                f"{wider.name} syntax, but the conservative tsql2008 profile is in use. "
+                "Add profile=auto to the connection to use the level the database is set to."
             )
         return ServerInfo(
             dialect="mssql",
@@ -314,6 +359,7 @@ class MSSQLConnector(Connector):
                     name=name, schema=ps, table=pt, columns=[],
                     ref_schema=rs, ref_table=rt, ref_columns=[],
                     enforced=not (disabled or untrusted),
+                    weakness="disabled" if disabled else "not_validated" if untrusted else None,
                 )
             grouped[name].columns.append(pc)
             grouped[name].ref_columns.append(rc)

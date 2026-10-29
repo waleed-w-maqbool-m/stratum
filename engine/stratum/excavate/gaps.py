@@ -48,8 +48,9 @@ MISSING_UNIQUE = "missing_unique"
 MISSING_LOOKUP = "missing_lookup"
 ISOLATED = "isolated_table"
 
-# Fewer distinct values than this say nothing: a column holding 1..4 matches anything.
-MIN_VALUES_TESTED = 5
+# Fewer distinct values than this say nothing. One missing value out of five reads as 80%
+# and as "a relationship eroded by deleted rows"; twenty is where a shortfall means something.
+MIN_VALUES_TESTED = 20
 
 # How many archive and backup parents may be probed to place a dangling reference.
 PROBE_BUDGET = 25

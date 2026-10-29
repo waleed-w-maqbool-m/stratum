@@ -70,6 +70,7 @@ def detect(schema: Schema) -> list[Finding]:
                     "source": "declared foreign key",
                     "fk_name": fk.name,
                     "enforced": fk.enforced,
+                    "weakness": fk.weakness,
                 },
                 detector="declared",
                 status=Status.ACCEPTED,

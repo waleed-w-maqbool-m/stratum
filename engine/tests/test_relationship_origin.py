@@ -146,11 +146,17 @@ def _schema_with(fk: ForeignKeyInfo) -> Schema:
 
 def test_a_constraint_the_engine_does_not_enforce_is_less_certain():
     fk = ForeignKeyInfo(schema="", table="child", columns=["p_id"], ref_schema="",
-                        ref_table="parent", ref_columns=["id"], name="FK_c_p", enforced=False)
+                        ref_table="parent", ref_columns=["id"], name="FK_c_p", enforced=False,
+                        weakness="not_validated")
     [finding] = declared.detect(_schema_with(fk))
     assert finding.evidence["origin"] == "declared"
     assert finding.evidence["enforced"] is False
     assert finding.confidence == declared.UNENFORCED_CONFIDENCE
+    said = describe("declared", finding.evidence, "child", ["p_id"], "parent", ["id"])
+    assert "without checking existing rows" in said
+    off = describe("declared", {**finding.evidence, "weakness": "disabled"},
+                   "child", ["p_id"], "parent", ["id"])
+    assert "switched off" in off
 
 
 def test_a_declared_key_with_mismatched_column_counts_is_ignored():

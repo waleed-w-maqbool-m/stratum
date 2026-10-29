@@ -165,7 +165,7 @@ def test_too_few_values_are_not_evidence(result):
     schema = result.schema
     thin = Rejected(_candidate(
         schema, "orders", ["cust_id"], "customer", ["cust_id"], name_score=1.0,
-        inclusion=0.7, tested=3, orphan_count=1), "inclusion")
+        inclusion=0.8, tested=5, orphan_count=1), "inclusion")
     out = gaps.detect(None, schema, result.profiles, [], [thin], {}, [])
     assert not [g for g in out if g.value["gap_type"] == "broken_relationship"]
 

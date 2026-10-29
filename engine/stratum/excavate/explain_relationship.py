@@ -62,7 +62,11 @@ def describe(
         name = evidence.get("fk_name")
         text = f"Declared as foreign key {name}." if name else "Declared as a foreign key."
         if evidence.get("enforced") is False:
-            text += " The constraint exists but the database is not enforcing it."
+            if evidence.get("weakness") == "disabled":
+                text += " The constraint exists but is switched off."
+            else:
+                text += (" The constraint was added without checking existing rows, so the "
+                         "data may already break it.")
         if Origin.SHIPPED_SQL.value in corroborated:
             text += " Views or procedures also join on it."
         return " ".join(part for part in (text, measured) if part)

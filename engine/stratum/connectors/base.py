@@ -89,6 +89,9 @@ class ForeignKeyInfo:
     # False when the constraint exists but is disabled or was added without checking
     # existing rows (WITH NOCHECK); None when the engine does not say.
     enforced: bool | None = None
+    # Why it is not enforced: `disabled` (switched off) or `not_validated` (enabled, but
+    # existing rows were never checked against it). None when enforced or unknown.
+    weakness: str | None = None
 
 
 @dataclass
@@ -235,6 +238,25 @@ def parse_url(url: str) -> dict[str, Any]:
     if dialect == "sqlite":
         path = url.split("///", 1)[-1] if "///" in url else parsed.path
         return {"dialect": "sqlite", "path": unquote(path), "database": unquote(path)}
+
+    if dialect == "mssql":
+        from .mssql_url import fields_from_url
+
+        parsed_fields = fields_from_url(url)
+        return {
+            "dialect": "mssql",
+            "host": parsed_fields["host"],
+            "port": parsed_fields["port"] or (None if parsed_fields["instance"] else 1433),
+            "username": parsed_fields["username"],
+            "password": parsed_fields["password"],
+            "database": parsed_fields["database"],
+            "options": parsed.query,
+            "instance": parsed_fields["instance"],
+            "windows_auth": parsed_fields["windows_auth"],
+            "encrypt": parsed_fields["encrypt"],
+            "trust_cert": parsed_fields["trust_cert"],
+            "option_map": parsed_fields["options"],
+        }
 
     default_port = {"postgres": 5432, "mssql": 1433}.get(dialect)
     return {

@@ -121,6 +121,7 @@ class Candidate:
     corroborated_by: list[str] = field(default_factory=list)  # other origins that agree
     fk_name: str = ""
     enforced: bool | None = None      # declared only: does the engine check this constraint
+    weakness: str | None = None       # declared only: disabled | not_validated
     orphan_count: int = 0             # distinct tested values with no parent row
     orphan_samples: list[str] = field(default_factory=list)
     probe_failed: bool = False
@@ -582,6 +583,7 @@ def detect(
             origin=Origin.DECLARED.value,
             fk_name=finding.evidence.get("fk_name", ""),
             enforced=finding.evidence.get("enforced"),
+            weakness=finding.evidence.get("weakness"),
         )
         by_key[candidate.key()] = candidate
 
@@ -681,6 +683,7 @@ def detect(
                     "sources": candidate.sources,
                     "fk_name": candidate.fk_name,
                     "enforced": candidate.enforced,
+                    "weakness": candidate.weakness,
                     "inclusion": candidate.inclusion,
                     "distinct_values_tested": candidate.tested,
                     "inclusion_measured": measured,

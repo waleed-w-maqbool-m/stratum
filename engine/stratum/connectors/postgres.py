@@ -293,7 +293,8 @@ class PostgresConnector(Connector):
         return [
             ForeignKeyInfo(name=name, schema=s, table=t, columns=list(cols),
                            ref_schema=fs, ref_table=ft, ref_columns=list(fcols),
-                           enforced=bool(valid))
+                           enforced=bool(valid),
+                           weakness=None if valid else "not_validated")
             for name, s, t, cols, fs, ft, fcols, valid in rows
         ]
 

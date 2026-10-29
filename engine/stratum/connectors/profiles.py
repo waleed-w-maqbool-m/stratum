@@ -116,10 +116,39 @@ TSQL2008 = CapabilityProfile(
     quote_close="]",
 )
 
+TSQL2012 = CapabilityProfile(
+    name="tsql2012",
+    sqlglot_dialect="tsql",
+    description="SQL Server 2012-2014: OFFSET/FETCH, IIF, CONCAT, TRY_CAST, LAG/LEAD.",
+    json_fns=False,           # 2016
+    string_agg=False,         # 2017
+    limit=False,
+    top=True,
+    xml_value=True,
+    ilike=False,
+    regex=False,
+    quote_open="[",
+    quote_close="]",
+)
+
 TSQL2016 = CapabilityProfile(
     name="tsql2016",
     sqlglot_dialect="tsql",
-    description="SQL Server 2016+.",
+    description="SQL Server 2016: adds JSON functions.",
+    string_agg=False,         # 2017
+    limit=False,
+    top=True,
+    xml_value=True,
+    ilike=False,
+    regex=False,
+    quote_open="[",
+    quote_close="]",
+)
+
+TSQL2017 = CapabilityProfile(
+    name="tsql2017",
+    sqlglot_dialect="tsql",
+    description="SQL Server 2017 and later: adds STRING_AGG.",
     limit=False,
     top=True,
     xml_value=True,
@@ -182,7 +211,7 @@ LEGACY_STRICT = CapabilityProfile(
 )
 
 PROFILES: dict[str, CapabilityProfile] = {
-    p.name: p for p in (TSQL2008, TSQL2016, PG16, SQLITE3, LEGACY_STRICT)
+    p.name: p for p in (TSQL2008, TSQL2012, TSQL2016, TSQL2017, PG16, SQLITE3, LEGACY_STRICT)
 }
 
 
@@ -193,6 +222,21 @@ def get(name: str) -> CapabilityProfile:
         raise KeyError(
             f"unknown capability profile {name!r}; known: {sorted(PROFILES)}"
         ) from None
+
+
+def for_compat_level(level: int | None) -> CapabilityProfile:
+    """The SQL Server profile that matches a *database's* compatibility level.
+
+    The level, not the server version, is what a legacy shop sets: a 2022 server hosting a
+    database at level 100 behaves as SQL Server 2008 for syntax, and the SQL has to as well.
+    """
+    if level is None or level < 110:
+        return TSQL2008
+    if level < 130:
+        return TSQL2012
+    if level < 140:
+        return TSQL2016
+    return TSQL2017
 
 
 def for_server(dialect: str, version: str | None) -> CapabilityProfile:

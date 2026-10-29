@@ -15,6 +15,10 @@ from .profiles import CapabilityProfile, get
 
 
 def build(url: str, profile_name: str | None = None) -> Connector:
+    from .mssql_url import looks_like_ado, normalise
+
+    if looks_like_ado(url):
+        url = normalise(url)             # what SSMS shows: Server=.\SQLEXPRESS;Database=...
     fields = parse_url(url)
     dialect = fields["dialect"]
     profile: CapabilityProfile | None = get(profile_name) if profile_name else None
