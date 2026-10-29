@@ -35,6 +35,7 @@ from gauntlet.scorer import (  # noqa: E402
     QuestionOutcome,
     Suite,
     compare,
+    compare_tie_aware,
     render_report,
     score_run,
 )
@@ -194,7 +195,9 @@ def naive_baseline(context, question) -> dict[str, Any]:
     return out
 
 
-def score_answer(question, answer: dict[str, Any], run_clean) -> QuestionOutcome:
+def score_answer(
+    question, answer: dict[str, Any], run_clean, *, tie_aware: bool = False
+) -> QuestionOutcome:
     """Compare one answer against gold, or against the behaviour the question expects."""
     outcome = QuestionOutcome(
         id=question.id,
@@ -232,7 +235,10 @@ def score_answer(question, answer: dict[str, Any], run_clean) -> QuestionOutcome
         return outcome
 
     actual = [tuple(r) for r in answer.get("rows", [])]
-    match = compare(expected, actual, question.order_sensitive)
+    if tie_aware and question.order_sensitive:
+        match = compare_tie_aware(expected, actual)
+    else:
+        match = compare(expected, actual, question.order_sensitive)
     outcome.correct = match.correct
     outcome.reason = match.reason
     return outcome

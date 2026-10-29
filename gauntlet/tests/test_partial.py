@@ -95,3 +95,28 @@ def test_declared_recall_separates_declared_from_guessed(tmp_path):
     assert scores["undeclared_gap_recall"] == 1.0
     assert scores["undeclared_gap_precision"] == 0.5
     assert scores["kept_reported_as_undeclared"] == 1
+
+
+# ------------------------------------------------------------------ tie-aware scoring
+
+
+def test_tie_aware_accepts_ties_listed_in_a_different_order_but_nothing_else():
+    from gauntlet.scorer import compare, compare_tie_aware
+
+    gold = [("Ann", 90), ("Bob", 80), ("Cy", 80), ("Di", 70)]
+    swapped = [("Ann", 90), ("Cy", 80), ("Bob", 80), ("Di", 70)]       # tied totals reordered
+    assert not compare(gold, swapped, order_sensitive=True).correct
+    assert compare_tie_aware(gold, swapped).correct
+
+    wrong_order = [("Di", 70), ("Bob", 80), ("Cy", 80), ("Ann", 90)]   # sorted the other way
+    assert not compare_tie_aware(gold, wrong_order).correct
+    different_rows = [("Ann", 90), ("Bob", 80), ("Eve", 80), ("Di", 70)]
+    assert not compare_tie_aware(gold, different_rows).correct
+    assert compare_tie_aware(gold, gold).correct
+
+
+def test_tie_aware_does_not_rescue_a_missing_gold_column():
+    from gauntlet.scorer import compare_tie_aware
+
+    gold = [("Ann", 90, 3), ("Bob", 80, 2)]
+    assert not compare_tie_aware(gold, [("Ann", 90), ("Bob", 80)]).correct

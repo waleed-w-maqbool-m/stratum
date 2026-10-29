@@ -148,6 +148,51 @@ def compare(
     return MatchResult(True, "", matched, len(gold_cols))
 
 
+def _direction(values: list) -> str | None:
+    """`asc` or `desc` when the values are sorted and not all equal, else None."""
+    try:
+        ascending = all(a <= b for a, b in zip(values, values[1:], strict=False))
+        descending = all(a >= b for a, b in zip(values, values[1:], strict=False))
+    except TypeError:
+        return None
+    if ascending and descending:
+        return None
+    return "asc" if ascending else "desc" if descending else None
+
+
+def compare_tie_aware(gold_rows: list[tuple], system_rows: list[tuple]) -> MatchResult:
+    """`compare(order_sensitive=True)`, minus the penalty for ordering ties differently.
+
+    A question like "the ten customers who spent the most" has no single correct order for
+    customers who spent the same. Strict comparison marks a system wrong for listing two
+    equal totals the other way round. This accepts a result when it has exactly the rows
+    gold has and is sorted on the same column gold is sorted on, so the only difference left
+    is inside groups of equal values. It does not help when the *set* of rows differs, as
+    when a tie at the cut-off lets a different city through.
+    """
+    strict = compare(gold_rows, system_rows, order_sensitive=True)
+    if strict.correct or not gold_rows:
+        return strict
+    if not compare(gold_rows, system_rows, order_sensitive=False).correct:
+        return strict
+    gold = [tuple(normalise(v) for v in row) for row in gold_rows]
+    system = [tuple(normalise(v) for v in row) for row in system_rows]
+    for j in range(len(gold[0])):
+        gold_column = [row[j] for row in gold]
+        direction = _direction(gold_column)
+        if direction is None:
+            continue
+        wanted = sorted(map(str, gold_column))
+        for k in range(len(system[0])):
+            column = [row[k] for row in system]
+            if sorted(map(str, column)) == wanted and _direction(column) == direction:
+                return MatchResult(
+                    True, "same rows; order differs only among tied sort values",
+                    strict.matched_columns, strict.gold_columns,
+                )
+    return strict
+
+
 # ------------------------------------------------------------------------------ suites
 
 

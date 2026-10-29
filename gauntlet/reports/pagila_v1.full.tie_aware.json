@@ -1,0 +1,10 @@
+{
+  "suite": "pagila_v1",
+  "tag": "full",
+  "questions": 45,
+  "strict_correct": 26,
+  "strict": 0.578,
+  "tie_aware_correct": 26,
+  "tie_aware": 0.578,
+  "accepted_only_when_ties_are_not_penalised": []
+}

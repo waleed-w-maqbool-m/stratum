@@ -1,0 +1,13 @@
+{
+  "suite": "chinook_v1",
+  "tag": "full",
+  "questions": 46,
+  "strict_correct": 28,
+  "strict": 0.609,
+  "tie_aware_correct": 30,
+  "tie_aware": 0.652,
+  "accepted_only_when_ties_are_not_penalised": [
+    "c-006",
+    "c-042"
+  ]
+}

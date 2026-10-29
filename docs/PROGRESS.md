@@ -475,8 +475,8 @@ contain them. That is a test of the mechanism, not a measurement of how often it
 
 | | Before | After |
 |---|---|---|
-| engine tests | 132 | 152 |
-| gauntlet tests | 11 | 14 |
+| engine tests | 132 | 155 |
+| gauntlet tests | 11 | 16 |
 
 ### Phase C: an Atlas for studying a database
 
@@ -530,11 +530,41 @@ it produced. Moved inside that table's derived query it filters before the join,
 | regression test: anti-join on a constructed database, correct answer 58 | 60 | 58 |
 | a filter on the preserved side of a left join is still pushed down | yes | yes (tested) |
 
-What this does and does not show: the replay uses the logical SQL the language model wrote in
-the recorded run, compiled by the old and new compiler against the same saved model. It
-shows the compiler fault is fixed for that query. It is not a re-run of the suite, so the
-headline 28/46 is unchanged until the whole suite is run again. At most this moves one
-question (60.9% to 63.0% if nothing else changes).
+**Replaying the whole recorded Chinook run through the old and the new compiler.** Each of
+the 46 questions' recorded logical SQL (what the language model wrote) is compiled against the
+same saved semantic model, executed on the legacy database and scored. No model is called.
+
+| Chinook, 46 gold-scored questions | Strict (the benchmark's own rule) | Tie-aware |
+|---|---:|---:|
+| as recorded, old compiler (reproduces the published 28/46) | 28 (60.9%) | 30 (65.2%) |
+| new compiler | **29 (63.0%)** | **31 (67.4%)** |
+
+The only question whose result changed between the old and new compiler is c-021; none
+regressed. The strict figure is the published headline and stays the headline. The
+tie-aware figure is a second score for the same answers (see below), not a replacement.
+
+What this does and does not show: it is a replay of *recorded* generation through an improved
+compiler, so it isolates the compiler fix. It cannot show the effect of anything that changes
+what the language model is shown (retrieval, entity naming), because those would change the
+logical SQL itself and only a fresh run measures that. The model was `gpt-oss-120b` and the
+semantic model was version 1, as in the attribution.
+
+**A second, tie-aware score** (`python -m gauntlet.rescore --suite chinook_v1`). The benchmark
+marks an answer wrong when two customers with the same total are listed in the other order.
+The tie-aware score accepts a result that has exactly gold's rows and is sorted on the same
+column gold is sorted on, so only the order *within equal values* may differ. It is reported
+beside the strict score and never instead of it.
+
+| | Strict | Tie-aware | Accepted only when ties are not penalised |
+|---|---:|---:|---|
+| Chinook, as recorded | 28/46 (60.9%) | 30/46 (65.2%) | c-006, c-042 |
+| Pagila, as recorded | 26/45 (57.8%) | 26/45 (57.8%) | none |
+
+c-006 and c-042 are the two questions the failure attribution had already classed as the
+benchmark's fault (the same ten customers as gold, tied totals in a different order), so this
+is the scorer being changed to match a finding made independently, not tuned until it passed.
+It does not help c-025 (a tie at the cut-off lets a different city through, so the rows
+differ) or c-011 / c-040 (gold requires a column the system did not return).
 
 ---
 
