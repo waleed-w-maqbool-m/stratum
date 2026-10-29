@@ -235,3 +235,23 @@ def test_the_api_serves_gaps_and_draws_the_ones_that_name_a_table(result, tmp_pa
     # A confident undeclared key is a real edge already, so it is not drawn twice.
     assert not [e for e in payload["ghost_edges"] if e["gap_type"] == "undeclared_fk"]
     assert payload["summary"]["gaps_by_type"]["broken_relationship"] == 1
+
+
+def test_a_join_whose_parent_is_unique_only_under_a_filter_is_not_offered_as_a_foreign_key(result):
+    from stratum.excavate.findings import Finding, Status
+
+    schema = result.schema
+    # Orders are unique only where a discriminator holds, as in a god table.
+    join = Finding(
+        kind=Kind.JOIN, target="line",
+        value={"from_table": "line", "from_columns": ["order_id"],
+               "to_table": "orders", "to_columns": ["cust_id"], "expression": ""},
+        confidence=0.9, status=Status.HYPOTHESIS, detector="joins",
+        evidence={"origin": "data", "inclusion": 1.0, "distinct_values_tested": 80,
+                  "parent_filter": "kind = 'I'", "parent_key_is_unique": True},
+    )
+    out = gaps.detect(None, schema, result.profiles, [join], [], {}, [])
+    found = [g for g in out if g.target == "line"]
+    assert [g.value["gap_type"] for g in found] == ["missing_unique"]
+    assert found[0].evidence["fix"] == ""
+    assert "kind = 'I'" in found[0].evidence["reason"]

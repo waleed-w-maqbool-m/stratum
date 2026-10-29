@@ -1,0 +1,64 @@
+{
+  "database": "chinook_partial",
+  "declared_keys": 6,
+  "undeclared_keys": 5,
+  "declared_labelled_recall": 1.0,
+  "declared_labelled_precision": 1.0,
+  "undeclared_gap_recall": 1.0,
+  "undeclared_gap_precision": 1.0,
+  "kept_reported_as_undeclared": 0,
+  "undeclared_gaps_reported": 5,
+  "undeclared_not_in_answer_key": [],
+  "knowledge": {
+    "joins": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1": 1.0
+    },
+    "keys": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1": 1.0
+    },
+    "composite_keys": {
+      "found": 3,
+      "total": 3,
+      "recall": 1.0
+    },
+    "soft_deletes": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1": 1.0
+    },
+    "dead_tables": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1": 1.0
+    },
+    "table_class_exact": {
+      "agree": 134,
+      "total": 134,
+      "accuracy": 1.0
+    },
+    "enums": {
+      "decoded": 7,
+      "total": 22,
+      "accuracy": 0.318
+    },
+    "drift": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1": 1.0
+    },
+    "embedded_formats": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1": 1.0
+    },
+    "god_tables": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1": 1.0
+    }
+  }
+}

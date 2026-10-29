@@ -406,6 +406,78 @@ What this shows and does not show:
   AdventureWorks in phase E.
 - Not yet re-run: the question-answering suites. Phase A does not touch the ask pipeline.
 
+### Phase B: relationships and structure that should exist
+
+*Before:* the join detector threw away every candidate that failed its data test, so the
+tool could only say what it was sure of. A relationship that holds for 75% of values because
+the rest were deleted was invisible.
+
+*Now:* a `gaps` stage reports, separately from the relationships the model uses, seven kinds
+of suggestion: keys nothing enforces, relationships worn away by deleted parents, references
+that point into an archive or backup, dangling references, parents that are not unique, coded
+columns with no lookup table, and tables nothing relates to. Each carries its evidence and,
+where it applies, SQL for the connection's dialect (`WITH NOCHECK` on SQL Server and `NOT
+VALID` on Postgres when existing rows would violate the key). The SQL is shown and never run.
+A reviewer can accept or reject a gap; accepting one that names a parent adds the
+relationship.
+
+**New benchmark, `chinook_partial`** (`make partial`): a copy of the Chinook legacy database
+in which half of the real, unconditional joins (6 of 11, every second in a fixed order) are
+declared foreign keys and the other 5 are still undeclared. The answer key says which is
+which. Excavated with no language model:
+
+| | Result |
+|---|---:|
+| declared keys labelled `declared` (recall) | 6 / 6 |
+| relationships labelled `declared` that really were (precision) | 6 / 6 |
+| dropped keys returned as `undeclared_fk` suggestions (recall) | 5 / 5 |
+| `undeclared_fk` suggestions that really were dropped keys (precision) | 5 / 5 |
+| declared keys wrongly reported as undeclared | 0 |
+| join precision / recall against the answer key, all joins | 1.000 / 1.000 |
+
+The same legacy database with every key dropped scored join precision 0.929 and recall
+0.929 under the same conditions (see phase A). The gain on `chinook_partial` is not all
+from the gap work: declaring a key removes the ambiguity the language model is otherwise
+needed to settle (`CUST_MSTR.REP_NO` has two equally plausible parents without it).
+
+**What building and running it found, kept in the record because it is the point of it:**
+
+- The first run on `chinook_partial` scored 5/5 recall and 0.833 precision. The extra
+  suggestion was a foreign key from `SO_LN` to `TRANS_MSTR` on `(ORD_NO, STORE_CD)`.
+  `TRANS_MSTR` is a god table: that pair is unique only where `TRANS_TYP_CD = 'I'`, so the
+  `ALTER TABLE` Stratum wrote would have been refused by a real database. It is now reported
+  as a key that is not unique, with no SQL.
+- On the first run against the real legacy databases the detector produced three suggestions
+  that were wrong: a table's own primary key flagged as a dangling reference to another
+  table, the reverse of an edge it had already found, and two phone-number columns matched
+  by name. A fourth, on Pagila, reported a many-to-many pair (payments and rentals share
+  customer and staff) as a missing unique key in both directions. Each is now excluded and
+  has a test.
+- The search for a dangling column's parent among archive and backup tables first ran every
+  candidate pair among 100+ set-aside tables and took 7.8 s on Chinook. It now tests only the
+  dangling columns and takes under 2 ms.
+
+Suggestions on the benchmark databases, excavated with no language model:
+
+| | Chinook legacy | Pagila legacy |
+|---|---:|---:|
+| keys nothing enforces (`undeclared_fk`) | 11 | 19 |
+| parent not unique | 1 | 0 |
+| coded column, no lookup table | 1 | 0 |
+| table nothing relates to | 1 | 2 |
+| `gaps` stage time | 1 ms | 2 ms |
+
+Not measured: whether the *broken*, *dangling* and *archive* suggestions are right on a
+real legacy database. Neither benchmark database has orphaned references (the legacifier
+does not create them), so those three kinds are tested only on a small constructed fixture
+(`tests/fixtures/build_gaps.py`), where they are found because the fixture was built to
+contain them. That is a test of the mechanism, not a measurement of how often it is right.
+
+| | Before | After |
+|---|---|---|
+| engine tests | 132 | 150 |
+| gauntlet tests | 11 | 14 |
+
 ---
 
 ## Not built

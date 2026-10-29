@@ -68,6 +68,10 @@ eval-offline:               ## exercise the deterministic half without an LLM
 eval-resume:                ## continue a run that a rate limit interrupted
 	$(PY) -m gauntlet.runner --suite $(SUITE) --mode full --resume --pace 22 --patience 900 $(PIN)
 
+partial:                    ## build chinook_partial (half the keys declared) and score the labelling
+	$(PY) -m gauntlet.partial build
+	$(PY) -m gauntlet.partial score
+
 calibrate:                  ## fit the confidence weights and check the score is honest
 	cd engine && .venv/Scripts/python.exe -m stratum.cli calibrate --suite $(SUITE)
 

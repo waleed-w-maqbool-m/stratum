@@ -144,6 +144,23 @@ def detect(
             continue
         orphans = evidence.get("orphan_count") or 0
         keyed = _is_key(parent, value["to_columns"])
+        if evidence.get("parent_filter") and not keyed:
+            # Unique only once a discriminator is applied (a god table). The join is real,
+            # but no foreign key can reference a key that holds for some rows, so the
+            # honest suggestion is about the key, not a constraint that would be refused.
+            out.append(_gap(
+                MISSING_UNIQUE, child.qualified, value["from_columns"], parent.qualified,
+                value["to_columns"], f.confidence,
+                f"{_short(child.qualified)}.{', '.join(value['from_columns'])} points at "
+                f"{_short(parent.qualified)}.{', '.join(value['to_columns'])}, which is "
+                f"unique only where {evidence['parent_filter']}. A foreign key needs a key "
+                "that holds for every row, so this join cannot be declared as it stands.",
+                blockers=[f"the parent is unique only where {evidence['parent_filter']}"],
+                origin=evidence["origin"], inclusion=evidence.get("inclusion"),
+                values_tested=evidence.get("distinct_values_tested"),
+                parent_filter=evidence["parent_filter"],
+            ))
+            continue
         blockers: list[str] = []
         if orphans:
             blockers.append(f"{orphans} existing value{'s' if orphans != 1 else ''} "

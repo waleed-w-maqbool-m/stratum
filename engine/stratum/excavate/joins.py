@@ -689,6 +689,7 @@ def detect(
                     "name_similarity": candidate.name_score,
                     "parent_coverage": round(candidate.parent_coverage, 4),
                     "parent_key_is_unique": candidate.parent_unique,
+                    "parent_filter": candidate.parent_filter,
                     "composite": candidate.composite,
                     "needs_cast": any(f.needs_cast for f in candidate.child_forms)
                     or any(f.needs_cast for f in candidate.parent_forms),

@@ -299,6 +299,69 @@ def _comparable(model: dict[str, Any]) -> dict[str, Any]:
     return out
 
 
+def declared_recall(
+    manifest_path: Path, kept: list[tuple], model: dict[str, Any]
+) -> dict[str, Any]:
+    """On a database that kept some foreign keys: are the labels right?
+
+    `kept` are the joins the benchmark declared as constraints, as the same
+    (child, child cols, parent, parent cols) tuples `knowledge_recall` uses. Two claims
+    are scored. Every kept key must be labelled `declared`, and the keys that were dropped
+    must come back as `undeclared_fk` suggestions, with nothing else reported there. A
+    kept key that shows up as undeclared would mean the declared constraint was ignored.
+    """
+    manifest = json.loads(manifest_path.read_text("utf-8"))
+
+    def key(child: str, ccols: list[str], parent: str, pcols: list[str]) -> tuple:
+        return (_bare(child).lower(), tuple(sorted(c.lower() for c in ccols)),
+                _bare(parent).lower(), tuple(sorted(p.lower() for p in pcols)))
+
+    def both_ways(keys: set[tuple]) -> set[tuple]:
+        return keys | {(p, pc, c, cc) for (c, cc, p, pc) in keys}
+
+    truth = {
+        key(j["child"], j["child_cols"], j["parent"], j["parent_cols"])
+        for j in manifest["joins"] if not j.get("condition")
+    }
+    kept_keys = {key(*k[0:1], list(k[1]), k[2], list(k[3])) for k in kept}
+    dropped = truth - kept_keys
+
+    declared = {
+        key(r["from_table"], r["from_columns"], r["to_table"], r["to_columns"])
+        for r in model.get("relationships", []) if r.get("origin") == "declared"
+    }
+    undeclared = {
+        key(g["table"], g["columns"], g["to_table"], g["to_columns"])
+        for g in model.get("gaps", []) if g["gap_type"] == "undeclared_fk"
+    }
+
+    def share(part: set[tuple], whole: set[tuple]) -> float:
+        return round(len(part) / len(whole), 3) if whole else 0.0
+
+    return {
+        "declared_labelled_recall": share(
+            {k for k in kept_keys if k in both_ways(declared)}, kept_keys
+        ),
+        "declared_labelled_precision": share(
+            {d for d in declared if d in both_ways(kept_keys)}, declared
+        ),
+        "undeclared_gap_recall": share(
+            {d for d in dropped if d in both_ways(undeclared)}, dropped
+        ),
+        "undeclared_gap_precision": share(
+            {u for u in undeclared if u in both_ways(dropped)}, undeclared
+        ),
+        "kept_reported_as_undeclared": len(
+            {u for u in undeclared if u in both_ways(kept_keys)}
+        ),
+        "undeclared_gaps_reported": len(undeclared),
+        "undeclared_not_in_answer_key": sorted(
+            f"{u[0]}{list(u[1])} -> {u[2]}{list(u[3])}"
+            for u in undeclared if u not in both_ways(truth)
+        ),
+    }
+
+
 def knowledge_recall(manifest_path: Path, model: dict[str, Any]) -> dict[str, Any]:
     """Compare the engine's semantic model against the answer key.
 

@@ -25,6 +25,7 @@ gauntlet/reports/*
 !gauntlet/reports/chinook_v1.*.md
 !gauntlet/reports/pagila_v1.*.json
 !gauntlet/reports/pagila_v1.*.md
+!gauntlet/reports/chinook_partial.recall.json
 engine/.stratum/
 *.db-journal
 *.db-wal
