@@ -282,7 +282,7 @@ def test_the_atlas_has_an_as_submitted_view_and_a_table_inspector(result, tmp_pa
     assert columns["cust_id"]["logical"] and columns["cust_id"]["type"]
     assert detail["entity"] and detail["kind"] == "core"
     assert any(g["gap_type"] == "broken_relationship" for g in detail["gaps"])
-    assert "ticket" == api.table_detail("gapdb", "ticket")["table"]
+    assert api.table_detail("gapdb", "ticket")["table"] == "ticket"
 
     raw = api.table_detail("gapdb", "orders", view="submitted")
     assert raw["entity"] is None and raw["columns"][0]["logical"] == ""
